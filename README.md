@@ -1,4 +1,4 @@
-golearn
+GoLearn
 =======
 
-A sparse, but useful, machine learning library for Go.
+A basic, but useful, machine learning library for Go.
