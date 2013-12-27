@@ -2,6 +2,7 @@ package main
 
 import (
 		mat "github.com/skelterjohn/go.matrix"
+		rand "math/rand"
 		"fmt"
 		)
 
@@ -11,34 +12,49 @@ type KNNClassifier struct {
 	Labels []string
 }
 
-//Initialises a new classifier
+func RandomArray(n int) []float64 {
+	ReturnedArray := make([]float64, n)
+	for i := 0; i < n; i++ {
+		ReturnedArray[i] = rand.Float64()
+	}
+	return ReturnedArray
+}
+
+//Mints a new classifier
 func (KNN *KNNClassifier) New(name string, labels []string, numbers []float64, x int, y int){
 	KNN.Data = *mat.MakeDenseMatrix(numbers, x, y)
 	KNN.Name = name
 	KNN.Labels = labels
 }
 
-func (KNN *KNNClassifier) ComputeDistance(vector mat.DenseMatrix) mat.DenseMatrix {
+//Computes a variety of distance metrics between two vectors
+func (KNN *KNNClassifier) ComputeDistance(vector *mat.DenseMatrix) *mat.DenseMatrix {
 	//Add switches for different distance metrics
-	result, _ := KNN.Data.TimesDense(&vector)
-	return *result
+	result, err := KNN.Data.TimesDense(vector)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(result)
+	return result
 }
 
-func (KNN *KNNClassifier) Predict(vector mat.DenseMatrix) mat.DenseMatrix {
-	blah := KNN.ComputeDistance(vector)
-	//return *mat.Difference(&KNN.Data, &vector)
-	return blah
+//Returns a classification based on a vector input
+func (KNN *KNNClassifier) Predict(vector mat.DenseMatrix) *mat.DenseMatrix {
+	return KNN.ComputeDistance(&vector)
 }
 
+//Returns a label, given an index
 func (KNN *KNNClassifier) GetLabel(index int) string {
 	return KNN.Labels[index]
 }
 
 func main(){
-	knn := KNNClassifier{}
-	dense := *mat.MakeDenseMatrix([]float64{4,5,1,3,4,2},2,3)
-	knn.New("Testing", []string{"this sucks", "hiya"}, []float64{1,2,3,4,5,6},2,3)
-	//hey := knn.ComputeDistance(dense)
-	blof := knn.Predict(dense)
-	fmt.Println(blof)
+	for {
+		values := RandomArray(4)
+		knn := KNNClassifier{}
+		knn.New("Testing", []string{"this sucks", "hiya"}, values,2,2)
+		knn.Predict(knn.Data)
+	}
 }
