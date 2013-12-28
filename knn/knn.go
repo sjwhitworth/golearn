@@ -6,7 +6,7 @@ import (
 		"math"
 		"fmt"
 		"sort"
-		"/base/"
+		"base/base"
 		// "errors"
 		)
  
@@ -119,11 +119,11 @@ func (KNN *KNNClassifier) GetLabel(index int) string {
 
 func main(){
 	for {
-		cols, rows, _, labels, data := base.ParseCsv("/Users/stephenwhitworth/Desktop/model.csv", 1, []int{2,3})
-		knn := KNNClassifier{}
-		random := mat.MakeDenseMatrix([]float64{410,433,400,400},1,2)
-		knn.New("Testing", labels, data, rows, cols)
-		labels, indexes := knn.Predict(random, 1)
-		fmt.Println(labels, indexes)
+		cols, rows, headers, labels, data := base.ParseCsv("/Users/stephenwhitworth/Desktop/Crmmodel.csv", 1, []int{2,3})
+		// values := []float64{1,1,1,1,4,4,4,4}
+		// knn := KNNClassifier{}
+		// random := mat.MakeDenseMatrix([]float64{4,4,4,4},1,4)
+		// knn.New("Testing", []string{"One", "Two"}, values,2,4)
+		// knn.Predict(random, 1)
 	}
 }
