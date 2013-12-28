@@ -6,8 +6,8 @@ import (
 		"math"
 		"fmt"
 		"sort"
-		"base/base"
-		// "errors"
+		"../base"
+		// "errors""
 		)
  
 //Sorts a map by value size in .s property
@@ -41,6 +41,7 @@ func sortMap(m map[int]float64) []int {
 	return sm.s
 }
 
+//A KNN Classifier. Consists of a data matrix, associated labels in the same order as the matrix, and a name.
 type KNNClassifier struct {
 	Data mat.DenseMatrix
 	Name string
@@ -55,7 +56,7 @@ func RandomArray(n int) []float64 {
 	return ReturnedArray
 }
 
-//Mints a new classifier
+//Mints a new classifier.
 func (KNN *KNNClassifier) New(name string, labels []string, numbers []float64, x int, y int) {
 	
 	// if x != len(KNN.Labels) {
@@ -67,8 +68,7 @@ func (KNN *KNNClassifier) New(name string, labels []string, numbers []float64, x
 	KNN.Labels = labels
 }
 
-//Computes a variety of distance metrics between two vectors
-//Only returns Euclidean distance at the moment
+//Computes the Euclidean distance between two vectors.
 func (KNN *KNNClassifier) ComputeDistance(vector *mat.DenseMatrix, testrow *mat.DenseMatrix) float64 {
 	var sum float64
 
@@ -88,13 +88,12 @@ func (KNN *KNNClassifier) ComputeDistance(vector *mat.DenseMatrix, testrow *mat.
 	return eucdistance
 }
 
-//Returns a classification based on a vector input
-//Just need to build the max voting function
+//Returns a classification for the vector, based on a vector input, using the KNN algorithm.
 func (KNN *KNNClassifier) Predict(vector *mat.DenseMatrix, K int) ([]string, []int) {
 
 	rows := KNN.Data.Rows()
 	rownumbers := make(map[int]float64)
-	labels := make([]string, K)
+	labels := make([]string, 1)
 
 	for i := 0; i < rows; i++{
 		row := KNN.Data.GetRowVector(i)
@@ -112,18 +111,14 @@ func (KNN *KNNClassifier) Predict(vector *mat.DenseMatrix, K int) ([]string, []i
 	return labels, values
 }
 
-//Returns a label, given an index
-func (KNN *KNNClassifier) GetLabel(index int) string {
-	return KNN.Labels[index]
-}
-
 func main(){
+	cols, rows, _, labels, data := base.ParseCsv("/Users/stephenwhitworth/Desktop/model.csv", 1, []int{2,3})
+	knn := KNNClassifier{}
+	random := mat.MakeDenseMatrix([]float64{4,4},1,2)
+	knn.New("Testing", labels, data, rows, cols)
+	
 	for {
-		cols, rows, headers, labels, data := base.ParseCsv("/Users/stephenwhitworth/Desktop/Crmmodel.csv", 1, []int{2,3})
-		// values := []float64{1,1,1,1,4,4,4,4}
-		// knn := KNNClassifier{}
-		// random := mat.MakeDenseMatrix([]float64{4,4,4,4},1,4)
-		// knn.New("Testing", []string{"One", "Two"}, values,2,4)
-		// knn.Predict(random, 1)
+		labels, _ := knn.Predict(random, 20)
+		fmt.Println(labels)
 	}
 }
