@@ -1,4 +1,4 @@
-package main
+package golearn
 
 import (
 		mat "github.com/skelterjohn/go.matrix"

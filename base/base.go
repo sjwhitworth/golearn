@@ -1,4 +1,4 @@
-package base
+package golearn
 
 import (
 		"os"
@@ -8,8 +8,8 @@ import (
 		"strconv"
 		)
 
-//Need to implement base functions here, like parsing CSV etc.
-
+//Parses a CSV file, returning the number of columns and rows, the headers, the labels associated with
+//classification, and the data that will be used for training.
 func ParseCsv(filepath string, text int, columns []int) (int, int,[]string, []string, []float64) {
 	labels := make([]string, 10)
 	data := make([]float64, 10)
