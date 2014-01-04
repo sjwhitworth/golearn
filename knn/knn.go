@@ -6,7 +6,7 @@ import (
 		"math"
 		"fmt"
 		"sort"
-		"../base"
+		"github.com/sjwhitworth/golearn/base/"
 		// "errors""
 		)
  
@@ -43,9 +43,7 @@ func sortMap(m map[int]float64) []int {
 
 //A KNN Classifier. Consists of a data matrix, associated labels in the same order as the matrix, and a name.
 type KNNClassifier struct {
-	Data mat.DenseMatrix
-	Name string
-	Labels []string
+	BasePredictor
 }
 
 func RandomArray(n int) []float64 {
@@ -59,6 +57,7 @@ func RandomArray(n int) []float64 {
 //Mints a new classifier.
 func (KNN *KNNClassifier) New(name string, labels []string, numbers []float64, x int, y int) {
 	
+	//Write in some error handling here
 	// if x != len(KNN.Labels) {
 	// 	return errors.New("KNN: There must be a label for each row")
 	// }

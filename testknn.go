@@ -1,0 +1,5 @@
+package knn
+
+import (
+		"testing"
+		)
