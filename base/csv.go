@@ -1,4 +1,4 @@
-package golearn
+package base
 
 import (
 		"os"
@@ -10,10 +10,10 @@ import (
 
 //Parses a CSV file, returning the number of columns and rows, the headers, the labels associated with
 //classification, and the data that will be used for training.
-func ParseCsv(filepath string, text int, columns []int) (int, int,[]string, []string, []float64) {
-	labels := make([]string, 10)
-	data := make([]float64, 10)
-	headers := make([]string, 2)
+func ParseCsv(filepath string, label int, columns []int) (int, int,[]string, []string, []float64) {
+	labels := make([]string, 0)
+	data := make([]float64, 0)
+	headers := make([]string, 0)
 	rows := 0
 
 	file, err := os.Open(filepath)
@@ -40,7 +40,7 @@ func ParseCsv(filepath string, text int, columns []int) (int, int,[]string, []st
         }
 
         //
-        labels = append(labels, record[text])
+        labels = append(labels, record[label])
 
         //Iterate over our rows and append the values to a slice
         for _, col := range columns {
