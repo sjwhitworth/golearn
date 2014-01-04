@@ -1,5 +1,1 @@
 package knn
-
-import (
-		"testing"
-		)

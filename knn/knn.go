@@ -1,4 +1,4 @@
-package main
+package knn
 
 import (
 		mat "github.com/skelterjohn/go.matrix"
@@ -6,7 +6,6 @@ import (
 		"fmt"
 		util "golearn/utilities"
 		base "golearn/base"
-		// "errors""
 		)
 
 //A KNN Classifier. Consists of a data matrix, associated labels in the same order as the matrix, and a name.
@@ -78,17 +77,4 @@ func (KNN *KNNClassifier) Predict(vector *mat.DenseMatrix, K int) (string, []int
 	label := sortedlabels[0]
 
 	return label, values
-}
-
-func main(){
-	cols, rows, _, labels, data := base.ParseCsv("../datasets/iris.csv", 4, []int{0,1,2})
-	knn := KNNClassifier{}
-	knn.New("Testing", labels, data, rows, cols)
-	
-	for {
-		randArray := util.RandomArray(3)
-		random := mat.MakeDenseMatrix(randArray,1,3)
-		labels, _ := knn.Predict(random, 3)
-		fmt.Println(labels)
-	}
 }

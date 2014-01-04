@@ -3,7 +3,6 @@ package utilities
 import (
 		"sort"
 		rand "math/rand"
-		"fmt"
 		)
 
 type sortedIntMap struct {
@@ -71,6 +70,5 @@ func RandomArray(n int) []float64 {
 	for i := 0; i < n; i++ {
 		ReturnedArray[i] = rand.Float64() * float64(rand.Intn(7))
 	}
-	fmt.Println(ReturnedArray)
 	return ReturnedArray
 }
