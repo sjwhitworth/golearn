@@ -1,57 +1,17 @@
-package golearn
+package main
 
 import (
 		mat "github.com/skelterjohn/go.matrix"
-		rand "math/rand"
 		"math"
 		"fmt"
-		"sort"
-		"github.com/sjwhitworth/golearn/base/"
+		util "golearn/utilities"
+		base "golearn/base"
 		// "errors""
 		)
- 
-//Sorts a map by value size in .s property
-type sortedMap struct {
-	m map[int]float64
-	s []int
-}
- 
-func (sm *sortedMap) Len() int {
-	return len(sm.m)
-}
- 
-func (sm *sortedMap) Less(i, j int) bool {
-	return sm.m[sm.s[i]] < sm.m[sm.s[j]]
-}
- 
-func (sm *sortedMap) Swap(i, j int) {
-	sm.s[i], sm.s[j] = sm.s[j], sm.s[i]
-}
- 
-func sortMap(m map[int]float64) []int {
-	sm := new(sortedMap)
-	sm.m = m
-	sm.s = make([]int, len(m))
-	i := 0
-	for key, _ := range m {
-		sm.s[i] = key
-		i++
-	}
-	sort.Sort(sm)
-	return sm.s
-}
 
 //A KNN Classifier. Consists of a data matrix, associated labels in the same order as the matrix, and a name.
 type KNNClassifier struct {
-	BasePredictor
-}
-
-func RandomArray(n int) []float64 {
-	ReturnedArray := make([]float64, n)
-	for i := 0; i < n; i++ {
-		ReturnedArray[i] = rand.Float64()
-	}
-	return ReturnedArray
+	base.BaseClassifier
 }
 
 //Mints a new classifier.
@@ -88,11 +48,12 @@ func (KNN *KNNClassifier) ComputeDistance(vector *mat.DenseMatrix, testrow *mat.
 }
 
 //Returns a classification for the vector, based on a vector input, using the KNN algorithm.
-func (KNN *KNNClassifier) Predict(vector *mat.DenseMatrix, K int) ([]string, []int) {
+func (KNN *KNNClassifier) Predict(vector *mat.DenseMatrix, K int) (string, []int) {
 
 	rows := KNN.Data.Rows()
 	rownumbers := make(map[int]float64)
 	labels := make([]string, 1)
+	maxmap := make(map[string]int)
 
 	for i := 0; i < rows; i++{
 		row := KNN.Data.GetRowVector(i)
@@ -100,24 +61,34 @@ func (KNN *KNNClassifier) Predict(vector *mat.DenseMatrix, K int) ([]string, []i
 		rownumbers[i] = eucdistance
 	}
 
-	sorted := sortMap(rownumbers)
+	sorted := util.SortIntMap(rownumbers)
 	values := sorted[:K]
 
 	for _, elem := range values {
 		labels = append(labels, KNN.Labels[elem])
+
+		if _, ok := maxmap[KNN.Labels[elem]]; ok {
+			maxmap[KNN.Labels[elem]] += 1
+		} else {
+			maxmap[KNN.Labels[elem]] = 1
+		}
 	}
 
-	return labels, values
+	sortedlabels := util.SortStringMap(maxmap)
+	label := sortedlabels[0]
+
+	return label, values
 }
 
 func main(){
-	cols, rows, _, labels, data := base.ParseCsv("/Users/stephenwhitworth/Desktop/model.csv", 1, []int{2,3})
+	cols, rows, _, labels, data := base.ParseCsv("../datasets/iris.csv", 4, []int{0,1,2})
 	knn := KNNClassifier{}
-	random := mat.MakeDenseMatrix([]float64{4,4},1,2)
 	knn.New("Testing", labels, data, rows, cols)
 	
 	for {
-		labels, _ := knn.Predict(random, 20)
+		randArray := util.RandomArray(3)
+		random := mat.MakeDenseMatrix(randArray,1,3)
+		labels, _ := knn.Predict(random, 3)
 		fmt.Println(labels)
 	}
 }
