@@ -51,7 +51,7 @@ func (KNN *KNNClassifier) Predict(vector *mat.DenseMatrix, K int) (string, []int
 
 	rows := KNN.Data.Rows()
 	rownumbers := make(map[int]float64)
-	labels := make([]string, 1)
+	labels := make([]string, 0)
 	maxmap := make(map[string]int)
 
 	for i := 0; i < rows; i++{

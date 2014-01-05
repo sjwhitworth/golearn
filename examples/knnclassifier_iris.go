@@ -14,11 +14,12 @@ func main(){
 
 	//Initialises a new KNN classifier
 	knn := knnclass.KNNClassifier{}
+	knn.C
 	knn.New("Testing", labels, data, rows, cols)
 	
 	for {
 		//Creates a random array of N float64s between 0 and 7
-		randArray := util.RandomArray(3)
+		randArray := util.RandomArray(3, 7)
 
 		//Initialises a vector with this array
 		random := mat.MakeDenseMatrix(randArray,1,3)

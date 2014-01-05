@@ -9,3 +9,9 @@ type BaseClassifier struct {
 	Name string
 	Labels []string
 }
+
+type BaseRegressor struct {
+	Data mat.DenseMatrix
+	Name string
+	Labels []float64
+}

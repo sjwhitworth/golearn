@@ -3,6 +3,8 @@ package utilities
 import (
 		"sort"
 		rand "math/rand"
+		"fmt"
+		"strconv"
 		)
 
 type sortedIntMap struct {
@@ -65,10 +67,24 @@ func SortStringMap(m map[string]int) []string {
 	return sm.s
 }
 
-func RandomArray(n int) []float64 {
+func RandomArray(n int, k int) []float64 {
 	ReturnedArray := make([]float64, n)
 	for i := 0; i < n; i++ {
-		ReturnedArray[i] = rand.Float64() * float64(rand.Intn(7))
+		ReturnedArray[i] = rand.Float64() * float64(rand.Intn(k))
 	}
 	return ReturnedArray
+}
+
+func ConvertLabelsToFloat(labels []string) []float64 {
+	floats := make([]float64, 0)
+	for _, elem := range labels {
+		converted, err := strconv.ParseFloat(elem, 64)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		floats = append(floats, converted)
+	}
+	return floats
 }
