@@ -1,7 +1,7 @@
 GoLearn
 =======
 
-A basic, but useful, machine learning library for Go.
+A small start on a machine learning library in Go.
 
 To do:
 
@@ -9,4 +9,7 @@ To do:
 * Add useful tools - K fold parameter search
 * Improve error handling
 
-..and yes, it's nowhere near done yet :)
+Collaboration
+=============
+
+I'd like to work more formally on the project. If you'd like to contribute, please send me a mail at stephen dot whitworth at hailocab dot com
