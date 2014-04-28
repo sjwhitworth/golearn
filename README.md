@@ -9,4 +9,4 @@ To do:
 * Add useful tools - K fold parameter search
 * Improve error handling
 
-..and yes, it's nowhere near done yet
+..and yes, it's nowhere near done yet :)
