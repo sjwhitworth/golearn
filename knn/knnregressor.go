@@ -1,12 +1,12 @@
 package knn
 
 import (
-		mat "github.com/skelterjohn/go.matrix"
-		"math"
-		"fmt"
-		util "golearn/utilities"
-		base "golearn/base"
-		)
+	"fmt"
+	mat "github.com/skelterjohn/go.matrix"
+	base "golearn/base"
+	util "golearn/utilities"
+	"math"
+)
 
 //A KNN Regressor. Consists of a data matrix, associated result variables in the same order as the matrix, and a name.
 type KNNRegressor struct {
@@ -49,7 +49,7 @@ func (KNN *KNNRegressor) Predict(vector *mat.DenseMatrix, K int) (float64, []int
 	labels := make([]float64, 1)
 	sum := 0.0
 
-	for i := 0; i < rows; i++{
+	for i := 0; i < rows; i++ {
 		row := KNN.Data.GetRowVector(i)
 		eucdistance := KNN.ComputeDistance(row, vector)
 		rownumbers[i] = eucdistance
