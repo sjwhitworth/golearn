@@ -1,12 +1,14 @@
 package knn
 
 import (
-		mat "github.com/skelterjohn/go.matrix"
-		"math"
-		"fmt"
-		util "golearn/utilities"
-		base "golearn/base"
-		)
+	"fmt"
+	"math"
+
+	base "github.com/sjwhitworth/golearn/base"
+	util "github.com/sjwhitworth/golearn/utilities"
+
+	mat "github.com/skelterjohn/go.matrix"
+)
 
 //A KNN Classifier. Consists of a data matrix, associated labels in the same order as the matrix, and a name.
 type KNNClassifier struct {
@@ -15,7 +17,7 @@ type KNNClassifier struct {
 
 //Mints a new classifier.
 func (KNN *KNNClassifier) New(name string, labels []string, numbers []float64, x int, y int) {
-	
+
 	//Write in some error handling here
 	// if x != len(KNN.Labels) {
 	// 	return errors.New("KNN: There must be a label for each row")
@@ -54,7 +56,7 @@ func (KNN *KNNClassifier) Predict(vector *mat.DenseMatrix, K int) (string, []int
 	labels := make([]string, 0)
 	maxmap := make(map[string]int)
 
-	for i := 0; i < rows; i++{
+	for i := 0; i < rows; i++ {
 		row := KNN.Data.GetRowVector(i)
 		eucdistance := KNN.ComputeDistance(row, vector)
 		rownumbers[i] = eucdistance
