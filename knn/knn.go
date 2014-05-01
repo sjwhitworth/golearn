@@ -1,47 +1,28 @@
 package knn
 
 import (
-	"fmt"
+	base "github.com/sjwhitworth/golearn/base"
+	util "github.com/sjwhitworth/golearn/utilities"
 	mat "github.com/skelterjohn/go.matrix"
-	base "golearn/base"
-	util "golearn/utilities"
-	"math"
 )
 
 //A KNN Classifier. Consists of a data matrix, associated labels in the same order as the matrix, and a name.
 type KNNClassifier struct {
-	base.BaseClassifier
+	base.BaseEstimator
+	Labels       []string
+	DistanceFunc string
 }
 
 //Mints a new classifier.
-func (KNN *KNNClassifier) New(name string, labels []string, numbers []float64, x int, y int) {
+func (KNN *KNNClassifier) New(labels []string, numbers []float64, x int, y int, distfunc string) {
 
-	KNN.Data = *mat.MakeDenseMatrix(numbers, x, y)
-	KNN.Name = name
+	KNN.Data = mat.MakeDenseMatrix(numbers, x, y)
 	KNN.Labels = labels
+	KNN.DistanceFunc = distfunc
 }
 
-//Computes the Euclidean distance between two vectors.
-func (KNN *KNNClassifier) ComputeDistance(vector *mat.DenseMatrix, testrow *mat.DenseMatrix) float64 {
-	var sum float64
-
-	difference, err := testrow.MinusDense(vector)
-	flat := difference.Array()
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	for _, i := range flat {
-		squared := math.Pow(i, 2)
-		sum += squared
-	}
-
-	eucdistance := math.Sqrt(sum)
-	return eucdistance
-}
-
-//Returns a classification for the vector, based on a vector input, using the KNN algorithm.
+// Returns a classification for the vector, based on a vector input, using the KNN algorithm.
+// @todo: Lots of room to improve this. V messy.
 func (KNN *KNNClassifier) Predict(vector *mat.DenseMatrix, K int) (string, []int) {
 
 	rows := KNN.Data.Rows()
@@ -51,7 +32,9 @@ func (KNN *KNNClassifier) Predict(vector *mat.DenseMatrix, K int) (string, []int
 
 	for i := 0; i < rows; i++ {
 		row := KNN.Data.GetRowVector(i)
-		eucdistance := KNN.ComputeDistance(row, vector)
+
+		//Will put code in to check errs later
+		eucdistance, _ := util.ComputeDistance(KNN.DistanceFunc, row, vector)
 		rownumbers[i] = eucdistance
 	}
 

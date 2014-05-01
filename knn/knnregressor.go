@@ -2,21 +2,23 @@ package knn
 
 import (
 	"fmt"
-	mat "github.com/skelterjohn/go.matrix"
-	base "golearn/base"
-	util "golearn/utilities"
 	"math"
+
+	util "github.com/sjwhitworth/golearn/utilities"
+	mat "github.com/skelterjohn/go.matrix"
 )
 
 //A KNN Regressor. Consists of a data matrix, associated result variables in the same order as the matrix, and a name.
 type KNNRegressor struct {
-	base.BaseRegressor
+	Data   *mat.DenseMatrix
+	Name   string
+	Labels []float64
 }
 
 //Mints a new classifier.
 func (KNN *KNNRegressor) New(name string, labels []float64, numbers []float64, x int, y int) {
 
-	KNN.Data = *mat.MakeDenseMatrix(numbers, x, y)
+	KNN.Data = mat.MakeDenseMatrix(numbers, x, y)
 	KNN.Name = name
 	KNN.Labels = labels
 }
