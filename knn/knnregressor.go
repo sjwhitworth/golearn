@@ -1,46 +1,25 @@
+//@todo: A lot of code duplication here.
+
 package knn
 
 import (
-	"fmt"
-	"math"
-
 	util "github.com/sjwhitworth/golearn/utilities"
 	mat "github.com/skelterjohn/go.matrix"
 )
 
 //A KNN Regressor. Consists of a data matrix, associated result variables in the same order as the matrix, and a name.
 type KNNRegressor struct {
-	Data   *mat.DenseMatrix
-	Name   string
-	Labels []float64
+	Data         *mat.DenseMatrix
+	Labels       []float64
+	DistanceFunc string
 }
 
 //Mints a new classifier.
-func (KNN *KNNRegressor) New(name string, labels []float64, numbers []float64, x int, y int) {
-
+func NewKnnRegressor(labels []float64, numbers []float64, x int, y int, distfunc string) *KNNRegressor {
+	KNN := KNNRegressor{}
 	KNN.Data = mat.MakeDenseMatrix(numbers, x, y)
-	KNN.Name = name
 	KNN.Labels = labels
-}
-
-//Computes the Euclidean distance between two vectors.
-func (KNN *KNNRegressor) ComputeDistance(vector *mat.DenseMatrix, testrow *mat.DenseMatrix) float64 {
-	var sum float64
-
-	difference, err := testrow.MinusDense(vector)
-	flat := difference.Array()
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	for _, i := range flat {
-		squared := math.Pow(i, 2)
-		sum += squared
-	}
-
-	eucdistance := math.Sqrt(sum)
-	return eucdistance
+	return &KNN
 }
 
 //Returns an average of the K nearest labels/variables, based on a vector input.
@@ -53,7 +32,7 @@ func (KNN *KNNRegressor) Predict(vector *mat.DenseMatrix, K int) (float64, []int
 
 	for i := 0; i < rows; i++ {
 		row := KNN.Data.GetRowVector(i)
-		eucdistance := KNN.ComputeDistance(row, vector)
+		eucdistance, _ := util.ComputeDistance(KNN.DistanceFunc, row, vector)
 		rownumbers[i] = eucdistance
 	}
 

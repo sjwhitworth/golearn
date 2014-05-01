@@ -1,3 +1,7 @@
+/* Package KNN implements a K Nearest Neighbors object. It is capable of both classification
+   and regression. It accepts data in the form of a list of float64s, which are then reshaped
+   into a X by Y matrix. */
+
 package knn
 
 import (
@@ -14,11 +18,12 @@ type KNNClassifier struct {
 }
 
 //Mints a new classifier.
-func (KNN *KNNClassifier) New(labels []string, numbers []float64, x int, y int, distfunc string) {
-
+func NewKnnClassifier(labels []string, numbers []float64, x int, y int, distfunc string) *KNNClassifier {
+	KNN := KNNClassifier{}
 	KNN.Data = mat.MakeDenseMatrix(numbers, x, y)
 	KNN.Labels = labels
 	KNN.DistanceFunc = distfunc
+	return &KNN
 }
 
 // Returns a classification for the vector, based on a vector input, using the KNN algorithm.

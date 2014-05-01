@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	data "github.com/sjwhitworth/golearn/data"
-	knnclass "github.com/sjwhitworth/golearn/knn"
+	knn "github.com/sjwhitworth/golearn/knn"
 	util "github.com/sjwhitworth/golearn/utilities"
 	mat "github.com/skelterjohn/go.matrix"
 )
@@ -15,8 +15,7 @@ func main() {
 	newlabels := util.ConvertLabelsToFloat(labels)
 
 	//Initialises a new KNN classifier
-	knn := knnclass.KNNRegressor{}
-	knn.New(newlabels, data, rows, cols, "euclidean")
+	cls := knn.NewKnnRegressor(newlabels, data, rows, cols, "euclidean")
 
 	for {
 		//Creates a random array of N float64s between 0 and Y
@@ -26,7 +25,7 @@ func main() {
 		random := mat.MakeDenseMatrix(randArray, 1, 2)
 
 		//Calculates the Euclidean distance and returns the most popular label
-		outcome, _ := knn.Predict(random, 3)
+		outcome, _ := cls.Predict(random, 3)
 		fmt.Println(outcome)
 	}
 }
