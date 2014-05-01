@@ -1,7 +1,7 @@
 GoLearn
 =======
 
-![](http://talks.golang.org/2013/advconc/gopherhat.jpg)
+![](http://talks.golang.org/2013/advconc/gopherhat.jpg =250x)
 
 A small start on a machine learning library in Go.
 
