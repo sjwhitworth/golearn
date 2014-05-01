@@ -3,6 +3,23 @@ GoLearn
 
 A small start on a machine learning library in Go.
 
+Install
+=======
+
+```
+go get github.com/sjwhitworth/golearn
+cd src/github.com/sjwhitworth/golearn
+go get ./...
+```
+
+Examples
+=======
+
+```
+cd examples/
+go run knnclassifier_iris.go
+```
+
 Join the team
 =============
 
