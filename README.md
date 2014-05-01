@@ -1,7 +1,7 @@
 GoLearn
 =======
 
-<img src="http://talks.golang.org/2013/advconc/gopherhat.jpg" width=250>
+<img src="http://talks.golang.org/2013/advconc/gopherhat.jpg" width=125>
 
 A small start on a machine learning library in Go.
 
