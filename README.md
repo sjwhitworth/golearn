@@ -1,6 +1,8 @@
 GoLearn
 =======
 
+![](http://talks.golang.org/2013/advconc/gopherhat.jpg)
+
 A small start on a machine learning library in Go.
 
 Install
