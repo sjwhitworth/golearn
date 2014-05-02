@@ -3,7 +3,7 @@ package pairwise
 import (
 	"math"
 
-	mat "github.com/skelterjohn/go.matrix"
+	"github.com/gonum/matrix/mat64"
 )
 
 type Euclidean struct{}
@@ -12,23 +12,17 @@ func NewEuclidean() *Euclidean {
 	return &Euclidean{}
 }
 
-func (self *Euclidean) InnerProduct(vectorX *mat.DenseMatrix, vectorY *mat.DenseMatrix) float64 {
-	CheckDimMatch(vectorX, vectorY)
-
-	result := mat.Product(mat.Transpose(vectorX), vectorY).Get(0, 0)
+func (self *Euclidean) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+	result := vectorX.Dot(vectorY)
 
 	return result
 }
 
 // We may need to create Metrics / Vector interface for this
-func (self *Euclidean) Distance(vectorX *mat.DenseMatrix, vectorY *mat.DenseMatrix) (float64, error) {
-	difference, err := vectorY.MinusDense(vectorX)
+func (self *Euclidean) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+	vectorX.Sub(vectorX, vectorY)
 
-	if err != nil {
-		return 0, err
-	}
+	result := self.InnerProduct(vectorX, vectorX)
 
-	result := self.InnerProduct(difference, difference)
-
-	return math.Sqrt(result), nil
+	return math.Sqrt(result)
 }

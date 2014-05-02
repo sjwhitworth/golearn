@@ -3,7 +3,7 @@ package pairwise
 import (
 	"math"
 
-	mat "github.com/skelterjohn/go.matrix"
+	"github.com/gonum/matrix/mat64"
 )
 
 type RBFKernel struct {
@@ -14,9 +14,7 @@ func NewRBFKernel(gamma float64) *RBFKernel {
 	return &RBFKernel{gamma: gamma}
 }
 
-func (self *RBFKernel) InnerProduct(vectorX *mat.DenseMatrix, vectorY *mat.DenseMatrix) (float64, error) {
-	CheckDimMatch(vectorX, vectorY)
-
+func (self *RBFKernel) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) (float64, error) {
 	euclidean := NewEuclidean()
 	distance, err := euclidean.Distance(vectorX, vectorY)
 
