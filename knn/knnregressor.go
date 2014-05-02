@@ -2,11 +2,10 @@ package knn
 
 import (
 	"fmt"
-	"math"
-
-	base "github.com/sjwhitworth/golearn/base"
-	util "github.com/sjwhitworth/golearn/utilities"
 	mat "github.com/skelterjohn/go.matrix"
+	base "golearn/base"
+	util "golearn/utilities"
+	"math"
 )
 
 //A KNN Regressor. Consists of a data matrix, associated result variables in the same order as the matrix, and a name.

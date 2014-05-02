@@ -2,12 +2,10 @@ package knn
 
 import (
 	"fmt"
-	"math"
-
-	base "github.com/sjwhitworth/golearn/base"
-	util "github.com/sjwhitworth/golearn/utilities"
-
 	mat "github.com/skelterjohn/go.matrix"
+	base "golearn/base"
+	util "golearn/utilities"
+	"math"
 )
 
 //A KNN Classifier. Consists of a data matrix, associated labels in the same order as the matrix, and a name.
@@ -17,11 +15,6 @@ type KNNClassifier struct {
 
 //Mints a new classifier.
 func (KNN *KNNClassifier) New(name string, labels []string, numbers []float64, x int, y int) {
-
-	//Write in some error handling here
-	// if x != len(KNN.Labels) {
-	// 	return errors.New("KNN: There must be a label for each row")
-	// }
 
 	KNN.Data = *mat.MakeDenseMatrix(numbers, x, y)
 	KNN.Name = name

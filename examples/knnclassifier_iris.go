@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-
-	base "github.com/sjwhitworth/golearn/base"
-	knnclass "github.com/sjwhitworth/golearn/knn"
-	util "github.com/sjwhitworth/golearn/utilities"
 	mat "github.com/skelterjohn/go.matrix"
+	"golearn/data"
+	util "golearn/utilities"
 )
 
 func main() {
@@ -15,7 +13,7 @@ func main() {
 
 	//Initialises a new KNN classifier
 	knn := knnclass.KNNClassifier{}
-	// knn.C
+	knn.C
 	knn.New("Testing", labels, data, rows, cols)
 
 	for {
