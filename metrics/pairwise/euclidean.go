@@ -23,7 +23,12 @@ func (self *Euclidean) InnerProduct(vectorX *mat.DenseMatrix, vectorY *mat.Dense
 // We may need to create Metrics / Vector interface for this
 func (self *Euclidean) Distance(vectorX *mat.DenseMatrix, vectorY *mat.DenseMatrix) (float64, error) {
 	difference, err := vectorY.MinusDense(vectorX)
+
+	if err != nil {
+		return 0, err
+	}
+
 	result := self.InnerProduct(difference, difference)
 
-	return math.Sqrt(result), err
+	return math.Sqrt(result), nil
 }
