@@ -3,7 +3,7 @@ package pairwise
 import (
 	"math"
 
-	mat "github.com/skelterjohn/go.matrix"
+	"github.com/gonum/matrix/mat64"
 )
 
 type PolyKernel struct {
@@ -14,18 +14,17 @@ func NewPolyKernel(degree int) *PolyKernel {
 	return &PolyKernel{degree: degree}
 }
 
-func (self *PolyKernel) InnerProduct(vectorX *mat.DenseMatrix, vectorY *mat.DenseMatrix) (float64, error) {
-	CheckDimMatch(vectorX, vectorY)
-
-	result := mat.Product(mat.Transpose(vectorX), vectorY).Get(0, 0)
+func (self *PolyKernel) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+	result := vectorX.Dot(vectorY)
 	result = math.Pow(result+1, float64(self.degree))
 
-	return result, nil
+	return result
 }
 
-func (self *PolyKernel) Distance(vectorX *mat.DenseMatrix, vectorY *mat.DenseMatrix) (float64, error) {
-	difference, err := vectorY.MinusDense(vectorX)
-	result, err := self.InnerProduct(difference, difference)
+func (self *PolyKernel) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+	subVector := mat64.NewDense(0, 0, nil)
+	subVector.Sub(vectorX, vectorY)
+	result := self.InnerProduct(subVector, subVector)
 
-	return math.Sqrt(result), err
+	return math.Sqrt(result)
 }
