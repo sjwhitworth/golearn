@@ -1,7 +1,6 @@
 package pairwise
 
 import (
-	"errors"
 	"math"
 
 	mat "github.com/skelterjohn/go.matrix"
@@ -16,9 +15,7 @@ func NewPolyKernel(degree int) *PolyKernel {
 }
 
 func (self *PolyKernel) InnerProduct(vectorX *mat.DenseMatrix, vectorY *mat.DenseMatrix) (float64, error) {
-	if !CheckDimMatch(vectorX, vectorY) {
-		return 0, errors.New("Dimension mismatch")
-	}
+	CheckDimMatch(vectorX, vectorY)
 
 	result := mat.Product(mat.Transpose(vectorX), vectorY).Get(0, 0)
 	result = math.Pow(result+1, float64(self.degree))

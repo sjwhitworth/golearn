@@ -1,7 +1,6 @@
 package pairwise
 
 import (
-	"errors"
 	"math"
 
 	mat "github.com/skelterjohn/go.matrix"
@@ -16,9 +15,7 @@ func NewRBFKernel(gamma float64) *RBFKernel {
 }
 
 func (self *RBFKernel) InnerProduct(vectorX *mat.DenseMatrix, vectorY *mat.DenseMatrix) (float64, error) {
-	if !CheckDimMatch(vectorX, vectorY) {
-		return 0, errors.New("Dimension mismatch")
-	}
+	CheckDimMatch(vectorX, vectorY)
 
 	euclidean := NewEuclidean()
 	distance, err := euclidean.Distance(vectorX, vectorY)
