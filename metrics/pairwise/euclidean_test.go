@@ -23,11 +23,7 @@ func TestEuclidean(t *testing.T) {
 		})
 
 		Convey("When calculating distance", func() {
-			result, err := euclidean.Distance(vectorX, vectorY)
-
-			Convey("The err should be nil", func() {
-				So(err, ShouldBeNil)
-			})
+			result := euclidean.Distance(vectorX, vectorY)
 
 			Convey("The result should be 3", func() {
 				So(result, ShouldEqual, 3)

@@ -20,9 +20,10 @@ func (self *Euclidean) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) 
 
 // We may need to create Metrics / Vector interface for this
 func (self *Euclidean) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
-	vectorX.Sub(vectorX, vectorY)
+	subVector := mat64.NewDense(0, 0, nil)
+	subVector.Sub(vectorX, vectorY)
 
-	result := self.InnerProduct(vectorX, vectorX)
+	result := self.InnerProduct(subVector, subVector)
 
 	return math.Sqrt(result)
 }
