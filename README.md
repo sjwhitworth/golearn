@@ -5,6 +5,8 @@ GoLearn
 
 A small start on a machine learning library in Go.
 
+twitter: [@golearn_ml](http://www.twitter.com/golearn_ml)
+
 Install
 =======
 
