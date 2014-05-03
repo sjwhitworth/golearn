@@ -12,6 +12,8 @@ func NewManhattan() *Manhattan {
 	return &Manhattan{}
 }
 
+// Manhattan distance, also known as L1 distance.
+// Compute sum of absolute values of elements.
 func (self *Manhattan) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	var length int
 	subVector := mat64.NewDense(0, 0, nil)
