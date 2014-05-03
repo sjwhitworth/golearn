@@ -2,17 +2,25 @@ package utilities
 
 import (
 	"fmt"
-	mat "github.com/skelterjohn/go.matrix"
+	mat "github.com/gonum/matrix/mat64"
 	"math/rand"
 	"time"
 )
 
-func shuffleMatrix(dataset *mat.DenseMatrix, numGen *rand.Rand) *mat.DenseMatrix {
-	shuffledSet := dataset.Copy()
+func shuffleMatrix(dataset *mat.Dense, numGen *rand.Rand) *mat.Dense {
+	shuffledSet := mat.DenseCopyOf(dataset)
+	rowCount, colCount := shuffledSet.Dims()
+	temp := make([]float64, colCount)
 
-	for i := 0; i < shuffledSet.Rows(); i++ {
+	// Fisher–Yates shuffle
+	for i := 0; i < rowCount; i++ {
 		j := numGen.Intn(i + 1)
-		shuffledSet.SwapRows(i, j)
+		if j != i {
+			// Make a "hard" copy to avoid pointer craziness.
+			copy(temp, shuffledSet.RowView(i))
+			shuffledSet.SetRow(i, shuffledSet.RowView(j))
+			shuffledSet.SetRow(j, temp)
+		}
 	}
 
 	return shuffledSet
@@ -21,9 +29,9 @@ func shuffleMatrix(dataset *mat.DenseMatrix, numGen *rand.Rand) *mat.DenseMatrix
 // TrainTestSplit splits input DenseMatrix into subsets for testing.
 // The function expects a test size number (int) or percentage (float64), and a random state or nil to get "random" shuffle.
 // It returns a list containing the train-test split and an error status.
-func TrainTestSplit(size interface{}, randomState interface{}, datasets ...*mat.DenseMatrix) ([]*mat.DenseMatrix, error) {
+func TrainTestSplit(size interface{}, randomState interface{}, datasets ...*mat.Dense) ([]*mat.Dense, error) {
 	// Get number of instances (rows).
-	instanceCount := datasets[0].Rows()
+	instanceCount, _ := datasets[0].Dims()
 
 	// Input should be one or two matrices.
 	dataCount := len(datasets)
@@ -33,9 +41,10 @@ func TrainTestSplit(size interface{}, randomState interface{}, datasets ...*mat.
 
 	if dataCount == 2 {
 		// Test for consistency.
-		if datasets[1].Rows() != instanceCount {
+		labelCount, labelFeatures := datasets[1].Dims()
+		if labelCount != instanceCount {
 			return nil, fmt.Errorf("Data and labels must have the same number of instances")
-		} else if datasets[1].Cols() != 1 {
+		} else if labelFeatures != 1 {
 			return nil, fmt.Errorf("Label matrix must have single feature")
 		}
 	}
@@ -64,14 +73,16 @@ func TrainTestSplit(size interface{}, randomState interface{}, datasets ...*mat.
 	numGen := rand.New(randSource)
 
 	// Return slice will hold training and test data and optional labels matrix.
-	var returnDatasets []*mat.DenseMatrix
+	var returnDatasets []*mat.Dense
 
 	for _, dataset := range datasets {
+		_, featureCount := dataset.Dims()
+
 		tempMatrix := shuffleMatrix(dataset, numGen)
+
 		// Features count is different on data and labels.
-		featureCount := tempMatrix.Cols()
-		returnDatasets = append(returnDatasets, tempMatrix.GetMatrix(0, 0, trainSize, featureCount))
-		returnDatasets = append(returnDatasets, tempMatrix.GetMatrix(trainSize, 0, testSize, featureCount))
+		returnDatasets = append(returnDatasets, mat.NewDense(trainSize, featureCount, tempMatrix.RawMatrix().Data[:trainSize*featureCount]))
+		returnDatasets = append(returnDatasets, mat.NewDense(testSize, featureCount, tempMatrix.RawMatrix().Data[trainSize*featureCount:]))
 	}
 
 	return returnDatasets, nil
