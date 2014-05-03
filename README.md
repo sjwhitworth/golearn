@@ -25,4 +25,4 @@ go run knnclassifier_iris.go
 Join the team
 =============
 
-If you'd like to contribute, please send me a mail at stephen dot whitworth at hailocab dot com.
+If you'd like to contribute, please send me a mail at stephen dot whitworth at hailocab dot com. I will also add you to the team [Slack](https://slack.com) account, which we also use to communicate.
