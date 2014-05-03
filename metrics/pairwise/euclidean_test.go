@@ -8,11 +8,12 @@ import (
 )
 
 func TestEuclidean(t *testing.T) {
+	var vectorX, vectorY *mat64.Dense
 	euclidean := NewEuclidean()
 
 	Convey("Given two vectors", t, func() {
-		vectorX := mat64.NewDense(3, 1, []float64{1, 2, 3})
-		vectorY := mat64.NewDense(3, 1, []float64{2, 4, 5})
+		vectorX = mat64.NewDense(3, 1, []float64{1, 2, 3})
+		vectorY = mat64.NewDense(3, 1, []float64{2, 4, 5})
 
 		Convey("When doing inner product", func() {
 			result := euclidean.InnerProduct(vectorX, vectorY)

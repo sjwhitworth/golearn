@@ -13,13 +13,24 @@ func NewManhattan() *Manhattan {
 }
 
 func (self *Manhattan) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+	var length int
 	subVector := mat64.NewDense(0, 0, nil)
 	subVector.Sub(vectorX, vectorY)
 
-	r, _ := subVector.Dims()
+	r, c := subVector.Dims()
+
+	if r == 1 {
+		// Force transpose to column vector
+		subVector.TCopy(subVector)
+		length = c
+	} else if c == 1 {
+		length = r
+	} else {
+		panic(mat64.ErrShape)
+	}
 
 	result := .0
-	for i := 0; i < r; i++ {
+	for i := 0; i < length; i++ {
 		result += math.Abs(subVector.At(i, 0))
 	}
 

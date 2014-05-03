@@ -8,11 +8,12 @@ import (
 )
 
 func TestPolyKernel(t *testing.T) {
+	var vectorX, vectorY *mat64.Dense
 	polyKernel := NewPolyKernel(3)
 
 	Convey("Given two vectors", t, func() {
-		vectorX := mat64.NewDense(3, 1, []float64{1, 2, 3})
-		vectorY := mat64.NewDense(3, 1, []float64{2, 4, 5})
+		vectorX = mat64.NewDense(3, 1, []float64{1, 2, 3})
+		vectorY = mat64.NewDense(3, 1, []float64{2, 4, 5})
 
 		Convey("When doing inner product", func() {
 			result := polyKernel.InnerProduct(vectorX, vectorY)
