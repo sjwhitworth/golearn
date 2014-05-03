@@ -2,6 +2,7 @@ package knn
 
 import (
 	base "github.com/sjwhitworth/golearn/base"
+	pairwiseMetrics "github.com/sjwhitworth/golearn/metrics/pairwise"
 	util "github.com/sjwhitworth/golearn/utilities"
 	mat "github.com/skelterjohn/go.matrix"
 )
@@ -34,7 +35,8 @@ func (KNN *KNNClassifier) Predict(vector *mat.DenseMatrix, K int) (string, []int
 		row := KNN.Data.GetRowVector(i)
 
 		//Will put code in to check errs later
-		eucdistance, _ := util.ComputeDistance(KNN.DistanceFunc, row, vector)
+		euclidean := pairwiseMetrics.NewEuclidean()
+		eucdistance, _ := euclidean.Distance(row, vector)
 		rownumbers[i] = eucdistance
 	}
 
