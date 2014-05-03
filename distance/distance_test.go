@@ -43,3 +43,20 @@ func TestCranberraDistance(t *testing.T) {
 	})
 
 }
+
+
+func TestChebyshevDistance(t *testing.T) {
+
+	Convey("Given two vectors", t, func() {
+		p1 := []float64 { 1, 2, 3, 4 }
+		p2 := []float64 { -5, -6, 7, 8 }
+
+		distance := ChebyshevDistance(p1, p2)
+
+		Convey("The result should be a square root of 8", func() {
+			So(distance, ShouldEqual, 8)
+		})
+
+	})
+
+}
