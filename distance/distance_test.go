@@ -36,7 +36,7 @@ func TestCranberraDistance(t *testing.T) {
 		p2 := []float64 { -5, -6, 7, 4, 3 };
 		distance := CranberraDistance(p1, p2)
 
-		Convey("The result should be 0", func() {
+		Convey("The result should be 2.9", func() {
 			So(distance, ShouldEqual, 2.9)
 		})
 
@@ -55,6 +55,32 @@ func TestChebyshevDistance(t *testing.T) {
 
 		Convey("The result should be a square root of 8", func() {
 			So(distance, ShouldEqual, 8)
+		})
+
+	})
+
+}
+
+
+func TestManhattanDistance(t *testing.T) {
+
+	Convey("Given two vectors that are same", t, func() {
+		vec := []float64 { 0, 1, -2, 3.4, 5, -6.7, 89 }
+		distance := ManhattanDistance(vec, vec)
+
+		Convey("The result should be 0", func() {
+			So(distance, ShouldEqual, 0)
+		})
+
+	})
+
+	Convey("Given two vectors", t, func() {
+		p1 := []float64 { 1, -2, 3, 4 }
+		p2 := []float64 { -5, -6, 7, 8 }
+		distance := ManhattanDistance(p1, p2)
+
+		Convey("The result should be 18", func() {
+			So(distance, ShouldEqual, 18)
 		})
 
 	})
