@@ -5,6 +5,8 @@ import (
 	rand "math/rand"
 	"sort"
 	"strconv"
+
+	mat64 "github.com/gonum/matrix/mat64"
 )
 
 type sortedIntMap struct {
@@ -87,4 +89,8 @@ func ConvertLabelsToFloat(labels []string) []float64 {
 		floats = append(floats, converted)
 	}
 	return floats
+}
+
+func FloatsToMatrix(floats []float64) *mat64.Dense {
+	return mat64.NewDense(1, len(floats), floats)
 }

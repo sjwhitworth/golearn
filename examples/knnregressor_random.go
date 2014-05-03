@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
+	"github.com/gonum/matrix/mat64"
 	data "github.com/sjwhitworth/golearn/data"
 	knn "github.com/sjwhitworth/golearn/knn"
 	util "github.com/sjwhitworth/golearn/utilities"
-	mat "github.com/skelterjohn/go.matrix"
 )
 
 func main() {
@@ -22,10 +22,10 @@ func main() {
 		randArray := util.RandomArray(2, 100)
 
 		//Initialises a vector with this array
-		random := mat.MakeDenseMatrix(randArray, 1, 2)
+		random := mat64.NewDense(1, 2, randArray)
 
 		//Calculates the Euclidean distance and returns the most popular label
-		outcome, _ := cls.Predict(random, 3)
+		outcome := cls.Predict(random, 3)
 		fmt.Println(outcome)
 	}
 }

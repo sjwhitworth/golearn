@@ -4,7 +4,7 @@
 package base
 
 import (
-	mat "github.com/skelterjohn/go.matrix"
+	mat64 "github.com/gonum/matrix/mat64"
 )
 
 // An object that can ingest some data and train on it.
@@ -25,5 +25,6 @@ type Model interface {
 
 // @todo: Implement BaseEstimator setters and getters.
 type BaseEstimator struct {
-	Data *mat.DenseMatrix
+	Estimator
+	Data *mat64.Dense
 }

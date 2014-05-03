@@ -4,6 +4,7 @@ GoLearn
 <img src="http://talks.golang.org/2013/advconc/gopherhat.jpg" width=125>
 
 A small start on a machine learning library in Go.
+[Doc](http://godoc.org/github.com/sjwhitworth/golearn).
 
 Install
 =======
