@@ -33,7 +33,7 @@ func TestManhattan(t *testing.T) {
 			})
 		})
 
-		Convey("When calculating distance with row and column vectors", func() {
+		Convey("When calculating distance with different dimention matrices", func() {
 			vectorX.TCopy(vectorX)
 			So(func() { manhattan.Distance(vectorX, vectorY) }, ShouldPanicWith, mat64.ErrShape)
 		})

@@ -15,26 +15,19 @@ func NewManhattan() *Manhattan {
 // Manhattan distance, also known as L1 distance.
 // Compute sum of absolute values of elements.
 func (self *Manhattan) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
-	var length int
-	subVector := mat64.NewDense(0, 0, nil)
-	subVector.Sub(vectorX, vectorY)
-
-	r, c := subVector.Dims()
-
-	if r == 1 {
-		// Force transpose to column vector
-		subVector.TCopy(subVector)
-		length = c
-	} else if c == 1 {
-		length = r
-	} else {
+	r1, c1 := vectorX.Dims()
+	r2, c2 := vectorY.Dims()
+	if r1 != r2 || c1 != c2 {
 		panic(mat64.ErrShape)
 	}
+	// TODO: Add panic() whenever dimensions are not same
 
 	result := .0
-	for i := 0; i < length; i++ {
-		result += math.Abs(subVector.At(i, 0))
-	}
 
-	return result
+	for i := 0; i < r1; i++ {
+		for j := 0; j < c1; j++ {
+			result += math.Abs(vectorX.At(i, j) - vectorY.At(i, j))
+		}
+	}
+  return result
 }
