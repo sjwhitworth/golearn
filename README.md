@@ -1,10 +1,10 @@
 GoLearn
 =======
 
-<img src="http://talks.golang.org/2013/advconc/gopherhat.jpg" width=125>
+<img src="http://talks.golang.org/2013/advconc/gopherhat.jpg" width=125><br>
+[![GoDoc](https://godoc.org/github.com/sjwhitworth/golearn?status.png)](https://godoc.org/github.com/sjwhitworth/golearn)<br>
 
 A small start on a machine learning library in Go.
-[![GoDoc](https://godoc.org/github.com/sjwhitworth/golearn?status.png)](https://godoc.org/github.com/sjwhitworth/golearn)
 
 twitter: [@golearn_ml](http://www.twitter.com/golearn_ml)
 
