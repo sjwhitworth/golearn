@@ -1,2 +1,2 @@
-//golearn is a machine learning library for Go.
+//Package golearn is a machine learning library for Go.
 package golearn
