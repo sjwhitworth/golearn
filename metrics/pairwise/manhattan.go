@@ -20,7 +20,6 @@ func (self *Manhattan) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) floa
 	if r1 != r2 || c1 != c2 {
 		panic(mat64.ErrShape)
 	}
-	// TODO: Add panic() whenever dimensions are not same
 
 	result := .0
 
