@@ -1,7 +1,6 @@
-/* Package KNN implements a K Nearest Neighbors object, capable of both classification
-   and regression. It accepts data in the form of a slice of float64s, which are then reshaped
-   into a X by Y matrix. */
-
+// Package KNN implements a K Nearest Neighbors object, capable of both classification
+// and regression. It accepts data in the form of a slice of float64s, which are then reshaped
+// into a X by Y matrix.
 package knn
 
 import (

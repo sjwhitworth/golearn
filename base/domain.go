@@ -1,6 +1,5 @@
 // Package base provides base interfaces for GoLearn objects to implement.
 // It also provides a raw base for those objects.
-
 package base
 
 import (
