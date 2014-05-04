@@ -1,3 +1,5 @@
+/* Package utilities implements a host of helpful miscellaneous functions to the library. */
+
 package utilities
 
 import (
