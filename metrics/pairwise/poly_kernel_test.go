@@ -26,8 +26,8 @@ func TestPolyKernel(t *testing.T) {
 		Convey("When calculating distance", func() {
 			result := polyKernel.Distance(vectorX, vectorY)
 
-			Convey("The result should be 31.622776601683793", func() {
-				So(result, ShouldEqual, 31.622776601683793)
+			Convey("The result should alomost equal 31.622776601683793", func() {
+				So(result, ShouldAlmostEqual, 31.622776601683793)
 			})
 
 		})
