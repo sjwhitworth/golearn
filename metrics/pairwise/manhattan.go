@@ -28,5 +28,5 @@ func (self *Manhattan) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) floa
 			result += math.Abs(vectorX.At(i, j) - vectorY.At(i, j))
 		}
 	}
-  return result
+	return result
 }

@@ -12,8 +12,8 @@ func TestChebyshev(t *testing.T) {
 	chebyshev := NewChebyshev()
 
 	Convey("Given two vectors", t, func() {
-		vectorX = mat64.NewDense(4, 1, []float64{ 1, 2, 3, 4 })
-		vectorY = mat64.NewDense(4, 1, []float64{ -5, -6, 7, 8 })
+		vectorX = mat64.NewDense(4, 1, []float64{1, 2, 3, 4})
+		vectorY = mat64.NewDense(4, 1, []float64{-5, -6, 7, 8})
 
 		Convey("When calculating distance with two vectors", func() {
 			result := chebyshev.Distance(vectorX, vectorY)

@@ -12,7 +12,7 @@ func TestCranberrra(t *testing.T) {
 	cranberra := NewCranberra()
 
 	Convey("Given two vectors that are same", t, func() {
-		vec := mat64.NewDense(7, 1, []float64 { 0, 1, -2, 3.4, 5, -6.7, 89 })
+		vec := mat64.NewDense(7, 1, []float64{0, 1, -2, 3.4, 5, -6.7, 89})
 		distance := cranberra.Distance(vec, vec)
 
 		Convey("The result should be 0", func() {
@@ -20,10 +20,9 @@ func TestCranberrra(t *testing.T) {
 		})
 	})
 
-
 	Convey("Given two vectors", t, func() {
-		vectorX = mat64.NewDense(5, 1, []float64{ 1, 2, 3, 4, 9 })
-		vectorY = mat64.NewDense(5, 1, []float64{ -5, -6, 7, 4, 3 })
+		vectorX = mat64.NewDense(5, 1, []float64{1, 2, 3, 4, 9})
+		vectorY = mat64.NewDense(5, 1, []float64{-5, -6, 7, 4, 3})
 
 		Convey("When calculating distance with two vectors", func() {
 			result := cranberra.Distance(vectorX, vectorY)

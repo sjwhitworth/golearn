@@ -1,23 +1,23 @@
 package pairwise
 
 import (
-  "math"
+	"math"
 
-  "github.com/gonum/matrix/mat64"
+	"github.com/gonum/matrix/mat64"
 )
 
 type Cranberra struct{}
 
 func NewCranberra() *Cranberra {
-  return &Cranberra{}
+	return &Cranberra{}
 }
 
 func cranberraDistanceStep(num float64, denom float64) float64 {
-  if num == .0 && denom == .0 {
-    return .0
-  } else {
-    return num/denom
-  }
+	if num == .0 && denom == .0 {
+		return .0
+	} else {
+		return num / denom
+	}
 }
 
 func (self *Cranberra) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
@@ -27,10 +27,10 @@ func (self *Cranberra) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) floa
 		panic(mat64.ErrShape)
 	}
 
-  subVector := mat64.NewDense(0, 0, nil)
-  subVector.Sub(vectorX, vectorY)
+	subVector := mat64.NewDense(0, 0, nil)
+	subVector.Sub(vectorX, vectorY)
 
-  sum := .0
+	sum := .0
 
 	for i := 0; i < r1; i++ {
 		for j := 0; j < c1; j++ {
@@ -44,5 +44,5 @@ func (self *Cranberra) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) floa
 		}
 	}
 
-  return sum
+	return sum
 }
