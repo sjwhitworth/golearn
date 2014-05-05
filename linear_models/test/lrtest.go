@@ -5,10 +5,6 @@ import (
 	lm "golearn/linear_models"
 )
 
-type Obj struct {
-	a int
-}
-
 func main() {
 	X := [][]float64{
 		{0, 0, 0, 1},
