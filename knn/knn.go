@@ -21,7 +21,7 @@ type KNNClassifier struct {
 // Returns a new classifier
 func NewKnnClassifier(labels []string, numbers []float64, rows int, cols int, distfunc string) *KNNClassifier {
 	if rows != len(labels) {
-		panic("Number of rows must equal number of labels")
+		panic(mat64.ErrShape)
 	}
 
 	KNN := KNNClassifier{}
