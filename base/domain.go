@@ -3,6 +3,12 @@
 package base
 
 import (
+	"bytes"
+	"encoding/gob"
+	"io/ioutil"
+)
+
+import (
 	mat64 "github.com/gonum/matrix/mat64"
 )
 
@@ -22,8 +28,21 @@ type Model interface {
 	Score()
 }
 
-// @todo: Implement BaseEstimator setters and getters.
 type BaseEstimator struct {
-	Estimator
 	Data *mat64.Dense
+}
+
+// Serialises an estimator to a provided filepath, in gob format.
+// See http://golang.org/pkg/encoding/gob for further details.
+func SaveEstimatorToGob(path string, e *Estimator) {
+	b := new(bytes.Buffer)
+	enc := gob.NewEncoder(b)
+	err := enc.Encode(e)
+	if err != nil {
+		panic(err)
+	}
+	err = ioutil.WriteFile(path, b.Bytes(), 0644)
+	if err != nil {
+		panic(err)
+	}
 }
