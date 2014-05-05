@@ -27,9 +27,6 @@ func (self *Cranberra) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) floa
 		panic(mat64.ErrShape)
 	}
 
-	subVector := mat64.NewDense(0, 0, nil)
-	subVector.Sub(vectorX, vectorY)
-
 	sum := .0
 
 	for i := 0; i < r1; i++ {
