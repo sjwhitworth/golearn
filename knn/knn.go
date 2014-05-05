@@ -19,16 +19,19 @@ type KNNClassifier struct {
 }
 
 // Returns a new classifier
-func NewKnnClassifier(labels []string, numbers []float64, rows int, cols int, distfunc string) *KNNClassifier {
+func NewKnnClassifier(distfunc string) *KNNClassifier {
+	KNN := KNNClassifier{}
+	KNN.DistanceFunc = distfunc
+	return &KNN
+}
+
+func (KNN *KNNClassifier) Fit(labels []string, numbers []float64, rows int, cols int) {
 	if rows != len(labels) {
 		panic(mat64.ErrShape)
 	}
 
-	KNN := KNNClassifier{}
 	KNN.Data = mat64.NewDense(rows, cols, numbers)
 	KNN.Labels = labels
-	KNN.DistanceFunc = distfunc
-	return &KNN
 }
 
 // Returns a classification for the vector, based on a vector input, using the KNN algorithm.
@@ -94,12 +97,19 @@ type KNNRegressor struct {
 }
 
 // Mints a new classifier.
-func NewKnnRegressor(values []float64, numbers []float64, x int, y int, distfunc string) *KNNRegressor {
+func NewKnnRegressor(distfunc string) *KNNRegressor {
 	KNN := KNNRegressor{}
-	KNN.Data = mat64.NewDense(x, y, numbers)
-	KNN.Values = values
 	KNN.DistanceFunc = distfunc
 	return &KNN
+}
+
+func (KNN *KNNRegressor) Fit(values []float64, numbers []float64, rows int, cols int) {
+	if rows != len(values) {
+		panic(mat64.ErrShape)
+	}
+
+	KNN.Data = mat64.NewDense(rows, cols, numbers)
+	KNN.Values = values
 }
 
 //Returns an average of the K nearest labels/variables, based on a vector input.

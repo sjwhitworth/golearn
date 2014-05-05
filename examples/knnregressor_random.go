@@ -15,7 +15,8 @@ func main() {
 	newlabels := util.ConvertLabelsToFloat(labels)
 
 	//Initialises a new KNN classifier
-	cls := knn.NewKnnRegressor(newlabels, data, rows, cols, "euclidean")
+	cls := knn.NewKnnRegressor("euclidean")
+	cls.Fit(newlabels, data, rows, cols)
 
 	for {
 		//Creates a random array of N float64s between 0 and Y

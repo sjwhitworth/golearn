@@ -15,7 +15,6 @@ import (
 // An object that can ingest some data and train on it.
 type Estimator interface {
 	Fit()
-	Summarise()
 }
 
 // An object that provides predictions.
