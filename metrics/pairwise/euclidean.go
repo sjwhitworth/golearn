@@ -12,15 +12,14 @@ func NewEuclidean() *Euclidean {
 	return &Euclidean{}
 }
 
-// Compute usual inner product in the sense of euclidean.
+// Compute Eucledian inner product.
 func (self *Euclidean) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	result := vectorX.Dot(vectorY)
 
 	return result
 }
 
-// Compute usual distance in the sense of euclidean.
-// Also known as L2 distance.
+// Compute Euclidean distance (also known as L2 distance).
 func (self *Euclidean) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	subVector := mat64.NewDense(0, 0, nil)
 	subVector.Sub(vectorX, vectorY)
