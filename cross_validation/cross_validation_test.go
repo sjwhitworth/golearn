@@ -1,61 +1,30 @@
 package cross_validation
 
 import (
-	//. "github.com/smartystreets/goconvey/convey"
-	mat "github.com/gonum/matrix/mat64"
-	"math/rand"
+	. "github.com/smartystreets/goconvey/convey"
+	mat64 "github.com/gonum/matrix/mat64"
 	"testing"
-	"time"
+	"sync"
 )
 
-var (
-	flatValues, flatLabels []float64
-	values, labels         *mat.Dense
-)
+func TestShuffleMatrix(t *testing.T) {
+	var vectorX, vectorY *mat64.Dense
 
-func init() {
-	flatValues = make([]float64, 80)
-	flatLabels = make([]float64, 20)
+	Convey("Given two equal vectors", t, func() {
+			vectorX = mat64.NewDense(3, 1, []float64{1, 2, 3})
+			vectorY = mat64.DenseCopyOf(vectorX)
 
-	for i := 0; i < 80; i++ {
-		flatValues[i] = float64(i + 1)
-		// Replaces labels four times per run but who cares.
-		flatLabels[int(i/4)] = float64(rand.Intn(2))
-	}
+			Convey("After shuffling", func() {
+					wg := new(sync.WaitGroup)
+					wg.Add(1)
+					shuffleMatrix(vectorY, 0, wg)
+					wg.Wait()
+					result := vectorX.Equals(vectorY)
 
-	values = mat.NewDense(20, 4, flatValues)
-	labels = mat.NewDense(20, 1, flatLabels)
-}
+					Convey("The vectors should be different", func() {
+							So(result, ShouldNotEqual, true)
+						})
+				})
 
-func TestTrainTrainTestSplit(t *testing.T) {
-	nolab1, err := TrainTestSplit(4, nil, values)
-	if err != nil {
-		t.Error(err)
-	}
-
-	// Make sure the random generator gets a new seed (time).
-	time.Sleep(time.Second)
-
-	nolab2, _ := TrainTestSplit(4, nil, values)
-	if nolab1[0].Equals(nolab2[0]) {
-		t.Errorf("Shuffle with different seed returned same matrix")
-	}
-
-	nolab1, _ = TrainTestSplit(4, 1, values)
-	nolab2, _ = TrainTestSplit(4, 1, values)
-	// Comparing the determinants does not guarantee uniqueness, but it will do for now.
-	if !nolab1[0].Equals(nolab2[0]) {
-		t.Errorf("Shuffle with same seed returned different matrix")
-	}
-
-	// Same thing for data with labels.
-	lab1, err := TrainTestSplit(0.1, 10, values, labels)
-	if err != nil {
-		t.Error(err)
-	}
-
-	lab2, _ := TrainTestSplit(0.1, 10, values, labels)
-	if !lab1[0].Equals(lab2[0]) {
-		t.Errorf("Shuffle with same seed returned different determinants")
-	}
+		})
 }
