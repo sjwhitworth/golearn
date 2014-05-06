@@ -1,9 +1,16 @@
 liblinear: tron.o linear.o blas.a
-	g++ -shared -o linear.dll tron.o linear.o blas/blas.a
+	$(CXX) -shared -o linear.dll tron.o linear.o blas/blas.a
+	cp linear.dll liblinear.so
 tron.o: tron.cpp
-	g++ -c -fpic tron.cpp -o tron.o
+	$(CXX) -c -fpic tron.cpp -o tron.o
 linear.o: linear.cpp
-	g++ -c -fpic linear.cpp -o linear.o
+	$(CXX) -c -fpic linear.cpp -o linear.o
 blas.a:	
 	make -C blas
+clean:
+	rm -f *.o
+	make -C blas clean
 	
+install:
+	cp linear.dll ..
+	cp liblinear.so ..
