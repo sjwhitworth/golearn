@@ -12,5 +12,6 @@ clean:
 	make -C blas clean
 	
 install:
-	cp linear.dll ..
-	cp liblinear.so ..
+	mkdir ../lib
+	cp linear.dll ../lib
+	cp liblinear.so ../lib
