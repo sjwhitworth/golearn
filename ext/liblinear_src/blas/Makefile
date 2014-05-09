@@ -12,9 +12,9 @@ blas: $(FILES) $(HEADERS)
 	$(RANLIB) blas.a
 
 clean:
-	- rm -f *.o
-	- rm -f *.a
-	- rm -f *~
+	- $(RM) -f *.o
+	- $(RM) -f *.a
+	- $(RM) -f *~
 
 .c.o:
 	$(CC) $(CFLAGS) -fpic -c $*.c
