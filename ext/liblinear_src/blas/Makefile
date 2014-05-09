@@ -17,6 +17,6 @@ clean:
 	- rm -f *~
 
 .c.o:
-	$(CC) $(CFLAGS) -c $*.c
+	$(CC) $(CFLAGS) -fpic -c $*.c
 
 
