@@ -18,8 +18,8 @@ func TestRBFKernel(t *testing.T) {
 		Convey("When doing inner product", func() {
 			result := rbfKernel.InnerProduct(vectorX, vectorY)
 
-			Convey("The result should be 0.4065696597405991", func() {
-				So(result, ShouldEqual, 0.4065696597405991)
+			Convey("The result should almost equal 0.4065696597405991", func() {
+				So(result, ShouldAlmostEqual, 0.4065696597405991)
 
 			})
 		})
