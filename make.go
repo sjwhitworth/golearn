@@ -45,7 +45,7 @@ func main() {
 		return
 	}
 
-	os.Mkdir("ext/lib", os.ModeDir)
+	os.Mkdir("ext/lib", os.ModeDir | os.ModePerm)
 
 	log.Println("Installing libs")
 	err = copyFile("ext/liblinear_src/linear.dll", "ext/lib/linear.dll")
@@ -74,7 +74,7 @@ func main() {
 	}
 
 	fmt.Println("IMPORTANT:")
-	fmt.Println("Add \"" + lib_path + "\" to your " + target_envir + " environment manually")
+	fmt.Println("Add \"" + lib_path + "\" to your " + target_envir + " environment variable manually")
 }
 
 func copyFile(src, dst string) error {
