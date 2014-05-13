@@ -14,36 +14,34 @@ import (
 // The accepted distance functions at this time are 'euclidean' and 'manhattan'.
 type KNNClassifier struct {
 	base.BaseEstimator
-	Labels       []string
-	DistanceFunc string
+	TrainingData      *base.Instances
+	DistanceFunc      string
+	NearestNeighbours int
 }
 
 // Returns a new classifier
-func NewKnnClassifier(distfunc string) *KNNClassifier {
+func NewKnnClassifier(distfunc string, neighbours int) *KNNClassifier {
 	KNN := KNNClassifier{}
 	KNN.DistanceFunc = distfunc
+	KNN.NearestNeighbours = neighbours
 	return &KNN
 }
 
-func (KNN *KNNClassifier) Fit(labels []string, numbers []float64, rows int, cols int) {
-	if rows != len(labels) {
-		panic(mat64.ErrShape)
-	}
-
-	KNN.Data = mat64.NewDense(rows, cols, numbers)
-	KNN.Labels = labels
+// Train stores the training data for llater
+func (KNN *KNNClassifier) Fit(trainingData *base.Instances) {
+	KNN.TrainingData = trainingData
 }
 
 // Returns a classification for the vector, based on a vector input, using the KNN algorithm.
 // See http://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm.
-func (KNN *KNNClassifier) Predict(vector []float64, K int) string {
+func (KNN *KNNClassifier) PredictOne(vector []float64) string {
 
-	convertedVector := util.FloatsToMatrix(vector)
-	// Get the number of rows
-	rows, _ := KNN.Data.Dims()
+	rows := KNN.TrainingData.Rows
 	rownumbers := make(map[int]float64)
 	labels := make([]string, 0)
 	maxmap := make(map[string]int)
+
+	convertedVector := util.FloatsToMatrix(vector)
 
 	// Check what distance function we are using
 	switch KNN.DistanceFunc {
@@ -51,7 +49,7 @@ func (KNN *KNNClassifier) Predict(vector []float64, K int) string {
 		{
 			euclidean := pairwiseMetrics.NewEuclidean()
 			for i := 0; i < rows; i++ {
-				row := KNN.Data.RowView(i)
+				row := KNN.TrainingData.GetRowVectorWithoutClass(i)
 				rowMat := util.FloatsToMatrix(row)
 				distance := euclidean.Distance(rowMat, convertedVector)
 				rownumbers[i] = distance
@@ -61,7 +59,7 @@ func (KNN *KNNClassifier) Predict(vector []float64, K int) string {
 		{
 			manhattan := pairwiseMetrics.NewEuclidean()
 			for i := 0; i < rows; i++ {
-				row := KNN.Data.RowView(i)
+				row := KNN.TrainingData.GetRowVectorWithoutClass(i)
 				rowMat := util.FloatsToMatrix(row)
 				distance := manhattan.Distance(rowMat, convertedVector)
 				rownumbers[i] = distance
@@ -70,16 +68,16 @@ func (KNN *KNNClassifier) Predict(vector []float64, K int) string {
 	}
 
 	sorted := util.SortIntMap(rownumbers)
-	values := sorted[:K]
+	values := sorted[:KNN.NearestNeighbours]
 
 	for _, elem := range values {
-		// It's when we access this map
-		labels = append(labels, KNN.Labels[elem])
+		label := KNN.TrainingData.GetClass(elem)
+		labels = append(labels, label)
 
-		if _, ok := maxmap[KNN.Labels[elem]]; ok {
-			maxmap[KNN.Labels[elem]] += 1
+		if _, ok := maxmap[label]; ok {
+			maxmap[label] += 1
 		} else {
-			maxmap[KNN.Labels[elem]] = 1
+			maxmap[label] = 1
 		}
 	}
 
@@ -87,6 +85,14 @@ func (KNN *KNNClassifier) Predict(vector []float64, K int) string {
 	label := sortedlabels[0]
 
 	return label
+}
+
+func (KNN *KNNClassifier) Predict(what *base.Instances) *base.Instances {
+	ret := what.GeneratePredictionVector()
+	for i := 0; i < what.Rows; i++ {
+		ret.SetAttrStr(i, 0, KNN.PredictOne(what.GetRowVectorWithoutClass(i)))
+	}
+	return ret
 }
 
 //A KNN Regressor. Consists of a data matrix, associated result variables in the same order as the matrix, and a name.
@@ -112,7 +118,6 @@ func (KNN *KNNRegressor) Fit(values []float64, numbers []float64, rows int, cols
 	KNN.Values = values
 }
 
-//Returns an average of the K nearest labels/variables, based on a vector input.
 func (KNN *KNNRegressor) Predict(vector *mat64.Dense, K int) float64 {
 
 	// Get the number of rows

@@ -1,30 +1,39 @@
 package knn
 
 import (
-	"testing"
-
+	"github.com/sjwhitworth/golearn/base"
 	. "github.com/smartystreets/goconvey/convey"
+	"testing"
 )
 
 func TestKnnClassifier(t *testing.T) {
 	Convey("Given labels, a classifier and data", t, func() {
-		labels := []string{"blue", "blue", "red", "red"}
-		data := []float64{1, 1, 1, 1, 1, 1, 3, 3, 3, 6, 6, 6}
-		cls := NewKnnClassifier(labels, data, 4, 3, "euclidean")
+
+		trainingData, err1 := base.ParseCSVToInstances("knn_train.csv", false)
+		testingData, err2 := base.ParseCSVToInstances("knn_test.csv", false)
+
+		if err1 != nil {
+			t.Error(err1)
+			return
+		}
+		if err2 != nil {
+			t.Error(err2)
+			return
+		}
+
+		cls := NewKnnClassifier("euclidean", 2)
+		cls.Fit(trainingData)
+		predictions := cls.Predict(testingData)
 
 		Convey("When predicting the label for our first vector", func() {
-			// The vector we're going to predict
-			vector := []float64{1.2, 1.2, 1.5}
-			result := cls.Predict(vector, 2)
+			result := predictions.GetClass(0)
 			Convey("The result should be 'blue", func() {
 				So(result, ShouldEqual, "blue")
 			})
 		})
 
 		Convey("When predicting the label for our first vector", func() {
-			// The vector we're going to predict
-			vector2 := []float64{5, 5, 5}
-			result2 := cls.Predict(vector2, 2)
+			result2 := predictions.GetClass(1)
 			Convey("The result should be 'red", func() {
 				So(result2, ShouldEqual, "red")
 			})
