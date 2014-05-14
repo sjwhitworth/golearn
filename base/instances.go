@@ -273,6 +273,33 @@ func (inst *Instances) DecomposeOnAttributeValues(at Attribute) map[string]*Inst
 	return ret
 }
 
+func (inst *Instances) GetClassDistributionAfterSplit(at Attribute) map[string]map[string]int {
+
+	ret := make(map[string]map[string]int)
+
+	// Find the attribute we're decomposing on
+	attrIndex := inst.GetAttrIndex(at)
+	if attrIndex == -1 {
+		panic("Invalid attribute index")
+	}
+
+	// Get the class index
+	classAttr := inst.GetAttr(inst.ClassIndex)
+
+	for i := 0; i < inst.Rows; i++ {
+		splitVar := at.GetStringFromSysVal(inst.Get(i, attrIndex))
+		classVar := classAttr.GetStringFromSysVal(inst.Get(i, inst.ClassIndex))
+		if _, ok := ret[splitVar]; !ok {
+			ret[splitVar] = make(map[string]int)
+			i--
+			continue
+		}
+		ret[splitVar][classVar]++
+	}
+
+	return ret
+}
+
 // Get returns the system representation (float64) of the value
 // stored at the given row and col coordinate.
 func (inst *Instances) Get(row int, col int) float64 {
@@ -306,6 +333,20 @@ func (inst *Instances) GetClass(row int) string {
 	attr := inst.GetAttr(inst.ClassIndex)
 	val := inst.Get(row, inst.ClassIndex)
 	return attr.GetStringFromSysVal(val)
+}
+
+// GetClassDist returns a map containing the count of each
+// class type (indexed by the class' string representation)
+func (inst *Instances) GetClassDistribution() map[string]int {
+	ret := make(map[string]int)
+	attr := inst.GetAttr(inst.ClassIndex)
+	for i := 0; i < inst.Rows; i++ {
+		val := inst.Get(i, inst.ClassIndex)
+		cls := attr.GetStringFromSysVal(val)
+		ret[cls]++
+	}
+
+	return ret
 }
 
 func (Inst *Instances) GetClassAttrPtr() *Attribute {
