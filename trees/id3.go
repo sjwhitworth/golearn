@@ -154,9 +154,15 @@ func (d *DecisionTreeNode) Prune(using *base.Instances) {
 	if d.Children == nil {
 		return
 	} else {
+		if d.SplitAttr == nil {
+			return
+		}
 		// Recursively prune children of this node
 		sub := using.DecomposeOnAttributeValues(d.SplitAttr)
 		for k := range d.Children {
+			if sub[k] == nil {
+				continue
+			}
 			d.Children[k].Prune(sub[k])
 		}
 	}
@@ -206,4 +212,47 @@ func (d *DecisionTreeNode) Predict(what *base.Instances) *base.Instances {
 		}
 	}
 	return predictions
+}
+
+//
+// ID3 Tree type
+//
+
+// ID3DecisionTree represents an ID3-based decision tree
+// using the Information Gain metric to select which attributes
+// to split on at each node.
+type ID3DecisionTree struct {
+	base.BaseClassifier
+	Root       *DecisionTreeNode
+	PruneSplit float64
+}
+
+func NewID3DecisionTree(prune float64) *ID3DecisionTree {
+	return &ID3DecisionTree{
+		base.BaseClassifier{},
+		nil,
+		prune,
+	}
+}
+
+// Fit builds the ID3 decision tree
+func (t *ID3DecisionTree) Fit(on *base.Instances) {
+	rule := new(InformationGainRuleGenerator)
+	if t.PruneSplit > 0.001 {
+		insts := base.InstancesTrainTestSplit(on, t.PruneSplit)
+		t.Root = InferID3Tree(insts[0], rule)
+		t.Root.Prune(insts[1])
+	} else {
+		t.Root = InferID3Tree(on, rule)
+	}
+}
+
+// Predict outputs predictions from the ID3 decision tree
+func (t *ID3DecisionTree) Predict(what *base.Instances) *base.Instances {
+	return t.Root.Predict(what)
+}
+
+// String returns a human-readable ID3 tree
+func (t *ID3DecisionTree) String() string {
+	return fmt.Sprintf("ID3DecisionTree(%s\n)", t.Root)
 }

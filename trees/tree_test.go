@@ -194,3 +194,57 @@ func TestID3Classification(testEnv *testing.T) {
 	fmt.Println(eval.GetMacroRecall(confusionMat))
 	fmt.Println(eval.GetSummary(confusionMat))
 }
+
+func TestID3(testEnv *testing.T) {
+
+	// Import the "PlayTennis" dataset
+	inst, err := base.ParseCSVToInstances("./tennis.csv", true)
+	if err != nil {
+		panic(err)
+	}
+
+	// Build the decision tree
+	tree := NewID3DecisionTree(0.0)
+	tree.Fit(inst)
+	root := tree.Root
+
+	// Verify the tree
+	// First attribute should be "outlook"
+	if root.SplitAttr.GetName() != "outlook" {
+		testEnv.Error(root)
+	}
+	sunnyChild := root.Children["sunny"]
+	overcastChild := root.Children["overcast"]
+	rainyChild := root.Children["rainy"]
+	if sunnyChild.SplitAttr.GetName() != "humidity" {
+		testEnv.Error(sunnyChild)
+	}
+	if rainyChild.SplitAttr.GetName() != "windy" {
+		testEnv.Error(rainyChild)
+	}
+	if overcastChild.SplitAttr != nil {
+		testEnv.Error(overcastChild)
+	}
+
+	sunnyLeafHigh := sunnyChild.Children["high"]
+	sunnyLeafNormal := sunnyChild.Children["normal"]
+	if sunnyLeafHigh.Class != "no" {
+		testEnv.Error(sunnyLeafHigh)
+	}
+	if sunnyLeafNormal.Class != "yes" {
+		testEnv.Error(sunnyLeafNormal)
+	}
+
+	windyLeafFalse := rainyChild.Children["false"]
+	windyLeafTrue := rainyChild.Children["true"]
+	if windyLeafFalse.Class != "yes" {
+		testEnv.Error(windyLeafFalse)
+	}
+	if windyLeafTrue.Class != "no" {
+		testEnv.Error(windyLeafTrue)
+	}
+
+	if overcastChild.Class != "yes" {
+		testEnv.Error(overcastChild)
+	}
+}
