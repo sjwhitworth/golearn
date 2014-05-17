@@ -21,6 +21,9 @@ go get ./...
 Getting Started
 =======
 
+Data is loaded in as Instances. You can then perform matrix like operations on them, and pass them to estimators.
+We implement the scikit-learn interface of Fit/Predict, so you can easily swap out estimators for trial and error.
+
 ```
 // Load in a dataset, with headers. Header attributes will be stored.
 // Think of instances as a Data Frame structure in R or Pandas.
