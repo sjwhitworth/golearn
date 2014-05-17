@@ -21,7 +21,7 @@ go get ./...
 Getting Started
 =======
 
-Data is loaded in as Instances. You can then perform matrix like operations on them, and pass them to estimators.
+Data are loaded in as Instances. You can then perform matrix like operations on them, and pass them to estimators.
 We implement the scikit-learn interface of Fit/Predict, so you can easily swap out estimators for trial and error.
 
 ```
