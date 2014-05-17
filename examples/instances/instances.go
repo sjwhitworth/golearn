@@ -10,7 +10,7 @@ import (
 func main() {
 
 	// Instances can be read using ParseCsvToInstances
-	rawData, err := base.ParseCSVToInstances("datasets/iris_headers.csv", true)
+	rawData, err := base.ParseCSVToInstances("../datasets/iris_headers.csv", true)
 	if err != nil {
 		panic(err)
 	}

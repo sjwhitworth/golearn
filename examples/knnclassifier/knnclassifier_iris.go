@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	rawData, err := base.ParseCSVToInstances("datasets/iris_headers.csv", true)
+	rawData, err := base.ParseCSVToInstances("../datasets/iris_headers.csv", true)
 	if err != nil {
 		panic(err)
 	}
