@@ -29,15 +29,15 @@ func NewRandomForest(forestSize int, features int) RandomForest {
 }
 
 // Train builds the RandomForest on the specified instances
-func (f *RandomForest) Train(on *base.Instances) {
+func (f *RandomForest) Fit(on *base.Instances) {
 	f.Model = new(meta.BaggedModel)
 	for i := 0; i < f.ForestSize; i++ {
 		tree := new(trees.RandomTree)
-		tree.Rules = new(trees.RandomTreeRule)
-		tree.Attributes = f.Features
+		tree.Rule = new(trees.RandomTreeRuleGenerator)
+		tree.Rule.Attributes = f.Features
 		f.Model.AddModel(tree)
 	}
-	f.Model.Train(on)
+	f.Model.Fit(on)
 }
 
 // Predict generates predictions from a trained RandomForest

@@ -15,10 +15,10 @@ type BaggedModel struct {
 }
 
 func (b *BaggedModel) generateTrainingInstances(from *base.Instances) *base.Instances {
-	from = from.SampleWithReplacement(from.Rows)
-	return from
+	return from.SampleWithReplacement(from.Rows)
 }
 
+// AddModel adds a base.Classifier to the current model
 func (b *BaggedModel) AddModel(m base.Classifier) {
 	b.Models = append(b.Models, m)
 }

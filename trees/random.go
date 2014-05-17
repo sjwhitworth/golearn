@@ -36,14 +36,14 @@ func (r *RandomTreeRuleGenerator) GenerateSplitAttribute(f *base.Instances) base
 type RandomTree struct {
 	base.BaseClassifier
 	Root *DecisionTreeNode
-	Rule RandomTreeRuleGenerator
+	Rule *RandomTreeRuleGenerator
 }
 
 func NewRandomTree(attrs int) *RandomTree {
 	return &RandomTree{
 		base.BaseClassifier{},
 		nil,
-		RandomTreeRuleGenerator{
+		&RandomTreeRuleGenerator{
 			attrs,
 			InformationGainRuleGenerator{},
 		},
@@ -52,7 +52,7 @@ func NewRandomTree(attrs int) *RandomTree {
 
 // Train builds a RandomTree suitable for prediction
 func (rt *RandomTree) Fit(from *base.Instances) {
-	rt.Root = InferID3Tree(from, &rt.Rule)
+	rt.Root = InferID3Tree(from, rt.Rule)
 }
 
 // Predict returns a set of Instances containing predictions

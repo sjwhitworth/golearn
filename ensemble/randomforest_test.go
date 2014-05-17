@@ -20,7 +20,7 @@ func TestRandomForest1(testEnv *testing.T) {
 	filt.Run(insts[1])
 	filt.Run(insts[0])
 	rf := NewRandomForest(10, 2)
-	rf.Train(insts[0])
+	rf.Fit(insts[0])
 	predictions := rf.Predict(insts[1])
 	fmt.Println(predictions)
 	confusionMat := eval.GetConfusionMatrix(insts[1], predictions)
