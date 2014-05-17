@@ -1,10 +1,9 @@
 package optimisation
 
 import (
-	"testing"
-
 	"github.com/gonum/blas/cblas"
 	"github.com/gonum/matrix/mat64"
+	"testing"
 )
 
 func init() {
