@@ -14,7 +14,8 @@ func TestRandomTree(testEnv *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	filt := filters.NewBinningFilter(inst, 10)
+
+	filt := filters.NewChiMergeFilter(inst, 0.90)
 	filt.AddAllNumericAttributes()
 	filt.Build()
 	filt.Run(inst)
@@ -31,7 +32,7 @@ func TestRandomTreeClassification(testEnv *testing.T) {
 		panic(err)
 	}
 	insts := base.InstancesTrainTestSplit(inst, 0.6)
-	filt := filters.NewBinningFilter(insts[0], 10)
+	filt := filters.NewChiMergeFilter(inst, 0.90)
 	filt.AddAllNumericAttributes()
 	filt.Build()
 	filt.Run(insts[0])
@@ -56,7 +57,7 @@ func TestRandomTreeClassification2(testEnv *testing.T) {
 		panic(err)
 	}
 	insts := base.InstancesTrainTestSplit(inst, 0.6)
-	filt := filters.NewBinningFilter(insts[0], 10)
+	filt := filters.NewChiMergeFilter(inst, 0.90)
 	filt.AddAllNumericAttributes()
 	filt.Build()
 	fmt.Println(insts[1])

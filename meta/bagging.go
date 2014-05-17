@@ -3,70 +3,20 @@ package meta
 import (
 	"fmt"
 	base "github.com/sjwhitworth/golearn/base"
-	"math/rand"
 	"runtime"
 	"strings"
-	"time"
 )
 
 // BaggedModels train Classifiers on subsets of the original
 // Instances and combine the results through voting
 type BaggedModel struct {
 	base.BaseClassifier
-	Models           []base.Classifier
-	SelectedFeatures map[int][]base.Attribute
-	// If this is greater than 0, select up to d features
-	// for feeding into each classifier
-	RandomFeatures int
+	Models []base.Classifier
 }
 
-func (b *BaggedModel) generateRandomAttributes(from *base.Instances) []base.Attribute {
-	if b.RandomFeatures > from.GetAttributeCount()-1 {
-		panic("Can't have more random features")
-	}
-	ret := make([]base.Attribute, 0)
-	for {
-		if len(ret) > b.RandomFeatures {
-			break
-		}
-		attrIndex := rand.Intn(from.GetAttributeCount())
-		if attrIndex == from.ClassIndex {
-			continue
-		}
-		matched := false
-		newAttr := from.GetAttr(attrIndex)
-		for _, a := range ret {
-			if a.Equals(newAttr) {
-				matched = true
-				break
-			}
-		}
-		if !matched {
-			ret = append(ret, newAttr)
-		}
-	}
-	ret = append(ret, from.GetClassAttr())
-	return ret
-}
-
-func (b *BaggedModel) generateTrainingInstances(from *base.Instances) ([]base.Attribute, *base.Instances) {
-
-	var attrs []base.Attribute
+func (b *BaggedModel) generateTrainingInstances(from *base.Instances) *base.Instances {
 	from = from.SampleWithReplacement(from.Rows)
-
-	if b.RandomFeatures > 0 {
-		attrs = b.generateRandomAttributes(from)
-		from = from.SelectAttributes(attrs)
-	} else {
-		attrs = make([]base.Attribute, 0)
-	}
-
-	return attrs, from
-}
-
-func (b *BaggedModel) generateTestingInstances(from *base.Instances, model int) *base.Instances {
-	attrs := b.SelectedFeatures[model]
-	return from.SelectAttributes(attrs)
+	return from
 }
 
 func (b *BaggedModel) AddModel(m base.Classifier) {
@@ -78,11 +28,9 @@ func (b *BaggedModel) AddModel(m base.Classifier) {
 func (b *BaggedModel) Fit(from *base.Instances) {
 	n := runtime.GOMAXPROCS(0)
 	block := make(chan bool, n)
-	for i, m := range b.Models {
+	for _, m := range b.Models {
 		go func(c base.Classifier, f *base.Instances) {
-			a, f := b.generateTrainingInstances(f)
-			b.SelectedFeatures[i] = a
-			rand.Seed(time.Now().UnixNano())
+			f = b.generateTrainingInstances(f)
 			c.Fit(f)
 			block <- true
 		}(m, from)
@@ -102,9 +50,8 @@ func (b *BaggedModel) Predict(from *base.Instances) *base.Instances {
 	// Channel to receive the results as they come in
 	votes := make(chan *base.Instances, n)
 	// Dispatch prediction generation
-	for i, m := range b.Models {
+	for _, m := range b.Models {
 		go func(c base.Classifier, f *base.Instances) {
-			f = b.generateTestingInstances(f, i)
 			p := c.Predict(f)
 			votes <- p
 		}(m, from)

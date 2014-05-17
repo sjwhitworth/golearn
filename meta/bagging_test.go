@@ -19,14 +19,12 @@ func TestRandomForest1(testEnv *testing.T) {
 
 	rand.Seed(time.Now().UnixNano())
 	insts := base.InstancesTrainTestSplit(inst, 0.6)
-	filt := filters.NewBinningFilter(insts[0], 10)
+	filt := filters.NewChiMergeFilter(inst, 0.90)
 	filt.AddAllNumericAttributes()
 	filt.Build()
 	filt.Run(insts[1])
 	filt.Run(insts[0])
 	rf := new(BaggedModel)
-	rf.RandomFeatures = 2
-	rf.SelectedFeatures = make(map[int][]base.Attribute)
 	for i := 0; i < 10; i++ {
 		rf.AddModel(trees.NewRandomTree(2))
 	}
