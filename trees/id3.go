@@ -5,6 +5,7 @@ import (
 	"fmt"
 	base "github.com/sjwhitworth/golearn/base"
 	eval "github.com/sjwhitworth/golearn/evaluation"
+	"sort"
 )
 
 // NodeType determines whether a DecisionTreeNode is a leaf or not
@@ -66,9 +67,9 @@ func InferID3Tree(from *base.Instances, with RuleGenerator) *DecisionTreeNode {
 		}
 	}
 
-	// If there are no more attribute left to split on,
+	// If there are no more Attributes left to split on,
 	// return a DecisionTreeLeaf with the majority class
-	if from.GetAttributeCount() == 1 {
+	if from.GetAttributeCount() == 2 {
 		ret := &DecisionTreeNode{
 			LeafNode,
 			nil,
@@ -82,7 +83,7 @@ func InferID3Tree(from *base.Instances, with RuleGenerator) *DecisionTreeNode {
 
 	ret := &DecisionTreeNode{
 		RuleNode,
-		make(map[string]*DecisionTreeNode),
+		nil,
 		nil,
 		classes,
 		maxClass,
@@ -92,9 +93,14 @@ func InferID3Tree(from *base.Instances, with RuleGenerator) *DecisionTreeNode {
 	// Generate a return structure
 	// Generate the splitting attribute
 	splitOnAttribute := with.GenerateSplitAttribute(from)
+	if splitOnAttribute == nil {
+		// Can't determine, just return what we have
+		return ret
+	}
 	// Split the attributes based on this attribute's value
 	splitInstances := from.DecomposeOnAttributeValues(splitOnAttribute)
 	// Create new children from these attributes
+	ret.Children = make(map[string]*DecisionTreeNode)
 	for k := range splitInstances {
 		newInstances := splitInstances[k]
 		ret.Children[k] = InferID3Tree(newInstances, with)
@@ -114,7 +120,12 @@ func (d *DecisionTreeNode) getNestedString(level int) string {
 		buf.WriteString(fmt.Sprintf("Leaf(%s)", d.Class))
 	} else {
 		buf.WriteString(fmt.Sprintf("Rule(%s)", d.SplitAttr.GetName()))
+		keys := make([]string, 0)
 		for k := range d.Children {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
 			buf.WriteString("\n")
 			buf.WriteString(tmp.String())
 			buf.WriteString("\t")
@@ -171,16 +182,25 @@ func (d *DecisionTreeNode) Predict(what *base.Instances) *base.Instances {
 	predictions := base.NewInstances(outputAttrs, what.Rows)
 	for i := 0; i < what.Rows; i++ {
 		cur := d
-		for j := 0; j < what.Cols; j++ {
-			at := what.GetAttr(j)
-			classVar := at.GetStringFromSysVal(what.Get(i, j))
+		for {
 			if cur.Children == nil {
 				predictions.SetAttrStr(i, 0, cur.Class)
+				break
 			} else {
+				at := cur.SplitAttr
+				j := what.GetAttrIndex(at)
+				classVar := at.GetStringFromSysVal(what.Get(i, j))
 				if next, ok := cur.Children[classVar]; ok {
 					cur = next
 				} else {
-					predictions.SetAttrStr(i, 0, cur.Class)
+					var bestChild string
+					for c := range cur.Children {
+						bestChild = c
+						if c > classVar {
+							break
+						}
+					}
+					cur = cur.Children[bestChild]
 				}
 			}
 		}

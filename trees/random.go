@@ -20,11 +20,22 @@ func (r *RandomTreeRuleGenerator) GenerateSplitAttribute(f *base.Instances) base
 	consideredAttributes := make([]int, r.Attributes)
 	attrCounter := 0
 	for {
-		if attrCounter >= r.Attributes {
+		if len(consideredAttributes) >= r.Attributes {
 			break
 		}
 		selectedAttribute := rand.Intn(maximumAttribute)
+		fmt.Println(selectedAttribute, attrCounter, consideredAttributes, len(consideredAttributes))
 		if selectedAttribute != f.ClassIndex {
+			matched := false
+			for _, a := range consideredAttributes {
+				if a == selectedAttribute {
+					matched = true
+					break
+				}
+			}
+			if matched {
+				continue
+			}
 			consideredAttributes = append(consideredAttributes, selectedAttribute)
 			attrCounter++
 		}

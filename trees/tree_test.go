@@ -56,7 +56,7 @@ func TestRandomTreeClassification2(testEnv *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	insts := base.InstancesTrainTestSplit(inst, 0.6)
+	insts := base.InstancesTrainTestSplit(inst, 0.4)
 	filt := filters.NewChiMergeFilter(inst, 0.90)
 	filt.AddAllNumericAttributes()
 	filt.Build()
@@ -169,4 +169,28 @@ func TestID3Inference(testEnv *testing.T) {
 	if overcastChild.Class != "yes" {
 		testEnv.Error(overcastChild)
 	}
+}
+
+func TestID3Classification(testEnv *testing.T) {
+	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+	if err != nil {
+		panic(err)
+	}
+	filt := filters.NewBinningFilter(inst, 10)
+	filt.AddAllNumericAttributes()
+	filt.Build()
+	filt.Run(inst)
+	fmt.Println(inst)
+	insts := base.InstancesTrainTestSplit(inst, 0.70)
+	// Build the decision tree
+	rule := new(InformationGainRuleGenerator)
+	root := InferID3Tree(insts[0], rule)
+	fmt.Println(root)
+	predictions := root.Predict(insts[1])
+	fmt.Println(predictions)
+	confusionMat := eval.GetConfusionMatrix(insts[1], predictions)
+	fmt.Println(confusionMat)
+	fmt.Println(eval.GetMacroPrecision(confusionMat))
+	fmt.Println(eval.GetMacroRecall(confusionMat))
+	fmt.Println(eval.GetSummary(confusionMat))
 }

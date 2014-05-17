@@ -55,7 +55,6 @@ func (r *InformationGainRuleGenerator) GetSplitAttributeFromSelection(considered
 	}
 
 	// Pick the one which maximises IG
-
 	return f.GetAttr(selectedAttribute)
 }
 
