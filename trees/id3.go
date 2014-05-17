@@ -1,9 +1,9 @@
 package trees
 
 import (
+	"bytes"
 	"fmt"
 	base "github.com/sjwhitworth/golearn/base"
-	"strings"
 )
 
 // NodeType determines whether a DecisionTreeNode is a leaf or not
@@ -32,9 +32,9 @@ type DecisionTreeNode struct {
 	ClassAttr *base.Attribute
 }
 
-// InferDecisionTree builds a decision tree using a RuleGenerator
-// from a set of Instances
-func InferDecisionTree(from *base.Instances, with RuleGenerator) *DecisionTreeNode {
+// InferID3Tree builds a decision tree using a RuleGenerator
+// from a set of Instances (implements the ID3 algorithm)
+func InferID3Tree(from *base.Instances, with RuleGenerator) *DecisionTreeNode {
 	// Count the number of classes at this node
 	classes := from.CountClassValues()
 	// If there's only one class, return a DecisionTreeLeaf with
@@ -96,25 +96,39 @@ func InferDecisionTree(from *base.Instances, with RuleGenerator) *DecisionTreeNo
 	// Create new children from these attributes
 	for k := range splitInstances {
 		newInstances := splitInstances[k]
-		ret.Children[k] = InferDecisionTree(newInstances, with)
+		ret.Children[k] = InferID3Tree(newInstances, with)
 	}
 	ret.SplitAttr = splitOnAttribute
 	return ret
 }
 
+func (d *DecisionTreeNode) getNestedString(level int) string {
+	buf := bytes.NewBuffer(nil)
+	tmp := bytes.NewBuffer(nil)
+	for i := 0; i < level; i++ {
+		tmp.WriteString("\t")
+	}
+	buf.WriteString(tmp.String())
+	if d.Children == nil {
+		buf.WriteString(fmt.Sprintf("Leaf(%s)", d.Class))
+	} else {
+		buf.WriteString(fmt.Sprintf("Rule(%s)", d.SplitAttr.GetName()))
+		for k := range d.Children {
+			buf.WriteString("\n")
+			buf.WriteString(tmp.String())
+			buf.WriteString("\t")
+			buf.WriteString(k)
+			buf.WriteString("\n")
+			buf.WriteString(d.Children[k].getNestedString(level + 1))
+		}
+	}
+	return buf.String()
+}
+
 // String returns a human-readable representation of a given node
 // and it's children
 func (d *DecisionTreeNode) String() string {
-	children := make([]string, 0)
-	if d.Children != nil {
-		for k := range d.Children {
-			childStr := fmt.Sprintf("Rule(%s -> %s)", k, d.Children[k])
-			children = append(children, childStr)
-		}
-		return fmt.Sprintf("(%s(%s))", d.SplitAttr, strings.Join(children, "\n\t"))
-	}
-
-	return fmt.Sprintf("Leaf(%s (%s))", d.Class, d.ClassDist)
+	return d.getNestedString(0)
 }
 
 func (d *DecisionTreeNode) Predict(what *base.Instances) *base.Instances {

@@ -22,7 +22,7 @@ func TestRandomTree(testEnv *testing.T) {
 	fmt.Println(inst)
 	r := new(RandomTreeRuleGenerator)
 	r.Attributes = 2
-	root := InferDecisionTree(inst, r)
+	root := InferID3Tree(inst, r)
 	fmt.Println(root)
 }
 
@@ -40,7 +40,7 @@ func TestRandomTreeClassification(testEnv *testing.T) {
 	fmt.Println(inst)
 	r := new(RandomTreeRuleGenerator)
 	r.Attributes = 2
-	root := InferDecisionTree(insts[0], r)
+	root := InferID3Tree(insts[0], r)
 	fmt.Println(root)
 	predictions := root.Predict(insts[1])
 	fmt.Println(predictions)
@@ -89,5 +89,58 @@ func TestInformationGain(testEnv *testing.T) {
 	entropy := getSplitEntropy(outlook)
 	if math.Abs(entropy-0.694) > 0.001 {
 		testEnv.Error(entropy)
+	}
+}
+
+func TestID3Inference(testEnv *testing.T) {
+
+	// Import the "PlayTennis" dataset
+	inst, err := base.ParseCSVToInstances("./tennis.csv", true)
+	if err != nil {
+		panic(err)
+	}
+
+	// Build the decision tree
+	rule := new(InformationGainRuleGenerator)
+	root := InferID3Tree(inst, rule)
+
+	// Verify the tree
+	// First attribute should be "outlook"
+	if root.SplitAttr.GetName() != "outlook" {
+		testEnv.Error(root)
+	}
+	sunnyChild := root.Children["sunny"]
+	overcastChild := root.Children["overcast"]
+	rainyChild := root.Children["rainy"]
+	if sunnyChild.SplitAttr.GetName() != "humidity" {
+		testEnv.Error(sunnyChild)
+	}
+	if rainyChild.SplitAttr.GetName() != "windy" {
+		testEnv.Error(rainyChild)
+	}
+	if overcastChild.SplitAttr != nil {
+		testEnv.Error(overcastChild)
+	}
+
+	sunnyLeafHigh := sunnyChild.Children["high"]
+	sunnyLeafNormal := sunnyChild.Children["normal"]
+	if sunnyLeafHigh.Class != "no" {
+		testEnv.Error(sunnyLeafHigh)
+	}
+	if sunnyLeafNormal.Class != "yes" {
+		testEnv.Error(sunnyLeafNormal)
+	}
+
+	windyLeafFalse := rainyChild.Children["false"]
+	windyLeafTrue := rainyChild.Children["true"]
+	if windyLeafFalse.Class != "yes" {
+		testEnv.Error(windyLeafFalse)
+	}
+	if windyLeafTrue.Class != "no" {
+		testEnv.Error(windyLeafTrue)
+	}
+
+	if overcastChild.Class != "yes" {
+		testEnv.Error(overcastChild)
 	}
 }
