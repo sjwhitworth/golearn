@@ -6,6 +6,5 @@ go:
  - tip
 install:
  - sudo apt-get install libblas-dev
- - gcc -lblas ...
  - go get github.com/smartystreets/goconvey/convey
  - go get -v ./...
