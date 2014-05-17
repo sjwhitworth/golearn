@@ -75,6 +75,32 @@ func TestRandomTreeClassification2(testEnv *testing.T) {
 	fmt.Println(eval.GetSummary(confusionMat))
 }
 
+func TestPruning(testEnv *testing.T) {
+	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+	if err != nil {
+		panic(err)
+	}
+	insts := base.InstancesTrainTestSplit(inst, 0.6)
+	filt := filters.NewChiMergeFilter(inst, 0.90)
+	filt.AddAllNumericAttributes()
+	filt.Build()
+	fmt.Println(insts[1])
+	filt.Run(insts[1])
+	filt.Run(insts[0])
+	root := NewRandomTree(2)
+	fitInsts := base.InstancesTrainTestSplit(insts[0], 0.6)
+	root.Fit(fitInsts[0])
+	root.Prune(fitInsts[1])
+	fmt.Println(root)
+	predictions := root.Predict(insts[1])
+	fmt.Println(predictions)
+	confusionMat := eval.GetConfusionMatrix(insts[1], predictions)
+	fmt.Println(confusionMat)
+	fmt.Println(eval.GetMacroPrecision(confusionMat))
+	fmt.Println(eval.GetMacroRecall(confusionMat))
+	fmt.Println(eval.GetSummary(confusionMat))
+}
+
 func TestInformationGain(testEnv *testing.T) {
 	outlook := make(map[string]map[string]int)
 	outlook["sunny"] = make(map[string]int)

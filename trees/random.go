@@ -63,3 +63,7 @@ func (rt *RandomTree) Predict(from *base.Instances) *base.Instances {
 func (rt *RandomTree) String() string {
 	return fmt.Sprintf("RandomTree(%s)", rt.Root)
 }
+
+func (rt *RandomTree) Prune(with *base.Instances) {
+	rt.Root.Prune(with)
+}

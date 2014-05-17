@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	base "github.com/sjwhitworth/golearn/base"
+	eval "github.com/sjwhitworth/golearn/evaluation"
 )
 
 // NodeType determines whether a DecisionTreeNode is a leaf or not
@@ -131,6 +132,39 @@ func (d *DecisionTreeNode) String() string {
 	return d.getNestedString(0)
 }
 
+func computeAccuracy(predictions *base.Instances, from *base.Instances) float64 {
+	cf := eval.GetConfusionMatrix(from, predictions)
+	return eval.GetAccuracy(cf)
+}
+
+// Prune eliminates branches which hurt accuracy
+func (d *DecisionTreeNode) Prune(using *base.Instances) {
+	// If you're a leaf, you're already pruned
+	if d.Children == nil {
+		return
+	} else {
+		// Recursively prune children of this node
+		sub := using.DecomposeOnAttributeValues(d.SplitAttr)
+		for k := range d.Children {
+			d.Children[k].Prune(sub[k])
+		}
+	}
+
+	// Get a baseline accuracy
+	baselineAccuracy := computeAccuracy(d.Predict(using), using)
+
+	// Speculatively remove the children and re-evaluate
+	tmpChildren := d.Children
+	d.Children = nil
+	newAccuracy := computeAccuracy(d.Predict(using), using)
+
+	// Keep the children removed if better, else restore
+	if newAccuracy < baselineAccuracy {
+		d.Children = tmpChildren
+	}
+}
+
+// Predict outputs a base.Instances containing predictions from this tree
 func (d *DecisionTreeNode) Predict(what *base.Instances) *base.Instances {
 	outputAttrs := make([]base.Attribute, 1)
 	outputAttrs[0] = what.GetClassAttr()
