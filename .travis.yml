@@ -4,3 +4,5 @@ go:
  - 1.2
  - release
  - tip
+install:
+ - go get github.com/smartystreets/goconvey/convey
