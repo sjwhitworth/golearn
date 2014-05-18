@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 // BaggedModels train Classifiers on subsets of the original
@@ -13,8 +14,9 @@ import (
 type BaggedModel struct {
 	base.BaseClassifier
 	Models             []base.Classifier
-	selectedAttributes map[int][]base.Attribute
 	RandomFeatures     int
+	lock               sync.Mutex
+	selectedAttributes map[int][]base.Attribute
 }
 
 func (b *BaggedModel) generateTrainingAttrs(model int, from *base.Instances) []base.Attribute {
@@ -47,7 +49,9 @@ func (b *BaggedModel) generateTrainingAttrs(model int, from *base.Instances) []b
 		}
 	}
 	ret = append(ret, from.GetClassAttr())
+	b.lock.Lock()
 	b.selectedAttributes[model] = ret
+	b.lock.Unlock()
 	return ret
 }
 
@@ -74,11 +78,11 @@ func (b *BaggedModel) Fit(from *base.Instances) {
 	b.selectedAttributes = make(map[int][]base.Attribute)
 	block := make(chan bool, n)
 	for i, m := range b.Models {
-		go func(c base.Classifier, f *base.Instances) {
-			f = b.generateTrainingInstances(i, f)
-			c.Fit(f)
+		go func(c base.Classifier, f *base.Instances, model int) {
+			l := b.generateTrainingInstances(model, f)
+			c.Fit(l)
 			block <- true
-		}(m, from)
+		}(m, from, i)
 	}
 	for i := 0; i < len(b.Models); i++ {
 		<-block
@@ -96,11 +100,11 @@ func (b *BaggedModel) Predict(from *base.Instances) *base.Instances {
 	votes := make(chan *base.Instances, n)
 	// Dispatch prediction generation
 	for i, m := range b.Models {
-		go func(c base.Classifier, f *base.Instances) {
-			f = b.generatePredictionInstances(i, f)
-			p := c.Predict(f)
+		go func(c base.Classifier, f *base.Instances, model int) {
+			l := b.generatePredictionInstances(model, f)
+			p := c.Predict(l)
 			votes <- p
-		}(m, from)
+		}(m, from, i)
 	}
 	// Count the votes for each class
 	voting := make(map[int](map[string]int))
