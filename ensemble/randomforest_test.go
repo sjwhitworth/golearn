@@ -13,7 +13,7 @@ func TestRandomForest1(testEnv *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	insts := base.InstancesTrainTestSplit(inst, 0.80)
+	insts := base.InstancesTrainTestSplit(inst, 0.60)
 	filt := filters.NewChiMergeFilter(insts[0], 0.90)
 	filt.AddAllNumericAttributes()
 	filt.Build()

@@ -175,6 +175,7 @@ func InstancesTrainTestSplit(src *Instances, prop float64) [2](*Instances) {
 	trainingRows := make([]int, 0)
 	testingRows := make([]int, 0)
 	numAttrs := len(src.attributes)
+	src.Shuffle()
 	for i := 0; i < src.Rows; i++ {
 		trainOrTest := rand.Intn(101)
 		if trainOrTest > int(100*prop) {
