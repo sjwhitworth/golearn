@@ -195,6 +195,10 @@ func (d *DecisionTreeNode) Predict(what *base.Instances) *base.Instances {
 			} else {
 				at := cur.SplitAttr
 				j := what.GetAttrIndex(at)
+				if j == -1 {
+					predictions.SetAttrStr(i, 0, cur.Class)
+					break
+				}
 				classVar := at.GetStringFromSysVal(what.Get(i, j))
 				if next, ok := cur.Children[classVar]; ok {
 					cur = next

@@ -31,10 +31,9 @@ func NewRandomForest(forestSize int, features int) RandomForest {
 // Train builds the RandomForest on the specified instances
 func (f *RandomForest) Fit(on *base.Instances) {
 	f.Model = new(meta.BaggedModel)
+	f.Model.RandomFeatures = f.Features
 	for i := 0; i < f.ForestSize; i++ {
-		tree := new(trees.RandomTree)
-		tree.Rule = new(trees.RandomTreeRuleGenerator)
-		tree.Rule.Attributes = f.Features
+		tree := trees.NewID3DecisionTree(0.00)
 		f.Model.AddModel(tree)
 	}
 	f.Model.Fit(on)

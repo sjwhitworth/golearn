@@ -3,6 +3,7 @@ package meta
 import (
 	"fmt"
 	base "github.com/sjwhitworth/golearn/base"
+	"math/rand"
 	"runtime"
 	"strings"
 )
@@ -11,11 +12,54 @@ import (
 // Instances and combine the results through voting
 type BaggedModel struct {
 	base.BaseClassifier
-	Models []base.Classifier
+	Models             []base.Classifier
+	selectedAttributes map[int][]base.Attribute
+	RandomFeatures     int
 }
 
-func (b *BaggedModel) generateTrainingInstances(from *base.Instances) *base.Instances {
-	return from.SampleWithReplacement(from.Rows)
+func (b *BaggedModel) generateTrainingAttrs(model int, from *base.Instances) []base.Attribute {
+	ret := make([]base.Attribute, 0)
+	if b.RandomFeatures == 0 {
+		for j := 0; j < from.Cols; j++ {
+			attr := from.GetAttr(j)
+			ret = append(ret, attr)
+		}
+	} else {
+		for {
+			if len(ret) >= b.RandomFeatures {
+				break
+			}
+			attrIndex := rand.Intn(from.Cols)
+			if attrIndex == from.ClassIndex {
+				continue
+			}
+			attr := from.GetAttr(attrIndex)
+			matched := false
+			for _, a := range ret {
+				if a.Equals(attr) {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				ret = append(ret, attr)
+			}
+		}
+	}
+	ret = append(ret, from.GetClassAttr())
+	b.selectedAttributes[model] = ret
+	return ret
+}
+
+func (b *BaggedModel) generatePredictionInstances(model int, from *base.Instances) *base.Instances {
+	selected := b.selectedAttributes[model]
+	return from.SelectAttributes(selected)
+}
+
+func (b *BaggedModel) generateTrainingInstances(model int, from *base.Instances) *base.Instances {
+	insts := from.SampleWithReplacement(from.Rows)
+	selected := b.generateTrainingAttrs(model, from)
+	return insts.SelectAttributes(selected)
 }
 
 // AddModel adds a base.Classifier to the current model
@@ -27,10 +71,11 @@ func (b *BaggedModel) AddModel(m base.Classifier) {
 // Instances.
 func (b *BaggedModel) Fit(from *base.Instances) {
 	n := runtime.GOMAXPROCS(0)
+	b.selectedAttributes = make(map[int][]base.Attribute)
 	block := make(chan bool, n)
-	for _, m := range b.Models {
+	for i, m := range b.Models {
 		go func(c base.Classifier, f *base.Instances) {
-			f = b.generateTrainingInstances(f)
+			f = b.generateTrainingInstances(i, f)
 			c.Fit(f)
 			block <- true
 		}(m, from)
@@ -50,8 +95,9 @@ func (b *BaggedModel) Predict(from *base.Instances) *base.Instances {
 	// Channel to receive the results as they come in
 	votes := make(chan *base.Instances, n)
 	// Dispatch prediction generation
-	for _, m := range b.Models {
+	for i, m := range b.Models {
 		go func(c base.Classifier, f *base.Instances) {
+			f = b.generatePredictionInstances(i, f)
 			p := c.Predict(f)
 			votes <- p
 		}(m, from)
