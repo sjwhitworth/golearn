@@ -1,24 +1,33 @@
 package naive
 
 import (
+    "math"
+    "github.com/sjwhitworth/golearn/base"
     "testing"
-    "github.com/gonum/matrix/mat64"
+    . "github.com/smartystreets/goconvey/convey"
 )
 
-// Test if panic is correctly called when matrices with different
-// dimensions are used as arguments.
-func TestFitPanic(t *testing.T) {
-    defer func() {
-        if recover() == nil {
-            t.Fatalf("invalid matrix dim did not panic")
+func TestFit(t *testing.T) {
+    Convey("Given a simple training data", t, func() {
+        trainingData, err1 := base.ParseCSVToInstances("test/simple_train.csv", false)
+        if err1 != nil {
+            t.Error(err1)
         }
-    }()
 
-    nb := NewBernoulliNBClassifier(2)
+        nb := NewBernoulliNBClassifier()
+        nb.Fit(trainingData)
 
-    X := mat64.NewDense(10, 20, nil)
-    // simulating user mistake, one extra label
-    y := make([]int, 11)
+        Convey("All log(prior) should be correctly calculated", func() {
+            logPriorBlue := nb.logClassPrior["blue"]
+            logPriorRed := nb.logClassPrior["red"]
 
-    nb.Fit(X, y)
+            So(logPriorBlue, ShouldAlmostEqual, math.Log(0.5))
+            So(logPriorRed, ShouldAlmostEqual, math.Log(0.5))
+        })
+
+        Convey("'red' conditional probabilities should be correct", func() {
+        })
+        Convey("'blue' conditional probabilities should be correct", func() {
+        })
+    })
 }

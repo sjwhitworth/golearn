@@ -1,7 +1,7 @@
 package naive
 
 import (
-    "github.com/gonum/matrix/mat64"
+    "math"
     base "github.com/sjwhitworth/golearn/base"
 )
 
@@ -38,45 +38,74 @@ import (
 // http://nlp.stanford.edu/IR-book/html/htmledition/the-bernoulli-model-1.html
 type BernoulliNBClassifier struct {
     base.BaseEstimator
-    // Number of instances in each class. Used for calculating the prior
-    // probability and p(f_i|C)
-    classInstances []int
+    // Logarithm of each class prior
+    logClassPrior map[string]float64
+    // Log of conditional probability for each term. This vector should be
+    // accessed in the following way: p(f|c) = logCondProb[c][f].
+    // Logarithm is used in order to avoid underflow.
+    logCondProb map[string][]float64
 }
 
 // Create a new Bernoulli Naive Bayes Classifier. The argument 'classes'
 // is the number of possible labels in the classification task.
-func NewBernoulliNBClassifier(classes int) *BernoulliNBClassifier {
+func NewBernoulliNBClassifier() *BernoulliNBClassifier {
     nb := BernoulliNBClassifier{}
-    nb.classInstances = make([]int, classes)
+    nb.logCondProb = make(map[string][]float64)
+    nb.logClassPrior = make(map[string]float64)
     return &nb
 }
 
 // Fill data matrix with Bernoulli Naive Bayes model. All values
-// necessary for calculating prior probability and p(f_i
-func (nb *BernoulliNBClassifier) Fit(X *mat64.Dense, y []int) {
-    instances, features := X.Dims()
-    if instances != len(y) {
-        panic(mat64.ErrShape)
-    }
+// necessary for calculating prior probability and p(f_i)
+func (nb *BernoulliNBClassifier) Fit(X *base.Instances) {
 
-    nb.Data = mat64.NewDense(len(nb.classInstances), features, nil)
+    // Number of instances in class
+    classInstances := make(map[string]int)
 
-    for r := 0; r < instances; r++ {
-        // Get label of this instance. This should be a value between
-        // zero and nb.classes.
-        label := y[r]
-        nb.classInstances[label]++
+    // Number of documents with given term (by class)
+    docsContainingTerm := make(map[string][]int)
 
-        for c := 0; c < features; c++ {
-            v := X.At(r, c)
+    // This algorithm could be vectorized after binarizing the data
+    // matrix. Since mat64 doesn't have this function, a iterative
+    // version is used.
+    for r := 0; r < X.Rows; r++ {
+        class := X.GetClass(r)
+
+        // increment number of instances in class
+        t, ok := classInstances[class]
+        if !ok { t = 0 }
+        classInstances[class] = t + 1
+
+        for feat := 0; feat < X.Cols; feat++ {
+            v := X.Get(r, feat)
             // In Bernoulli Naive Bayes the presence and absence of
             // features are considered. All non-zero values are
             // treated as presence.
             if v > 0 {
                 // Update number of times this feature appeared within
                 // given label.
-                nb.Data.Set(label, c, nb.Data.At(label, c) + 1.0)
+                t, ok := docsContainingTerm[class]
+                if !ok {
+                    t = make([]int, X.Cols)
+                    docsContainingTerm[class] = t
+                }
+                t[feat] += 1
             }
+        }
+    }
+
+    // Pre-calculate conditional probabilities for each class
+    for c, _ := range classInstances {
+        nb.logClassPrior[c] = math.Log((float64(classInstances[c]))/float64(X.Rows))
+        nb.logCondProb[c] = make([]float64, X.Cols)
+        for feat := 0; feat < X.Cols; feat++ {
+            classTerms, _ := docsContainingTerm[c]
+            numDocs := classTerms[feat]
+            docsInClass, _ := classInstances[c]
+
+            classLogCondProb, _ := nb.logCondProb[c]
+            // Calculate conditional probability with laplace smoothing
+            classLogCondProb[feat] = math.Log(float64(numDocs + 1) / float64(docsInClass + 1))
         }
     }
 }
