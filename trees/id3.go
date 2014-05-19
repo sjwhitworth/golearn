@@ -109,6 +109,8 @@ func InferID3Tree(from *base.Instances, with RuleGenerator) *DecisionTreeNode {
 	return ret
 }
 
+// getNestedString returns the contents of node d
+// prefixed by level number of tags (also prints children)
 func (d *DecisionTreeNode) getNestedString(level int) string {
 	buf := bytes.NewBuffer(nil)
 	tmp := bytes.NewBuffer(nil)
@@ -143,6 +145,7 @@ func (d *DecisionTreeNode) String() string {
 	return d.getNestedString(0)
 }
 
+// computeAccuracy is a helper method for Prune()
 func computeAccuracy(predictions *base.Instances, from *base.Instances) float64 {
 	cf := eval.GetConfusionMatrix(from, predictions)
 	return eval.GetAccuracy(cf)
@@ -231,6 +234,8 @@ type ID3DecisionTree struct {
 	PruneSplit float64
 }
 
+// Returns a new ID3DecisionTree with the specified test-prune
+// ratio. Of the ratio is less than 0.001, the tree isn't pruned
 func NewID3DecisionTree(prune float64) *ID3DecisionTree {
 	return &ID3DecisionTree{
 		base.BaseClassifier{},
@@ -256,7 +261,7 @@ func (t *ID3DecisionTree) Predict(what *base.Instances) *base.Instances {
 	return t.Root.Predict(what)
 }
 
-// String returns a human-readable ID3 tree
+// String returns a human-readable version of this ID3 tree
 func (t *ID3DecisionTree) String() string {
 	return fmt.Sprintf("ID3DecisionTree(%s\n)", t.Root)
 }

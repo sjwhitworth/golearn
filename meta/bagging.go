@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// BaggedModels train Classifiers on subsets of the original
+// BaggedModel trains base.Classifiers on subsets of the original
 // Instances and combine the results through voting
 type BaggedModel struct {
 	base.BaseClassifier
@@ -17,6 +17,8 @@ type BaggedModel struct {
 	RandomFeatures     int
 }
 
+// generateTrainingAttrs selects RandomFeatures number of base.Attributes from
+// the provided base.Instances.
 func (b *BaggedModel) generateTrainingAttrs(model int, from *base.Instances) []base.Attribute {
 	ret := make([]base.Attribute, 0)
 	if b.RandomFeatures == 0 {
@@ -51,11 +53,17 @@ func (b *BaggedModel) generateTrainingAttrs(model int, from *base.Instances) []b
 	return ret
 }
 
+// generatePredictionInstances returns a modified version of the
+// requested base.Instances with only the base.Attributes selected
+// for training the model.
 func (b *BaggedModel) generatePredictionInstances(model int, from *base.Instances) *base.Instances {
 	selected := b.selectedAttributes[model]
 	return from.SelectAttributes(selected)
 }
 
+// generateTrainingInstances generates RandomFeatures number of
+// attributes and returns a modified version of base.Instances
+// for training the model
 func (b *BaggedModel) generateTrainingInstances(model int, from *base.Instances) *base.Instances {
 	insts := from.SampleWithReplacement(from.Rows)
 	selected := b.generateTrainingAttrs(model, from)
