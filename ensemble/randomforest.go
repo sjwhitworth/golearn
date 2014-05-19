@@ -4,6 +4,7 @@ import (
 	base "github.com/sjwhitworth/golearn/base"
 	meta "github.com/sjwhitworth/golearn/meta"
 	trees "github.com/sjwhitworth/golearn/trees"
+	"fmt"
 )
 
 // RandomForest classifies instances using an ensemble
@@ -18,8 +19,8 @@ type RandomForest struct {
 // NewRandomForests generates and return a new random forests
 // forestSize controls the number of trees that get built
 // features controls the number of features used to build each tree
-func NewRandomForest(forestSize int, features int) RandomForest {
-	ret := RandomForest{
+func NewRandomForest(forestSize int, features int) *RandomForest {
+	ret := &RandomForest{
 		base.BaseClassifier{},
 		forestSize,
 		features,
@@ -42,4 +43,8 @@ func (f *RandomForest) Fit(on *base.Instances) {
 // Predict generates predictions from a trained RandomForest
 func (f *RandomForest) Predict(with *base.Instances) *base.Instances {
 	return f.Model.Predict(with)
+}
+
+func (f *RandomForest) String() string {
+	return fmt.Sprintf("RandomForest(ForestSize: %d, Features:%d, %s\n)", f.ForestSize, f.Features, f.Model)
 }

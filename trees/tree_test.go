@@ -121,7 +121,7 @@ func TestInformationGain(testEnv *testing.T) {
 func TestID3Inference(testEnv *testing.T) {
 
 	// Import the "PlayTennis" dataset
-	inst, err := base.ParseCSVToInstances("./tennis.csv", true)
+	inst, err := base.ParseCSVToInstances("../examples/datasets/tennis.csv", true)
 	if err != nil {
 		panic(err)
 	}
@@ -198,7 +198,7 @@ func TestID3Classification(testEnv *testing.T) {
 func TestID3(testEnv *testing.T) {
 
 	// Import the "PlayTennis" dataset
-	inst, err := base.ParseCSVToInstances("./tennis.csv", true)
+	inst, err := base.ParseCSVToInstances("../examples/datasets/tennis.csv", true)
 	if err != nil {
 		panic(err)
 	}
