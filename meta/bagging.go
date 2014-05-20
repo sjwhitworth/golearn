@@ -82,19 +82,17 @@ func (b *BaggedModel) AddModel(m base.Classifier) {
 // Train generates and trains each model on a randomised subset of
 // Instances.
 func (b *BaggedModel) Fit(from *base.Instances) {
-	n := runtime.GOMAXPROCS(0)
+	var wait sync.WaitGroup
 	b.selectedAttributes = make(map[int][]base.Attribute)
-	block := make(chan bool, n)
 	for i, m := range b.Models {
+		wait.Add(1)
 		go func(c base.Classifier, f *base.Instances, model int) {
 			l := b.generateTrainingInstances(model, f)
 			c.Fit(l)
-			block <- true
+			wait.Done()
 		}(m, from, i)
 	}
-	for i := 0; i < len(b.Models); i++ {
-		<-block
-	}
+	wait.Wait()
 }
 
 // Predict gathers predictions from all the classifiers
@@ -103,15 +101,14 @@ func (b *BaggedModel) Fit(from *base.Instances) {
 // IMPORTANT: in the event of a tie, the first class which
 // achieved the tie value is output.
 func (b *BaggedModel) Predict(from *base.Instances) *base.Instances {
-	n := runtime.GOMAXPROCS(0)
+	n := runtime.NumCPU()
 	// Channel to receive the results as they come in
 	votes := make(chan *base.Instances, n)
 	// Dispatch prediction generation
 	for i, m := range b.Models {
 		go func(c base.Classifier, f *base.Instances, model int) {
 			l := b.generatePredictionInstances(model, f)
-			p := c.Predict(l)
-			votes <- p
+			votes <- c.Predict(l)
 		}(m, from, i)
 	}
 	// Count the votes for each class
