@@ -7,7 +7,18 @@ import (
     . "github.com/smartystreets/goconvey/convey"
 )
 
-func TestFit(t *testing.T) {
+func TestNoFit(t *testing.T) {
+    Convey("Given an empty BernoulliNaiveBayes", t, func() {
+        nb := NewBernoulliNBClassifier()
+
+        Convey("PredictOne should panic if Fit was not called", func() {
+            testDoc := []float64{0.0, 1.0}
+            So(func() { nb.PredictOne(testDoc) }, ShouldPanic)
+        })
+    })
+}
+
+func TestSimple(t *testing.T) {
     Convey("Given a simple training data", t, func() {
         trainingData, err1 := base.ParseCSVToInstances("test/simple_train.csv", false)
         if err1 != nil {
@@ -17,32 +28,72 @@ func TestFit(t *testing.T) {
         nb := NewBernoulliNBClassifier()
         nb.Fit(trainingData)
 
-        Convey("All log(prior) should be correctly calculated", func() {
-            logPriorBlue := nb.logClassPrior["blue"]
-            logPriorRed := nb.logClassPrior["red"]
+        Convey("Check if Fit is working as expected", func() {
+            Convey("All log(prior) should be correctly calculated", func() {
+                logPriorBlue := nb.logClassPrior["blue"]
+                logPriorRed := nb.logClassPrior["red"]
 
-            So(logPriorBlue, ShouldAlmostEqual, math.Log(0.5))
-            So(logPriorRed, ShouldAlmostEqual, math.Log(0.5))
+                So(logPriorBlue, ShouldAlmostEqual, math.Log(0.5))
+                So(logPriorRed, ShouldAlmostEqual, math.Log(0.5))
+            })
+
+            Convey("'red' conditional probabilities should be correct", func() {
+                logCondProbTok0 := nb.condProb["red"][0]
+                logCondProbTok1 := nb.condProb["red"][1]
+                logCondProbTok2 := nb.condProb["red"][2]
+
+                So(logCondProbTok0, ShouldAlmostEqual, 1.0)
+                So(logCondProbTok1, ShouldAlmostEqual, 1.0/3.0)
+                So(logCondProbTok2, ShouldAlmostEqual, 1.0)
+            })
+
+            Convey("'blue' conditional probabilities should be correct", func() {
+                logCondProbTok0 := nb.condProb["blue"][0]
+                logCondProbTok1 := nb.condProb["blue"][1]
+                logCondProbTok2 := nb.condProb["blue"][2]
+
+                So(logCondProbTok0, ShouldAlmostEqual, 1.0)
+                So(logCondProbTok1, ShouldAlmostEqual, 1.0)
+                So(logCondProbTok2, ShouldAlmostEqual, 1.0/3.0)
+            })
         })
 
-        Convey("'red' conditional probabilities should be correct", func() {
-            logCondProbTok0 := nb.logCondProb["red"][0]
-            logCondProbTok1 := nb.logCondProb["red"][1]
-            logCondProbTok2 := nb.logCondProb["red"][2]
+        Convey("PredictOne should work as expected", func() {
+            Convey("Using a document with different number of cols should panic", func() {
+                testDoc := []float64{0.0, 2.0}
+                So(func() { nb.PredictOne(testDoc) }, ShouldPanic)
+            })
 
-            So(logCondProbTok0, ShouldAlmostEqual, math.Log(1.0))
-            So(logCondProbTok1, ShouldAlmostEqual, math.Log(1.0/3.0))
-            So(logCondProbTok2, ShouldAlmostEqual, math.Log(1.0))
+            Convey("Token 1 should be a good predictor of the blue class", func() {
+                testDoc := []float64{0.0, 123.0, 0.0}
+                So(nb.PredictOne(testDoc), ShouldEqual, "blue")
+
+                testDoc = []float64{120.0, 123.0, 0.0}
+                So(nb.PredictOne(testDoc), ShouldEqual, "blue")
+            })
+
+            Convey("Token 2 should be a good predictor of the red class", func() {
+                testDoc := []float64{0.0, 0.0, 120.0}
+                So(nb.PredictOne(testDoc), ShouldEqual, "red")
+
+                testDoc = []float64{10.0, 0.0, 120.0}
+                So(nb.PredictOne(testDoc), ShouldEqual, "red")
+            })
         })
 
-        Convey("'blue' conditional probabilities should be correct", func() {
-            logCondProbTok0 := nb.logCondProb["blue"][0]
-            logCondProbTok1 := nb.logCondProb["blue"][1]
-            logCondProbTok2 := nb.logCondProb["blue"][2]
+        Convey("Predict should work as expected", func() {
+            testData, err := base.ParseCSVToInstances("test/simple_test.csv", false)
+            if err != nil {
+                t.Error(err)
+            }
+            predictions := nb.Predict(testData)
 
-            So(logCondProbTok0, ShouldAlmostEqual, math.Log(1.0))
-            So(logCondProbTok1, ShouldAlmostEqual, math.Log(1.0))
-            So(logCondProbTok2, ShouldAlmostEqual, math.Log(1.0/3.0))
+            Convey("All simple predicitions should be correct", func() {
+                So(predictions.GetClass(0), ShouldEqual, "blue")
+                So(predictions.GetClass(1), ShouldEqual, "red")
+                So(predictions.GetClass(2), ShouldEqual, "blue")
+                So(predictions.GetClass(3), ShouldEqual, "red")
+            })
         })
     })
 }
