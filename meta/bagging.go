@@ -104,30 +104,62 @@ func (b *BaggedModel) Predict(from *base.Instances) *base.Instances {
 	n := runtime.NumCPU()
 	// Channel to receive the results as they come in
 	votes := make(chan *base.Instances, n)
-	// Dispatch prediction generation
-	for i, m := range b.Models {
-		go func(c base.Classifier, f *base.Instances, model int) {
-			l := b.generatePredictionInstances(model, f)
-			votes <- c.Predict(l)
-		}(m, from, i)
-	}
 	// Count the votes for each class
 	voting := make(map[int](map[string]int))
-	for _ = range b.Models { // Have to do this - deadlocks otherwise
-		incoming := <-votes
-		// Step through each prediction
-		for j := 0; j < incoming.Rows; j++ {
-			// Check if we've seen this class before...
-			if _, ok := voting[j]; !ok {
-				// If we haven't, create an entry
-				voting[j] = make(map[string]int)
-				// Continue on the current row
-				j--
-				continue
+
+	// Create a goroutine to collect the votes
+	var votingwait sync.WaitGroup
+	votingwait.Add(1)
+	go func() {
+		for {
+			incoming, ok := <-votes
+			if ok {
+				// Step through each prediction
+				for j := 0; j < incoming.Rows; j++ {
+					// Check if we've seen this class before...
+					if _, ok := voting[j]; !ok {
+						// If we haven't, create an entry
+						voting[j] = make(map[string]int)
+						// Continue on the current row
+						j--
+						continue
+					}
+					voting[j][incoming.GetClass(j)]++
+				}
+			} else {
+				votingwait.Done()
+				break
 			}
-			voting[j][incoming.GetClass(j)]++
 		}
+	}()
+
+	// Create workers to process the predictions
+	processpipe := make(chan int, n)
+	var processwait sync.WaitGroup
+	for i := 0; i < n; i++ {
+		processwait.Add(1)
+		go func() {
+			for {
+				if i, ok := <-processpipe; ok {
+					c := b.Models[i]
+					l := b.generatePredictionInstances(i, from)
+					votes <- c.Predict(l)
+				} else {
+					processwait.Done()
+					break
+				}
+			}
+		}()
 	}
+
+	// Send all the models to the workers for prediction
+	for i, _ := range b.Models {
+		processpipe <- i
+	}
+	close(processpipe) // Finished sending models to be predicted
+	processwait.Wait() // Predictors all finished processing
+	close(votes)       // Close the vote channel and allow it to drain
+	votingwait.Wait()  // All the votes are in
 
 	// Generate the overall consensus
 	ret := from.GeneratePredictionVector()
