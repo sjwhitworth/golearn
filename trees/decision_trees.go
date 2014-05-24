@@ -7,6 +7,6 @@ type DecisionTree struct {
 }
 
 type Branch struct {
-	LeftBranch  Branch
-	RightBranch Branch
+	LeftBranch*  Branch
+	RightBranch* Branch
 }
