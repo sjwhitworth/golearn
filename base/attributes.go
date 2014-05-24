@@ -219,7 +219,7 @@ func (Attr *CategoricalAttribute) GetSysValFromString(rawVal string) float64 {
 // Returns a string containing the list of human-readable values this
 // CategoricalAttribute can take.
 func (Attr *CategoricalAttribute) String() string {
-	return fmt.Sprintf("CategoricalAttribute(%s)", Attr.values)
+	return fmt.Sprintf("CategoricalAttribute(\"%s\", %s)", Attr.Name, Attr.values)
 }
 
 // GetStringFromSysVal returns a human-readable value from the given system-representation
