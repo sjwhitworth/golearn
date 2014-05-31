@@ -4,6 +4,9 @@ go:
  - 1.2
  - release
  - tip
+before_install:
+ - sudo apt-get update -qq
+ - sudo apt-get install -qq libatlas-base-dev
 install:
  - go get github.com/smartystreets/goconvey/convey
  - go get -v ./...
