@@ -2,7 +2,8 @@ GoLearn
 =======
 
 <img src="http://talks.golang.org/2013/advconc/gopherhat.jpg" width=125><br>
-[![GoDoc](https://godoc.org/github.com/sjwhitworth/golearn?status.png)](https://godoc.org/github.com/sjwhitworth/golearn)<br>
+[![GoDoc](https://godoc.org/github.com/sjwhitworth/golearn?status.png)](https://godoc.org/github.com/sjwhitworth/golearn)
+[![Build Status](https://travis-ci.org/sjwhitworth/golearn.png?branch=master)](https://travis-ci.org/sjwhitworth/golearn)<br>
 
 GoLearn is a 'batteries included' machine learning library for Go. **Simplicity**, paired with customisability, is the goal.
 We are in active development, and would love comments from users out in the wild. Drop us a line on Twitter.
