@@ -1,13 +1,19 @@
 package base
 
-import "fmt"
-import "strconv"
+import (
+	"encoding/binary"
+	"fmt"
+	"math"
+	"strconv"
+)
 
 const (
 	// CategoricalType is for Attributes which represent values distinctly.
 	CategoricalType = iota
 	// Float64Type should be replaced with a FractionalNumeric type [DEPRECATED].
 	Float64Type
+	// Int64Type is for IntAttributes
+	Int64Type
 )
 
 // Attribute Attributes disambiguate columns of the feature matrix and declare their types.
@@ -38,6 +44,93 @@ type Attribute interface {
 	// * If applicable, they have the same categorical values (though not
 	//   necessarily in the same order).
 	Equals(Attribute) bool
+}
+
+// IntAttribute is an implementation which stores 64-bit numbers
+// in native endianness
+type IntAttribute struct {
+	Name string
+}
+
+// NewIntAttribute returns a new IntAttribute
+func NewIntAttribute() *IntAttribute {
+	return &IntAttribute{""}
+}
+
+// Equals tests if an IntAttribute is the same as another
+//
+// Returns false if the other attribute has a different name
+// or is not IntAttribute
+func (Attr *IntAttribute) Equals(other Attribute) bool {
+	_, ok := other.(*IntAttribute)
+	if !ok {
+		return false
+	}
+	if Attr.GetName() != other.GetName() {
+		return false
+	}
+	return true
+}
+
+// GetName returns this IntAttribute's human-readable name
+func (Attr *IntAttribute) GetName() string {
+	return Attr.Name
+}
+
+// SetName sets this IntAttribute's human-readable name
+func (Attr *IntAttribute) SetName(name string) {
+	Attr.Name = name
+}
+
+// GetType returns Int64Type
+func (Attr *IntAttribute) GetType() int {
+	return Int64Type
+}
+
+// String returns a human-readable summary of this Attribute
+func (Attr *IntAttribute) String() string {
+	return fmt.Sprintf("IntAttribute(%s)", Attr.Name)
+}
+
+// CheckSysValFromString confirms whether a given rawVal can
+// be converted into a valid system representation.
+func (Attr *IntAttribute) CheckSysValFromString(rawVal string) (float64, error) {
+	f, err := strconv.ParseInt(rawVal, 10, 64)
+	if err != nil {
+		return 0.0, err
+	}
+	bs := make([]byte, 8)
+	binary.PutVarint(bs, f)
+	fu, amount := binary.Uvarint(bs)
+	if amount < 1 {
+		panic("Conversion failed")
+	}
+	float := math.Float64frombits(fu)
+	return float, nil
+}
+
+// GetSysValFromString parses the given rawVal string to a float64 and returns it.
+//
+// IMPORTANT: This function panic()s if rawVal is not a valid integer.
+// Use CheckSysValFromString to confirm.
+func (Attr *IntAttribute) GetSysValFromString(rawVal string) float64 {
+	f, err := Attr.CheckSysValFromString(rawVal)
+	if err != nil {
+		panic(err)
+	}
+	return f
+}
+
+// GetStringFromSysVal converts a given system value to to a string
+func (Attr *IntAttribute) GetStringFromSysVal(rawVal float64) string {
+	bytes := math.Float64bits(rawVal)
+	buf := make([]byte, 8)
+	binary.PutUvarint(buf, bytes)
+	val, read := binary.Varint(buf)
+	if read < 1 {
+		panic("Conversion failed!")
+	}
+	return fmt.Sprintf("%d", val)
 }
 
 // FloatAttribute is an implementation which stores floating point
