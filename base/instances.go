@@ -5,8 +5,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/gonum/matrix/mat64"
 	"math/rand"
+
+	"github.com/gonum/matrix/mat64"
 )
 
 // SortDirection specifies sorting direction...
@@ -507,7 +508,7 @@ func (inst *Instances) GeneratePredictionVector() *Instances {
 // Shuffle randomizes the row order in place
 func (inst *Instances) Shuffle() {
 	for i := 0; i < inst.Rows; i++ {
-		j := rand.Intn(inst.Rows)
+		j := rand.Intn(i + 1)
 		inst.swapRows(i, j)
 	}
 }
