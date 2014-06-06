@@ -61,21 +61,21 @@ func TestRandomForest1(testEnv *testing.T) {
 	}
 
 	rand.Seed(time.Now().UnixNano())
-	insts := base.InstancesTrainTestSplit(inst, 0.6)
+	trainData, testData := base.InstancesTrainTestSplit(inst, 0.6)
 	filt := filters.NewChiMergeFilter(inst, 0.90)
 	filt.AddAllNumericAttributes()
 	filt.Build()
-	filt.Run(insts[1])
-	filt.Run(insts[0])
+	filt.Run(testData)
+	filt.Run(trainData)
 	rf := new(BaggedModel)
 	for i := 0; i < 10; i++ {
 		rf.AddModel(trees.NewRandomTree(2))
 	}
-	rf.Fit(insts[0])
+	rf.Fit(trainData)
 	fmt.Println(rf)
-	predictions := rf.Predict(insts[1])
+	predictions := rf.Predict(testData)
 	fmt.Println(predictions)
-	confusionMat := eval.GetConfusionMatrix(insts[1], predictions)
+	confusionMat := eval.GetConfusionMatrix(testData, predictions)
 	fmt.Println(confusionMat)
 	fmt.Println(eval.GetMacroPrecision(confusionMat))
 	fmt.Println(eval.GetMacroRecall(confusionMat))

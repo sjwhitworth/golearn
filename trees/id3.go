@@ -248,9 +248,9 @@ func NewID3DecisionTree(prune float64) *ID3DecisionTree {
 func (t *ID3DecisionTree) Fit(on *base.Instances) {
 	rule := new(InformationGainRuleGenerator)
 	if t.PruneSplit > 0.001 {
-		insts := base.InstancesTrainTestSplit(on, t.PruneSplit)
-		t.Root = InferID3Tree(insts[0], rule)
-		t.Root.Prune(insts[1])
+		trainData, testData := base.InstancesTrainTestSplit(on, t.PruneSplit)
+		t.Root = InferID3Tree(trainData, rule)
+		t.Root.Prune(testData)
 	} else {
 		t.Root = InferID3Tree(on, rule)
 	}

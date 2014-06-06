@@ -172,7 +172,7 @@ func NewInstancesFromDense(attrs []Attribute, rows int, mat *mat64.Dense) *Insta
 //
 // IMPORTANT: this function is only meaningful when prop is between 0.0 and 1.0.
 // Using any other values may result in odd behaviour.
-func InstancesTrainTestSplit(src *Instances, prop float64) [2](*Instances) {
+func InstancesTrainTestSplit(src *Instances, prop float64) (*Instances, *Instances) {
 	trainingRows := make([]int, 0)
 	testingRows := make([]int, 0)
 	numAttrs := len(src.attributes)
@@ -198,10 +198,10 @@ func InstancesTrainTestSplit(src *Instances, prop float64) [2](*Instances) {
 		rawTestMatrix.SetRow(i, rowDat)
 	}
 
-	var ret [2]*Instances
-	ret[0] = NewInstancesFromDense(src.attributes, len(trainingRows), rawTrainMatrix)
-	ret[1] = NewInstancesFromDense(src.attributes, len(testingRows), rawTestMatrix)
-	return ret
+
+	trainingRet := NewInstancesFromDense(src.attributes, len(trainingRows), rawTrainMatrix)
+	testRet := NewInstancesFromDense(src.attributes, len(testingRows), rawTestMatrix)
+	return trainingRet, testRet
 }
 
 // CountAttrValues returns the distribution of values of a given
