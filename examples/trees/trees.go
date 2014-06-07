@@ -32,7 +32,7 @@ func main () {
 	filt.Run(iris)
 
 	// Create a 60-40 training-test split
-	insts := base.InstancesTrainTestSplit(iris, 0.60)
+	trainData, testData := base.InstancesTrainTestSplit(iris, 0.60)
 
 	//
 	// First up, use ID3
@@ -41,14 +41,14 @@ func main () {
 	// (Parameter controls train-prune split.)
 
 	// Train the ID3 tree
-	tree.Fit(insts[0])
+	tree.Fit(trainData)
 
 	// Generate predictions
-	predictions := tree.Predict(insts[1])
+	predictions := tree.Predict(testData)
 
 	// Evaluate
 	fmt.Println("ID3 Performance")
-	cf := eval.GetConfusionMatrix(insts[1], predictions)
+	cf := eval.GetConfusionMatrix(testData, predictions)
 	fmt.Println(eval.GetSummary(cf))
 
 	//
@@ -57,19 +57,19 @@ func main () {
 
 	// Consider two randomly-chosen attributes
 	tree = trees.NewRandomTree(2)
-	tree.Fit(insts[0])
-	predictions = tree.Predict(insts[1])
+	tree.Fit(testData)
+	predictions = tree.Predict(testData)
 	fmt.Println("RandomTree Performance")
-	cf = eval.GetConfusionMatrix(insts[1], predictions)
+	cf = eval.GetConfusionMatrix(testData, predictions)
 	fmt.Println(eval.GetSummary(cf))
 
 	//
 	// Finally, Random Forests
 	//
 	tree = ensemble.NewRandomForest(100, 3)
-	tree.Fit(insts[0])
-	predictions = tree.Predict(insts[1])
+	tree.Fit(trainData)
+	predictions = tree.Predict(testData)
 	fmt.Println("RandomForest Performance")
-	cf = eval.GetConfusionMatrix(insts[1], predictions)
+	cf = eval.GetConfusionMatrix(testData, predictions)
 	fmt.Println(eval.GetSummary(cf))
 }
