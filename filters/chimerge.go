@@ -43,6 +43,21 @@ func (c *ChiMergeFilter) Build() {
 	}
 }
 
+// AddAllNumericAttributes adds every suitable attribute
+// to the ChiMergeFilter for discretisation
+func (b *ChiMergeFilter) AddAllNumericAttributes() {
+	for i := 0; i < b.Instances.Cols; i++ {
+		if i == b.Instances.ClassIndex {
+			continue
+		}
+		attr := b.Instances.GetAttr(i)
+		if attr.GetType() != base.Float64Type {
+			continue
+		}
+		b.Attributes = append(b.Attributes, i)
+	}
+}
+
 // Run discretises the set of Instances `on'
 //
 // IMPORTANT: ChiMergeFilter discretises in place.

@@ -5,8 +5,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/gonum/matrix/mat64"
 	"math/rand"
+
+	"github.com/gonum/matrix/mat64"
 )
 
 // SortDirection specifies sorting direction...
@@ -171,10 +172,11 @@ func NewInstancesFromDense(attrs []Attribute, rows int, mat *mat64.Dense) *Insta
 //
 // IMPORTANT: this function is only meaningful when prop is between 0.0 and 1.0.
 // Using any other values may result in odd behaviour.
-func InstancesTrainTestSplit(src *Instances, prop float64) [2](*Instances) {
+func InstancesTrainTestSplit(src *Instances, prop float64) (*Instances, *Instances) {
 	trainingRows := make([]int, 0)
 	testingRows := make([]int, 0)
 	numAttrs := len(src.attributes)
+	src.Shuffle()
 	for i := 0; i < src.Rows; i++ {
 		trainOrTest := rand.Intn(101)
 		if trainOrTest > int(100*prop) {
@@ -196,10 +198,10 @@ func InstancesTrainTestSplit(src *Instances, prop float64) [2](*Instances) {
 		rawTestMatrix.SetRow(i, rowDat)
 	}
 
-	var ret [2]*Instances
-	ret[0] = NewInstancesFromDense(src.attributes, len(trainingRows), rawTrainMatrix)
-	ret[1] = NewInstancesFromDense(src.attributes, len(testingRows), rawTestMatrix)
-	return ret
+
+	trainingRet := NewInstancesFromDense(src.attributes, len(trainingRows), rawTrainMatrix)
+	testRet := NewInstancesFromDense(src.attributes, len(testingRows), rawTestMatrix)
+	return trainingRet, testRet
 }
 
 // CountAttrValues returns the distribution of values of a given
@@ -273,6 +275,33 @@ func (inst *Instances) DecomposeOnAttributeValues(at Attribute) map[string]*Inst
 	return ret
 }
 
+func (inst *Instances) GetClassDistributionAfterSplit(at Attribute) map[string]map[string]int {
+
+	ret := make(map[string]map[string]int)
+
+	// Find the attribute we're decomposing on
+	attrIndex := inst.GetAttrIndex(at)
+	if attrIndex == -1 {
+		panic("Invalid attribute index")
+	}
+
+	// Get the class index
+	classAttr := inst.GetAttr(inst.ClassIndex)
+
+	for i := 0; i < inst.Rows; i++ {
+		splitVar := at.GetStringFromSysVal(inst.Get(i, attrIndex))
+		classVar := classAttr.GetStringFromSysVal(inst.Get(i, inst.ClassIndex))
+		if _, ok := ret[splitVar]; !ok {
+			ret[splitVar] = make(map[string]int)
+			i--
+			continue
+		}
+		ret[splitVar][classVar]++
+	}
+
+	return ret
+}
+
 // Get returns the system representation (float64) of the value
 // stored at the given row and col coordinate.
 func (inst *Instances) Get(row int, col int) float64 {
@@ -306,6 +335,20 @@ func (inst *Instances) GetClass(row int) string {
 	attr := inst.GetAttr(inst.ClassIndex)
 	val := inst.Get(row, inst.ClassIndex)
 	return attr.GetStringFromSysVal(val)
+}
+
+// GetClassDist returns a map containing the count of each
+// class type (indexed by the class' string representation)
+func (inst *Instances) GetClassDistribution() map[string]int {
+	ret := make(map[string]int)
+	attr := inst.GetAttr(inst.ClassIndex)
+	for i := 0; i < inst.Rows; i++ {
+		val := inst.Get(i, inst.ClassIndex)
+		cls := attr.GetStringFromSysVal(val)
+		ret[cls]++
+	}
+
+	return ret
 }
 
 func (Inst *Instances) GetClassAttrPtr() *Attribute {
@@ -465,7 +508,7 @@ func (inst *Instances) GeneratePredictionVector() *Instances {
 // Shuffle randomizes the row order in place
 func (inst *Instances) Shuffle() {
 	for i := 0; i < inst.Rows; i++ {
-		j := rand.Intn(inst.Rows)
+		j := rand.Intn(i + 1)
 		inst.swapRows(i, j)
 	}
 }

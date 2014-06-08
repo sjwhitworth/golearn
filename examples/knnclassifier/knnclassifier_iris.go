@@ -17,9 +17,7 @@ func main() {
 	cls := knn.NewKnnClassifier("euclidean", 2)
 
 	//Do a training-test split
-	trainTest := base.InstancesTrainTestSplit(rawData, 0.50)
-	trainData := trainTest[0]
-	testData := trainTest[1]
+	trainData, testData := base.InstancesTrainTestSplit(rawData, 0.50)
 	cls.Fit(trainData)
 
 	//Calculates the Euclidean distance and returns the most popular label
