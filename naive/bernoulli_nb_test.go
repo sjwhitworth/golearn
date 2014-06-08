@@ -1,7 +1,6 @@
 package naive
 
 import (
-    "math"
     "github.com/sjwhitworth/golearn/base"
     "testing"
     . "github.com/smartystreets/goconvey/convey"
@@ -29,12 +28,10 @@ func TestSimple(t *testing.T) {
         nb.Fit(trainingData)
 
         Convey("Check if Fit is working as expected", func() {
-            Convey("All log(prior) should be correctly calculated", func() {
-                logPriorBlue := nb.logClassPrior["blue"]
-                logPriorRed := nb.logClassPrior["red"]
-
-                So(logPriorBlue, ShouldAlmostEqual, math.Log(0.5))
-                So(logPriorRed, ShouldAlmostEqual, math.Log(0.5))
+            Convey("All data needed for prior should be correctly calculated", func() {
+                So(nb.classInstances["blue"], ShouldEqual, 2)
+                So(nb.classInstances["red"], ShouldEqual, 2)
+                So(nb.trainingInstances, ShouldEqual, 4)
             })
 
             Convey("'red' conditional probabilities should be correct", func() {
