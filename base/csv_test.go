@@ -76,9 +76,9 @@ func TestReadInstances(testEnv *testing.T) {
 		testEnv.Error(err)
 		return
 	}
-	row1 := inst.RowStr(0)
-	row2 := inst.RowStr(50)
-	row3 := inst.RowStr(100)
+	row1 := inst.RowString(0)
+	row2 := inst.RowString(50)
+	row3 := inst.RowString(100)
 
 	if row1 != "5.10 3.50 1.40 0.20 Iris-setosa" {
 		testEnv.Error(row1)
@@ -97,10 +97,11 @@ func TestReadAwkwardInsatnces(testEnv *testing.T) {
 		testEnv.Error(err)
 		return
 	}
-	if inst.GetAttr(0).GetType() != Float64Type {
+	attrs := inst.AllAttributes()
+	if attrs[0].GetType() != Float64Type {
 		testEnv.Error("Should be float!")
 	}
-	if inst.GetAttr(1).GetType() != CategoricalType {
+	if attrs[1].GetType() != CategoricalType {
 		testEnv.Error("Should be discrete!")
 	}
 }

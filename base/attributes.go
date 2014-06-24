@@ -1,7 +1,9 @@
 package base
 
-import "fmt"
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 const (
 	// CategoricalType is for Attributes which represent values distinctly.
@@ -25,12 +27,12 @@ type Attribute interface {
 	// representation. For example, a CategoricalAttribute with values
 	// ["iris-setosa", "iris-virginica"] would return the float64
 	// representation of 0 when given "iris-setosa".
-	GetSysValFromString(string) float64
+	GetSysValFromString(string) []byte
 	// Converts a given value from a system representation into a human
 	// representation. For example, a CategoricalAttribute with values
 	// ["iris-setosa", "iris-viriginica"] might return "iris-setosa"
 	// when given 0.0 as the argument.
-	GetStringFromSysVal(float64) string
+	GetStringFromSysVal([]byte) string
 	// Tests for equality with another Attribute. Other Attributes are
 	// considered equal if:
 	// * They have the same type (i.e. FloatAttribute <> CategoricalAttribute)
@@ -38,6 +40,10 @@ type Attribute interface {
 	// * If applicable, they have the same categorical values (though not
 	//   necessarily in the same order).
 	Equals(Attribute) bool
+	// Tests whether two Attributes can be represented in the same pond
+	// i.e. they're the same size, and their byte order makes them meaningful
+	// when considered together
+	Compatable(Attribute) bool
 }
 
 // FloatAttribute is an implementation which stores floating point
@@ -51,6 +57,11 @@ type FloatAttribute struct {
 // precision of 2 decimal places
 func NewFloatAttribute() *FloatAttribute {
 	return &FloatAttribute{"", 2}
+}
+
+func (Attr *FloatAttribute) Compatable(other Attribute) bool {
+	_, ok := other.(*FloatAttribute)
+	return ok
 }
 
 // Equals tests a FloatAttribute for equality with another Attribute.
@@ -92,13 +103,16 @@ func (Attr *FloatAttribute) String() string {
 }
 
 // CheckSysValFromString confirms whether a given rawVal can
-// be converted into a valid system representation.
-func (Attr *FloatAttribute) CheckSysValFromString(rawVal string) (float64, error) {
+// be converted into a valid system representation. If it can't,
+// the returned value is nil.
+func (Attr *FloatAttribute) CheckSysValFromString(rawVal string) ([]byte, error) {
 	f, err := strconv.ParseFloat(rawVal, 64)
 	if err != nil {
-		return 0.0, err
+		return nil, err
 	}
-	return f, nil
+
+	ret := PackFloatToBytes(f)
+	return ret, nil
 }
 
 // GetSysValFromString parses the given rawVal string to a float64 and returns it.
@@ -106,8 +120,8 @@ func (Attr *FloatAttribute) CheckSysValFromString(rawVal string) (float64, error
 // float64 happens to be a 1-to-1 mapping to the system representation.
 // IMPORTANT: This function panic()s if rawVal is not a valid float.
 // Use CheckSysValFromString to confirm.
-func (Attr *FloatAttribute) GetSysValFromString(rawVal string) float64 {
-	f, err := strconv.ParseFloat(rawVal, 64)
+func (Attr *FloatAttribute) GetSysValFromString(rawVal string) []byte {
+	f, err := Attr.CheckSysValFromString(rawVal)
 	if err != nil {
 		panic(err)
 	}
@@ -116,25 +130,10 @@ func (Attr *FloatAttribute) GetSysValFromString(rawVal string) float64 {
 
 // GetStringFromSysVal converts a given system value to to a string with two decimal
 // places of precision [TODO: revise this and allow more precision].
-func (Attr *FloatAttribute) GetStringFromSysVal(rawVal float64) string {
+func (Attr *FloatAttribute) GetStringFromSysVal(rawVal []byte) string {
+	f := UnpackBytesToFloat(rawVal)
 	formatString := fmt.Sprintf("%%.%df", Attr.Precision)
-	return fmt.Sprintf(formatString, rawVal)
-}
-
-// GetSysVal returns the system representation of userVal.
-//
-// Because FloatAttribute represents float64 types, this
-// just returns its argument.
-func (Attr *FloatAttribute) GetSysVal(userVal float64) float64 {
-	return userVal
-}
-
-// GetUsrVal returns the user representation of sysVal.
-//
-// Because FloatAttribute represents float64 types, this
-// just returns its argument.
-func (Attr *FloatAttribute) GetUsrVal(sysVal float64) float64 {
-	return sysVal
+	return fmt.Sprintf(formatString, f)
 }
 
 // CategoricalAttribute is an Attribute implementation
@@ -168,21 +167,21 @@ func (Attr *CategoricalAttribute) GetType() int {
 }
 
 // GetSysVal returns the system representation of userVal as an index into the Values slice
-// If the userVal can't be found, it returns -1.
-func (Attr *CategoricalAttribute) GetSysVal(userVal string) float64 {
+// If the userVal can't be found, it returns nothing.
+func (Attr *CategoricalAttribute) GetSysVal(userVal string) []byte {
 	for idx, val := range Attr.values {
 		if val == userVal {
-			return float64(idx)
+			return PackU64ToBytes(uint64(idx))
 		}
 	}
-	return -1
+	return nil
 }
 
 // GetUsrVal returns a human-readable representation of the given sysVal.
 //
 // IMPORTANT: this function doesn't check the boundaries of the array.
-func (Attr *CategoricalAttribute) GetUsrVal(sysVal float64) string {
-	idx := int(sysVal)
+func (Attr *CategoricalAttribute) GetUsrVal(sysVal []byte) string {
+	idx := UnpackBytesToU64(sysVal)
 	return Attr.values[idx]
 }
 
@@ -192,13 +191,13 @@ func (Attr *CategoricalAttribute) GetUsrVal(sysVal float64) string {
 //
 // IMPORTANT: If no system representation yet exists, this functions adds it.
 // If you need to determine whether rawVal exists: use GetSysVal and check
-// for a -1 return value.
+// for a zero-length return value.
 //
 // Example: if the CategoricalAttribute contains the values ["iris-setosa",
 // "iris-virginica"] and "iris-versicolor" is provided as the argument,
 // the Values slide becomes ["iris-setosa", "iris-virginica", "iris-versicolor"]
 // and 2.00 is returned as the system representation.
-func (Attr *CategoricalAttribute) GetSysValFromString(rawVal string) float64 {
+func (Attr *CategoricalAttribute) GetSysValFromString(rawVal string) []byte {
 	// Match in raw values
 	catIndex := -1
 	for i, s := range Attr.values {
@@ -211,7 +210,9 @@ func (Attr *CategoricalAttribute) GetSysValFromString(rawVal string) float64 {
 		Attr.values = append(Attr.values, rawVal)
 		catIndex = len(Attr.values) - 1
 	}
-	return float64(catIndex)
+
+	ret := PackU64ToBytes(uint64(catIndex))
+	return ret
 }
 
 // String returns a human-readable summary of this Attribute.
@@ -228,8 +229,8 @@ func (Attr *CategoricalAttribute) String() string {
 // IMPORTANT: This function calls panic() if the value is greater than
 // the length of the array.
 // TODO: Return a user-configurable default instead.
-func (Attr *CategoricalAttribute) GetStringFromSysVal(val float64) string {
-	convVal := int(val)
+func (Attr *CategoricalAttribute) GetStringFromSysVal(rawVal []byte) string {
+	convVal := int(UnpackBytesToU64(rawVal))
 	if convVal >= len(Attr.values) {
 		panic(fmt.Sprintf("Out of range: %d in %d", convVal, len(Attr.values)))
 	}
@@ -248,6 +249,27 @@ func (Attr *CategoricalAttribute) Equals(other Attribute) bool {
 		return false
 	}
 	if Attr.GetName() != attribute.GetName() {
+		return false
+	}
+
+	// Check that this CategoricalAttribute has the same
+	// values as the other, in the same order
+	if len(attribute.values) != len(Attr.values) {
+		return false
+	}
+
+	for i, a := range Attr.values {
+		if a != attribute.values[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (Attr *CategoricalAttribute) Compatable(other Attribute) bool {
+	attribute, ok := other.(*CategoricalAttribute)
+	if !ok {
 		return false
 	}
 
