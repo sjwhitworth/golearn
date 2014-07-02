@@ -1,34 +1,30 @@
-package linear_models 
+package linear_models
 
 import (
-	"testing"
+	"github.com/sjwhitworth/golearn/base"
 	. "github.com/smartystreets/goconvey/convey"
+	"testing"
 )
 
 func TestLogisticRegression(t *testing.T) {
 	Convey("Given labels, a classifier and data", t, func() {
-		X := [][]float64{
-			{0, 0, 0, 1},
-			{0, 0, 1, 0},
-			{0, 1, 0, 0},
-			{1, 0, 0, 0},
-		}
-		y := []float64{-1, -1, 1, 1}
+		X, err := base.ParseCSVToInstances("train.csv", false)
+		So(err, ShouldEqual, nil)
+		Y, err := base.ParseCSVToInstances("test.csv", false)
+		So(err, ShouldEqual, nil)
 		lr := NewLogisticRegression("l2", 1.0, 1e-6)
-		lr.Fit(X,y)
+		lr.Fit(X)
 
 		Convey("When predicting the label of first vector", func() {
-			pred_x := [][]float64{ {1,1,0,0} }
-			pred_y := lr.Predict(pred_x)
+			Z := lr.Predict(Y)
 			Convey("The result should be 1", func() {
-				So(pred_y[0], ShouldEqual, 1.0)
+				So(Z.Get(0, 0), ShouldEqual, 1.0)
 			})
 		})
 		Convey("When predicting the label of second vector", func() {
-			pred_x := [][]float64{ {0,0,1,1} }
-			pred_y := lr.Predict(pred_x)
+			Z := lr.Predict(Y)
 			Convey("The result should be -1", func() {
-				So(pred_y[0], ShouldEqual, -1.0)
+				So(Z.Get(1, 0), ShouldEqual, -1.0)
 			})
 		})
 	})
