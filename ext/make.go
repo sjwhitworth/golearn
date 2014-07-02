@@ -36,7 +36,7 @@ func main() {
 	os.Setenv("RM", cmd_rm)
 
 	log.Println("Compiling")
-	cmd := exec.Command(*cmd_make, "-C", "ext/liblinear_src")
+	cmd := exec.Command(*cmd_make, "-C", "liblinear_src")
 	cmd.Stdout = os.Stdout
 	err := cmd.Run()
 
@@ -45,17 +45,17 @@ func main() {
 		return
 	}
 
-	os.Mkdir("ext/lib", os.ModeDir | 0777)
+	os.Mkdir("lib", os.ModeDir | 0777)
 
 	log.Println("Installing libs")
 	if runtime.GOOS == "windows" {
-		err = copyFile("ext/liblinear_src/linear.dll", "ext/lib/linear.dll")
+		err = copyFile("liblinear_src/linear.dll", "ext/lib/linear.dll")
 		if err != nil {
 			log.Println(err.Error())
 			return
 		}
 	} else {
-		err = copyFile("ext/liblinear_src/liblinear.so", "ext/lib/liblinear.so")
+		err = copyFile("liblinear_src/liblinear.so", "ext/lib/liblinear.so")
 		if err != nil {
 			log.Println(err.Error())
 			return
@@ -63,9 +63,9 @@ func main() {
 	}
 
 	log.Println("Cleaning")
-	exec.Command(*cmd_make, "-C", "ext/liblinear_src", "clean").Run()
+	exec.Command(*cmd_make, "-C", "liblinear_src", "clean").Run()
 
-	lib_path, err := filepath.Abs("ext/lib")
+	lib_path, err := filepath.Abs("lib")
 	var target_envir string
 	switch runtime.GOOS {
 	case "darwin":
