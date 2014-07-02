@@ -49,13 +49,13 @@ func main() {
 
 	log.Println("Installing libs")
 	if runtime.GOOS == "windows" {
-		err = copyFile("liblinear_src/linear.dll", "ext/lib/linear.dll")
+		err = copyFile("liblinear_src/linear.dll", "lib/linear.dll")
 		if err != nil {
 			log.Println(err.Error())
 			return
 		}
 	} else {
-		err = copyFile("liblinear_src/liblinear.so", "ext/lib/liblinear.so")
+		err = copyFile("liblinear_src/liblinear.so", "lib/liblinear.so")
 		if err != nil {
 			log.Println(err.Error())
 			return
