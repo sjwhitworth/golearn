@@ -5,3 +5,9 @@
 .idea/
 *.iml
 *.iws
+
+# C/C++
+*.o
+*.a
+*.so
+*.dll
