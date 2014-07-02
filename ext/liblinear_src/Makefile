@@ -1,5 +1,12 @@
+# Platform detection
+ifeq ($(OS),Windows_NT)
+    ARTEFACT="linear.dll"
+else
+    ARTEFACT="liblinear.so"
+endif
+
 liblinear: tron.o linear.o blas.a	
-	$(CXX) -shared -o linear.dll tron.o linear.o blas/blas.a	
+	$(CXX) -shared -o $(ARTEFACT) tron.o linear.o blas/blas.a	
 
 tron.o: tron.cpp
 	$(CXX) -fpic -c tron.cpp -o tron.o

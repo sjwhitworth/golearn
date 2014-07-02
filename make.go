@@ -45,18 +45,21 @@ func main() {
 		return
 	}
 
-	os.Mkdir("ext/lib", os.ModeDir)
+	os.Mkdir("ext/lib", os.ModeDir | 0777)
 
 	log.Println("Installing libs")
-	err = copyFile("ext/liblinear_src/linear.dll", "ext/lib/linear.dll")
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-	err = copyFile("ext/lib/linear.dll", "ext/lib/liblinear.so")
-	if err != nil {
-		log.Println(err.Error())
-		return
+	if runtime.GOOS == "windows" {
+		err = copyFile("ext/liblinear_src/linear.dll", "ext/lib/linear.dll")
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+	} else {
+		err = copyFile("ext/liblinear_src/liblinear.so", "ext/lib/liblinear.so")
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
 	}
 
 	log.Println("Cleaning")
