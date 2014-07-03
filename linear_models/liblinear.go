@@ -2,7 +2,7 @@ package linear_models
 
 /*
 #cgo LDFLAGS: -llinear
-#cgo CFLAGS: -I ../ext/liblinear_src
+#cgo CFLAGS:
 #include <linear.h>
 */
 import "C"
@@ -28,9 +28,6 @@ const (
 	L1R_L2LOSS_SVC      = C.L1R_L2LOSS_SVC
 	L1R_LR              = C.L1R_LR
 	L2R_LR_DUAL         = C.L2R_LR_DUAL
-	L2R_L2LOSS_SVR      = C.L2R_L2LOSS_SVR
-	L2R_L2LOSS_SVR_DUAL = C.L2R_L2LOSS_SVR_DUAL
-	L2R_L1LOSS_SVR_DUAL = C.L2R_L1LOSS_SVR_DUAL
 )
 
 func NewParameter(solver_type int, C float64, eps float64) *Parameter {
@@ -41,7 +38,6 @@ func NewParameter(solver_type int, C float64, eps float64) *Parameter {
 	param.c_param.nr_weight = C.int(0)
 	param.c_param.weight_label = nil
 	param.c_param.weight = nil
-	param.c_param.p = C.double(0.1)
 
 	return &param
 }
@@ -52,9 +48,9 @@ func NewProblem(X [][]float64, y []float64, bias float64) *Problem {
 	prob.c_prob.n = C.int(len(X[0]) + 1)
 
 	prob.c_prob.x = convert_features(X, bias)
-	c_y := make([]C.double, len(y))
+	c_y := make([]C.int, len(y))
 	for i := 0; i < len(y); i += 1 {
-		c_y[i] = C.double(y[i])
+		c_y[i] = C.int(y[i])
 	}
 	prob.c_prob.y = &c_y[0]
 	prob.c_prob.bias = C.double(-1)
