@@ -6,7 +6,7 @@ go:
  - tip
 before_install:
  - sudo apt-get update -qq
- - sudo apt-get install -qq libatlas-base-dev
+ - sudo apt-get install -qq libatlas-base-dev liblinear-dev
 install:
  - go get github.com/smartystreets/goconvey/convey
  - go get -v ./...

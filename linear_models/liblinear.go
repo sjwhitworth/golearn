@@ -1,7 +1,7 @@
 package linear_models
 
 /*
-#cgo LDFLAGS: -L ../ext/lib -llinear
+#cgo LDFLAGS: -llinear
 #cgo CFLAGS: -I ../ext/liblinear_src
 #include <linear.h>
 */
