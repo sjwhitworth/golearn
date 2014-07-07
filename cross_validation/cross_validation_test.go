@@ -1,61 +1,76 @@
 package cross_validation
 
 import (
-	//. "github.com/smartystreets/goconvey/convey"
-	mat "github.com/gonum/matrix/mat64"
-	"math/rand"
+	. "github.com/smartystreets/goconvey/convey"
+	mat64 "github.com/gonum/matrix/mat64"
 	"testing"
-	"time"
+	"sync"
 )
 
-var (
-	flatValues, flatLabels []float64
-	values, labels         *mat.Dense
-)
+func TestShuffleMatrix(t *testing.T) {
+	var vectorX, vectorY *mat64.Dense
 
-func init() {
-	flatValues = make([]float64, 80)
-	flatLabels = make([]float64, 20)
+	Convey("Given two equal vectors", t, func() {
+			vectorX = mat64.NewDense(3, 1, []float64{1, 2, 3})
+			vectorY = mat64.DenseCopyOf(vectorX)
 
-	for i := 0; i < 80; i++ {
-		flatValues[i] = float64(i + 1)
-		// Replaces labels four times per run but who cares.
-		flatLabels[int(i/4)] = float64(rand.Intn(2))
-	}
+			Convey("After shuffling", func() {
+					wg := new(sync.WaitGroup)
+					wg.Add(1)
+					shuffleMatrix(vectorY, 0, wg)
+					wg.Wait()
+					result := vectorX.Equals(vectorY)
 
-	values = mat.NewDense(20, 4, flatValues)
-	labels = mat.NewDense(20, 1, flatLabels)
+					Convey("The vectors should be different", func() {
+							So(result, ShouldNotEqual, true)
+						})
+				})
+
+		})
 }
 
-func TestTrainTrainTestSplit(t *testing.T) {
-	nolab1, err := TrainTestSplit(4, nil, values)
-	if err != nil {
-		t.Error(err)
+func TestTrainTestSplit(t *testing.T) {
+	data := make([]float64, 100)
+	labels := make([]float64, 20)
+
+	for i := 0; i < 100; i++ {
+		data[i] = float64(i)
+		labels[i/5] = float64(i-4)
 	}
 
-	// Make sure the random generator gets a new seed (time).
-	time.Sleep(time.Second)
+	Convey("Given a data and a labels matrix", t, func() {
+			dataMatrix := mat64.NewDense(20, 5, data)
+			labelMatrix := mat64.NewDense(20, 1, labels)
 
-	nolab2, _ := TrainTestSplit(4, nil, values)
-	if nolab1[0].Equals(nolab2[0]) {
-		t.Errorf("Shuffle with different seed returned same matrix")
-	}
+			Convey("After splitting into 15 training and 5 testing instances without shuffling", func() {
+					newData, _, _ := TrainTestSplit(5, nil, dataMatrix, labelMatrix)
 
-	nolab1, _ = TrainTestSplit(4, 1, values)
-	nolab2, _ = TrainTestSplit(4, 1, values)
-	// Comparing the determinants does not guarantee uniqueness, but it will do for now.
-	if !nolab1[0].Equals(nolab2[0]) {
-		t.Errorf("Shuffle with same seed returned different matrix")
-	}
+					Convey("First 15 items of the original data matrix should equal new data matrix", func() {
+							So(dataMatrix.RawMatrix().Data[:75], ShouldResemble, newData[0].RawMatrix().Data)
+						})
 
-	// Same thing for data with labels.
-	lab1, err := TrainTestSplit(0.1, 10, values, labels)
-	if err != nil {
-		t.Error(err)
-	}
+				})
+			Convey("After splitting into 15 training and 5 testing instances with shuffling", func() {
+					newData, newLabels, _ := TrainTestSplit(5, 99, dataMatrix, labelMatrix)
 
-	lab2, _ := TrainTestSplit(0.1, 10, values, labels)
-	if !lab1[0].Equals(lab2[0]) {
-		t.Errorf("Shuffle with same seed returned different determinants")
-	}
+					Convey("First 15 items of the original data matrix should not equal new data matrix", func() {
+							So(dataMatrix.RawMatrix().Data[:75], ShouldNotResemble, newData[0].RawMatrix().Data)
+						})
+
+					Convey("First element of every row aligns with labels", func() {
+							for i, v := range newLabels[0].RawMatrix().Data {
+								So(newData[0].At(i, 0), ShouldEqual, v)
+							}
+						})
+
+					Convey("After shuffling the same matrix with the same seed", func() {
+							newestData, _, _ := TrainTestSplit(5, 99, dataMatrix, labelMatrix)
+
+							Convey("First 15 items of the new data matrix should equal newest data matrix", func() {
+									So(newData[0].RawMatrix().Data[:75], ShouldResemble, newestData[0].RawMatrix().Data)
+								})
+						})
+				})
+		})
+
 }

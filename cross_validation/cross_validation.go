@@ -1,96 +1,114 @@
 package cross_validation
 
 import (
-	"fmt"
-	mat "github.com/gonum/matrix/mat64"
+	mat64 "github.com/gonum/matrix/mat64"
 	"math/rand"
+	"fmt"
 	"sync"
-	"time"
 )
 
-func shuffleMatrix(returnDatasets []*mat.Dense, dataset mat.Matrix, testSize int, seed int64, wg *sync.WaitGroup) {
+// shuffleMatrix can be used to shuffle any Matrix type (including DenseMatrix and Vec).
+// It accepts a matrix and a seed. The latter is used to repeat shuffles.
+// All changes to the matrix are made in place.
+func shuffleMatrix(vector *mat64.Dense, seed int64, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	// Create repeatable random number generator.
 	numGen := rand.New(rand.NewSource(seed))
 
-	// We don't want to alter the original dataset.
-	shuffledSet := mat.DenseCopyOf(dataset)
-	rowCount, colCount := shuffledSet.Dims()
-	temp := make([]float64, colCount)
-	
+	rows, cols := vector.Dims()
+	temp := make([]float64, cols)
+
 	// Fisher–Yates shuffle
-	for i := 0; i < rowCount; i++ {
+	for i := 0; i < rows; i++ {
 		j := numGen.Intn(i+1)
 		if j != i {
-			// Make a "hard" copy to avoid pointer craziness.
-			copy(temp, shuffledSet.RowView(i))
-			shuffledSet.SetRow(i, shuffledSet.RowView(j))
-			shuffledSet.SetRow(j, temp)
+			// Replace all values on that row.
+			copy(temp, vector.RowView(i))
+			vector.SetRow(i, vector.RowView(j))
+			vector.SetRow(j, temp)
 		}
 	}
-	trainSize := rowCount - testSize
-	returnDatasets[0] = mat.NewDense(trainSize, colCount, shuffledSet.RawMatrix().Data[:trainSize*colCount])
-	returnDatasets[1] = mat.NewDense(testSize, colCount, shuffledSet.RawMatrix().Data[trainSize*colCount:])
-
-	wg.Done()
 }
 
-// TrainTestSplit splits input DenseMatrix into subsets for testing.
-// The function expects a test size number (int) or percentage (float64), and a random state or nil to get "random" shuffle.
-// It returns a list containing the train-test split and an error status.
-func TrainTestSplit(size interface{}, randomState interface{}, datasets ...*mat.Dense) ([]*mat.Dense, error) {
-	// Get number of instances (rows).
-	instanceCount, _ := datasets[0].Dims()
+// TrainTestSplit breaks the dataset data into training and testing groups.
+// The inputs are the size of the test data (number of items of percentage),
+//  an integer to be used as the random state or a nil if no shuffling
+// of data is required, and the data and optional label matrices.
+// The method returns two arrays. The first contains the training and
+// testing subsets, and the second the corresponding labels, or nil for
+// unlabeled data.
+func TrainTestSplit(size interface{}, randomState interface{}, data ...*mat64.Dense) ([]*mat64.Dense, []*mat64.Dense, error) {
+	datasetCount := len(data)
 
-	// Input should be one or two matrices.
-	dataCount := len(datasets)
-	if dataCount > 2 {
-		return nil, fmt.Errorf("Expected 1 or 2 datasets, got %d\n", dataCount)
+	if datasetCount > 2 {
+		return nil, nil, fmt.Errorf("only one data and an optional label matrix are allowed")
 	}
 
-	if dataCount == 2 {
-		// Test for consistency.
-		labelCount, labelFeatures := datasets[1].Dims()
+	// Get number of instances (rows).
+	instanceCount, featureCount := data[0].Dims()
+
+	// Create temporary matrices so the original matrices don't get shuffled.
+	returnData := make([]*mat64.Dense, 2)
+	tempDataMatrix := mat64.DenseCopyOf(data[0])
+	var tempLabelMatrix *mat64.Dense
+	var returnLabels []*mat64.Dense
+
+	// Check for data compatibility.
+	if datasetCount == 2 {
+		labelCount, labelCols := data[1].Dims()
 		if labelCount != instanceCount {
-			return nil, fmt.Errorf("Data and labels must have the same number of instances")
-		} else if labelFeatures != 1 {
-			return nil, fmt.Errorf("Label matrix must have single feature")
+			return nil, nil, fmt.Errorf("incompatible data and label matrices")
+		} else if labelCols != 1 {
+			return nil, nil, fmt.Errorf("label matrix must have single column")
+		} else {
+			// Create label placeholders.
+			tempLabelMatrix = mat64.DenseCopyOf(data[1])
+			returnLabels = make([]*mat64.Dense, 2)
 		}
 	}
 
+	// Determine train/test partitions.
 	var testSize int
 	switch size := size.(type) {
-		// If size is an integer, treat it as the test data instance count.
 	case int:
+		// If size is an integer, treat it as the test data instance count.
 		testSize = size
 	case float64:
 		// If size is a float, treat it as a percentage of the instances to be allocated to the test set.
 		testSize = int(float64(instanceCount)*size + 0.5)
 	default:
-		return nil, fmt.Errorf("Expected a test instance count (int) or percentage (float64)")
+		return nil, nil, fmt.Errorf("expected a test size (int) or percentage (float64)")
+	}
+	trainSize := instanceCount - testSize
+
+	// Make sure partitions have proper sizes.
+	if trainSize > instanceCount || trainSize < 0 {
+		return nil, nil, fmt.Errorf("test size out of bounds")
 	}
 
-	var randSeed int64
-	// Create a deterministic shuffle, or a "random" one based on current time.
+	// Create a deterministic shuffle.
 	if seed, ok := randomState.(int); ok {
-		randSeed = int64(seed)
-	} else {
-		// Use seconds since epoch as seed
-		randSeed = time.Now().Unix()
+		wg := new(sync.WaitGroup)
+		wg.Add(1)
+		go shuffleMatrix(tempDataMatrix, int64(seed), wg)
+
+		if datasetCount == 2 {
+			wg.Add(1)
+			go shuffleMatrix(tempLabelMatrix, int64(seed), wg)
+		}
+		wg.Wait()
 	}
 
-	// Wait group for goroutine syncronization.
-	wg := new(sync.WaitGroup)
-	wg.Add(dataCount)
+	returnData[0] = mat64.NewDense(trainSize, featureCount, tempDataMatrix.RawMatrix().Data[:trainSize*featureCount])
+	returnData[1] = mat64.NewDense(testSize, featureCount, tempDataMatrix.RawMatrix().Data[trainSize*featureCount:])
 
-	// Return slice will hold training and test data and optional labels matrix.
-	returnDatasets := make([]*mat.Dense, 2*dataCount)
-
-	for i, dataset := range datasets {
-		// Send proper returnDataset slice.
-		// This is needed so goroutine doesn't mess up the expected return order.
-		// Perhaps returning a map is a better solution...
-		go shuffleMatrix(returnDatasets[i:i+2], dataset, testSize, randSeed, wg)
+	if datasetCount == 2 {
+		returnLabels[0] = mat64.NewDense(trainSize, 1, tempLabelMatrix.RawMatrix().Data[:trainSize])
+		returnLabels[1] = mat64.NewDense(testSize, 1, tempLabelMatrix.RawMatrix().Data[trainSize:])
 	}
-	wg.Wait()
 
-	return returnDatasets, nil
+	return returnData, returnLabels, nil
 }
+
+
