@@ -15,9 +15,8 @@ func NewCranberra() *Cranberra {
 func cranberraDistanceStep(num float64, denom float64) float64 {
 	if num == .0 && denom == .0 {
 		return .0
-	} else {
-		return num / denom
 	}
+	return num / denom
 }
 
 func (self *Cranberra) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {

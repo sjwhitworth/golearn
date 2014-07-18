@@ -156,18 +156,18 @@ func (d *DecisionTreeNode) Prune(using *base.Instances) {
 	// If you're a leaf, you're already pruned
 	if d.Children == nil {
 		return
-	} else {
-		if d.SplitAttr == nil {
-			return
+	}
+	if d.SplitAttr == nil {
+		return
+	}
+
+	// Recursively prune children of this node
+	sub := using.DecomposeOnAttributeValues(d.SplitAttr)
+	for k := range d.Children {
+		if sub[k] == nil {
+			continue
 		}
-		// Recursively prune children of this node
-		sub := using.DecomposeOnAttributeValues(d.SplitAttr)
-		for k := range d.Children {
-			if sub[k] == nil {
-				continue
-			}
-			d.Children[k].Prune(sub[k])
-		}
+		d.Children[k].Prune(sub[k])
 	}
 
 	// Get a baseline accuracy
