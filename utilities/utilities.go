@@ -32,7 +32,7 @@ func SortIntMap(m map[int]float64) []int {
 	sm.m = m
 	sm.s = make([]int, len(m))
 	i := 0
-	for key, _ := range m {
+	for key := range m {
 		sm.s[i] = key
 		i++
 	}
@@ -62,7 +62,7 @@ func SortStringMap(m map[string]int) []string {
 	sm.m = m
 	sm.s = make([]string, len(m))
 	i := 0
-	for key, _ := range m {
+	for key := range m {
 		sm.s[i] = key
 		i++
 	}

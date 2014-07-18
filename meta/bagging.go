@@ -153,7 +153,7 @@ func (b *BaggedModel) Predict(from *base.Instances) *base.Instances {
 	}
 
 	// Send all the models to the workers for prediction
-	for i, _ := range b.Models {
+	for i := range b.Models {
 		processpipe <- i
 	}
 	close(processpipe) // Finished sending models to be predicted
