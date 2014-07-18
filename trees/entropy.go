@@ -12,7 +12,7 @@ import (
 type InformationGainRuleGenerator struct {
 }
 
-// GetSplitAttribute returns the non-class Attribute which maximises the
+// GenerateSplitAttribute returns the non-class Attribute which maximises the
 // information gain.
 //
 // IMPORTANT: passing a base.Instances with no Attributes other than the class
@@ -27,7 +27,7 @@ func (r *InformationGainRuleGenerator) GenerateSplitAttribute(f *base.Instances)
 	return r.GetSplitAttributeFromSelection(allAttributes, f)
 }
 
-// GetSplitAttribute from selection returns the class Attribute which maximises
+// GetSplitAttributeFromSelection returns the class Attribute which maximises
 // the information gain amongst consideredAttributes
 //
 // IMPORTANT: passing a zero-length consideredAttributes parameter will panic()

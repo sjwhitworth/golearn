@@ -66,7 +66,7 @@ func NewRandomTree(attrs int) *RandomTree {
 	}
 }
 
-// Train builds a RandomTree suitable for prediction
+// Fit builds a RandomTree suitable for prediction
 func (rt *RandomTree) Fit(from *base.Instances) {
 	rt.Root = InferID3Tree(from, rt.Rule)
 }

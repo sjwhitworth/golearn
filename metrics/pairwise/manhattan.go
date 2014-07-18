@@ -12,9 +12,9 @@ func NewManhattan() *Manhattan {
 	return &Manhattan{}
 }
 
-// Manhattan distance, also known as L1 distance.
-// Compute sum of absolute values of elements.
-func (self *Manhattan) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+// Distance computes the Manhattan distance, also known as L1 distance.
+// == the sum of the absolute values of elements.
+func (m *Manhattan) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	r1, c1 := vectorX.Dims()
 	r2, c2 := vectorY.Dims()
 	if r1 != r2 || c1 != c2 {

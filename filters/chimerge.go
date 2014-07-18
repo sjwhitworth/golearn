@@ -21,7 +21,7 @@ type ChiMergeFilter struct {
 	_Trained     bool
 }
 
-// Create a ChiMergeFilter with some helpful intialisations.
+// NewChiMergeFilter creates a ChiMergeFilter with some helpful initialisations.
 func NewChiMergeFilter(inst *base.Instances, significance float64) ChiMergeFilter {
 	return ChiMergeFilter{
 		make([]int, 0),
@@ -45,16 +45,16 @@ func (c *ChiMergeFilter) Build() {
 
 // AddAllNumericAttributes adds every suitable attribute
 // to the ChiMergeFilter for discretisation
-func (b *ChiMergeFilter) AddAllNumericAttributes() {
-	for i := 0; i < b.Instances.Cols; i++ {
-		if i == b.Instances.ClassIndex {
+func (c *ChiMergeFilter) AddAllNumericAttributes() {
+	for i := 0; i < c.Instances.Cols; i++ {
+		if i == c.Instances.ClassIndex {
 			continue
 		}
-		attr := b.Instances.GetAttr(i)
+		attr := c.Instances.GetAttr(i)
 		if attr.GetType() != base.Float64Type {
 			continue
 		}
-		b.Attributes = append(b.Attributes, i)
+		c.Attributes = append(c.Attributes, i)
 	}
 }
 
@@ -110,7 +110,7 @@ type FrequencyTableEntry struct {
 }
 
 func (t *FrequencyTableEntry) String() string {
-	return fmt.Sprintf("%.2f %s", t.Value, t.Frequency)
+	return fmt.Sprintf("%.2f %v", t.Value, t.Frequency)
 }
 
 func ChiMBuildFrequencyTable(attr int, inst *base.Instances) []*FrequencyTableEntry {
@@ -129,7 +129,7 @@ func ChiMBuildFrequencyTable(attr int, inst *base.Instances) []*FrequencyTableEn
 		for _, entry := range ret {
 			if entry.Value == valueConv {
 				found = true
-				entry.Frequency[class] += 1
+				entry.Frequency[class]++
 			}
 		}
 		if !found {

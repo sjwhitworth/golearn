@@ -20,7 +20,7 @@ func TestChiMFreqTable(testEnv *testing.T) {
 		testEnv.Error("Wrong frequency")
 	}
 	if freq[0].Frequency["c3"] != 4 {
-		testEnv.Error("Wrong frequency %s", freq[1])
+		testEnv.Errorf("Wrong frequency %s", freq[1])
 	}
 	if freq[10].Frequency["c2"] != 1 {
 		testEnv.Error("Wrong frequency")
@@ -111,7 +111,7 @@ func TestChiMerge2(testEnv *testing.T) {
 	inst.Sort(base.Ascending, attrs)
 	freq := chiMerge(inst, 0, 0.90, 0, inst.Rows)
 	if len(freq) != 5 {
-		testEnv.Error("Wrong length (%d)", len(freq))
+		testEnv.Errorf("Wrong length (%d)", len(freq))
 		testEnv.Error(freq)
 	}
 	if freq[0].Value != 4.3 {

@@ -2,7 +2,7 @@ package optimisation
 
 import "github.com/gonum/matrix/mat64"
 
-// Batch gradient descent finds the local minimum of a function.
+// BatchGradientDescent finds the local minimum of a function.
 // See http://en.wikipedia.org/wiki/Gradient_descent for more details.
 func BatchGradientDescent(x, y, theta *mat64.Dense, alpha float64, epoch int) *mat64.Dense {
 	m, _ := y.Dims()
@@ -35,7 +35,7 @@ func BatchGradientDescent(x, y, theta *mat64.Dense, alpha float64, epoch int) *m
 	return theta
 }
 
-// Stochastic gradient descent updates the parameters of theta on a random row selection from a matrix.
+// StochasticGradientDescent updates the parameters of theta on a random row selection from a matrix.
 // It is faster as it does not compute the cost function over the entire dataset every time.
 // It instead calculates the error parameters over only one row of the dataset at a time.
 // In return, there is a trade off for accuracy. This is minimised by running multiple SGD processes
