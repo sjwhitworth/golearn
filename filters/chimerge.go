@@ -110,7 +110,7 @@ type FrequencyTableEntry struct {
 }
 
 func (t *FrequencyTableEntry) String() string {
-	return fmt.Sprintf("%.2f %s", t.Value, t.Frequency)
+	return fmt.Sprintf("%.2f %v", t.Value, t.Frequency)
 }
 
 func ChiMBuildFrequencyTable(attr int, inst *base.Instances) []*FrequencyTableEntry {
