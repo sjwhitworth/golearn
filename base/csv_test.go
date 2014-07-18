@@ -28,7 +28,7 @@ func TestParseCCSVGetAttributes(testEnv *testing.T) {
 		testEnv.Errorf("Final attribute should be categorical, %s", attrs[4])
 	}
 	if attrs[4].GetName() != "Species" {
-		testEnv.Errorf(attrs[4])
+		testEnv.Error(attrs[4])
 	}
 }
 
