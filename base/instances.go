@@ -319,7 +319,7 @@ func (inst *Instances) GetRowVector(row int) []float64 {
 	return inst.storage.RowView(row)
 }
 
-// GetRowVector returns a row of system representation
+// GetRowVectorWithoutClass returns a row of system representation
 // values at the given row index, excluding the class attribute
 func (inst *Instances) GetRowVectorWithoutClass(row int) []float64 {
 	rawRow := make([]float64, inst.Cols)
@@ -336,7 +336,7 @@ func (inst *Instances) GetClass(row int) string {
 	return attr.GetStringFromSysVal(val)
 }
 
-// GetClassDist returns a map containing the count of each
+// GetClassDistribution returns a map containing the count of each
 // class type (indexed by the class' string representation)
 func (inst *Instances) GetClassDistribution() map[string]int {
 	ret := make(map[string]int)

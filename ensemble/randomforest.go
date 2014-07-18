@@ -1,10 +1,10 @@
 package ensemble
 
 import (
+	"fmt"
 	base "github.com/sjwhitworth/golearn/base"
 	meta "github.com/sjwhitworth/golearn/meta"
 	trees "github.com/sjwhitworth/golearn/trees"
-	"fmt"
 )
 
 // RandomForest classifies instances using an ensemble
@@ -16,7 +16,7 @@ type RandomForest struct {
 	Model      *meta.BaggedModel
 }
 
-// NewRandomForests generates and return a new random forests
+// NewRandomForest generates and return a new random forests
 // forestSize controls the number of trees that get built
 // features controls the number of features used to build each tree
 func NewRandomForest(forestSize int, features int) *RandomForest {
@@ -29,7 +29,7 @@ func NewRandomForest(forestSize int, features int) *RandomForest {
 	return ret
 }
 
-// Train builds the RandomForest on the specified instances
+// Fit builds the RandomForest on the specified instances
 func (f *RandomForest) Fit(on *base.Instances) {
 	f.Model = new(meta.BaggedModel)
 	f.Model.RandomFeatures = f.Features

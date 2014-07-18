@@ -21,7 +21,7 @@ type ChiMergeFilter struct {
 	_Trained     bool
 }
 
-// Create a ChiMergeFilter with some helpful intialisations.
+// NewChiMergeFilter creates a ChiMergeFilter with some helpful initialisations.
 func NewChiMergeFilter(inst *base.Instances, significance float64) ChiMergeFilter {
 	return ChiMergeFilter{
 		make([]int, 0),

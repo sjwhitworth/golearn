@@ -43,7 +43,7 @@ func ParseCSVGetAttributes(filepath string, hasHeaders bool) []Attribute {
 	return attrs
 }
 
-// ParseCsvSniffAttributeNames returns a slice containing the top row
+// ParseCSVSniffAttributeNames returns a slice containing the top row
 // of a given CSV file, or placeholders if hasHeaders is false.
 func ParseCSVSniffAttributeNames(filepath string, hasHeaders bool) []string {
 	file, err := os.Open(filepath)

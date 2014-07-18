@@ -79,7 +79,7 @@ func (b *BaggedModel) AddModel(m base.Classifier) {
 	b.Models = append(b.Models, m)
 }
 
-// Train generates and trains each model on a randomised subset of
+// Fit generates and trains each model on a randomised subset of
 // Instances.
 func (b *BaggedModel) Fit(from *base.Instances) {
 	var wait sync.WaitGroup

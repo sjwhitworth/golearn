@@ -234,7 +234,7 @@ type ID3DecisionTree struct {
 	PruneSplit float64
 }
 
-// Returns a new ID3DecisionTree with the specified test-prune
+// NewID3DecisionTree returns a new ID3DecisionTree with the specified test-prune
 // ratio. Of the ratio is less than 0.001, the tree isn't pruned
 func NewID3DecisionTree(prune float64) *ID3DecisionTree {
 	return &ID3DecisionTree{

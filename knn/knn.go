@@ -1,4 +1,4 @@
-// Package KNN implements a K Nearest Neighbors object, capable of both classification
+// Package knn implements a K Nearest Neighbors object, capable of both classification
 // and regression. It accepts data in the form of a slice of float64s, which are then reshaped
 // into a X by Y matrix.
 package knn
@@ -10,7 +10,7 @@ import (
 	util "github.com/sjwhitworth/golearn/utilities"
 )
 
-// A KNN Classifier. Consists of a data matrix, associated labels in the same order as the matrix, and a distance function.
+// A KNNClassifier consists of a data matrix, associated labels in the same order as the matrix, and a distance function.
 // The accepted distance functions at this time are 'euclidean' and 'manhattan'.
 type KNNClassifier struct {
 	base.BaseEstimator
@@ -19,7 +19,7 @@ type KNNClassifier struct {
 	NearestNeighbours int
 }
 
-// Returns a new classifier
+// NewKnnClassifier returns a new classifier
 func NewKnnClassifier(distfunc string, neighbours int) *KNNClassifier {
 	KNN := KNNClassifier{}
 	KNN.DistanceFunc = distfunc
@@ -27,12 +27,12 @@ func NewKnnClassifier(distfunc string, neighbours int) *KNNClassifier {
 	return &KNN
 }
 
-// Train stores the training data for llater
+// Fit stores the training data for later
 func (KNN *KNNClassifier) Fit(trainingData *base.Instances) {
 	KNN.TrainingData = trainingData
 }
 
-// Returns a classification for the vector, based on a vector input, using the KNN algorithm.
+// PredictOne returns a classification for the vector, based on a vector input, using the KNN algorithm.
 // See http://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm.
 func (KNN *KNNClassifier) PredictOne(vector []float64) string {
 
@@ -95,14 +95,14 @@ func (KNN *KNNClassifier) Predict(what *base.Instances) *base.Instances {
 	return ret
 }
 
-//A KNN Regressor. Consists of a data matrix, associated result variables in the same order as the matrix, and a name.
+// A KNNRegressor consists of a data matrix, associated result variables in the same order as the matrix, and a name.
 type KNNRegressor struct {
 	base.BaseEstimator
 	Values       []float64
 	DistanceFunc string
 }
 
-// Mints a new classifier.
+// NewKnnRegressor mints a new classifier.
 func NewKnnRegressor(distfunc string) *KNNRegressor {
 	KNN := KNNRegressor{}
 	KNN.DistanceFunc = distfunc
@@ -119,7 +119,6 @@ func (KNN *KNNRegressor) Fit(values []float64, numbers []float64, rows int, cols
 }
 
 func (KNN *KNNRegressor) Predict(vector *mat64.Dense, K int) float64 {
-
 	// Get the number of rows
 	rows, _ := KNN.Data.Dims()
 	rownumbers := make(map[int]float64)

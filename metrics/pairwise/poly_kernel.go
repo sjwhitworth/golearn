@@ -10,12 +10,12 @@ type PolyKernel struct {
 	degree int
 }
 
-// Return a d-degree polynomial kernel
+// NewPolyKernel returns a d-degree polynomial kernel
 func NewPolyKernel(degree int) *PolyKernel {
 	return &PolyKernel{degree: degree}
 }
 
-// Compute inner product through kernel trick
+// InnerProduct computes the inner product through a kernel trick
 // K(x, y) = (x^T y + 1)^d
 func (self *PolyKernel) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	result := vectorX.Dot(vectorY)
@@ -24,7 +24,7 @@ func (self *PolyKernel) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense)
 	return result
 }
 
-// Compute distance under the polynomial kernel, maybe no need.
+// Distance computes distance under the polynomial kernel (maybe not needed?)
 func (self *PolyKernel) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	subVector := mat64.NewDense(0, 0, nil)
 	subVector.Sub(vectorX, vectorY)
