@@ -350,13 +350,13 @@ func (inst *Instances) GetClassDistribution() map[string]int {
 	return ret
 }
 
-func (Inst *Instances) GetClassAttrPtr() *Attribute {
-	attr := Inst.GetAttr(Inst.ClassIndex)
+func (inst *Instances) GetClassAttrPtr() *Attribute {
+	attr := inst.GetAttr(inst.ClassIndex)
 	return &attr
 }
 
-func (Inst *Instances) GetClassAttr() Attribute {
-	return Inst.GetAttr(Inst.ClassIndex)
+func (inst *Instances) GetClassAttr() Attribute {
+	return inst.GetAttr(inst.ClassIndex)
 }
 
 //
