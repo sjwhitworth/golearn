@@ -142,7 +142,7 @@ func NewInstances(attrs []Attribute, rows int) *Instances {
 func CheckNewInstancesFromRaw(attrs []Attribute, rows int, data []float64) error {
 	size := rows * len(attrs)
 	if size < len(data) {
-		return errors.New("base: data length is larger than the rows * attribute space.")
+		return errors.New("base: data length is larger than the rows * attribute space")
 	} else if size > len(data) {
 		return errors.New("base: data is smaller than the rows * attribute space")
 	}
