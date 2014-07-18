@@ -13,18 +13,18 @@ func NewEuclidean() *Euclidean {
 }
 
 // InnerProduct computes a Eucledian inner product.
-func (self *Euclidean) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+func (e *Euclidean) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	result := vectorX.Dot(vectorY)
 
 	return result
 }
 
 // Distance computes Euclidean distance (also known as L2 distance).
-func (self *Euclidean) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+func (e *Euclidean) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	subVector := mat64.NewDense(0, 0, nil)
 	subVector.Sub(vectorX, vectorY)
 
-	result := self.InnerProduct(subVector, subVector)
+	result := e.InnerProduct(subVector, subVector)
 
 	return math.Sqrt(result)
 }

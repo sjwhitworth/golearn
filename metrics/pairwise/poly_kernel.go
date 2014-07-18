@@ -17,18 +17,18 @@ func NewPolyKernel(degree int) *PolyKernel {
 
 // InnerProduct computes the inner product through a kernel trick
 // K(x, y) = (x^T y + 1)^d
-func (self *PolyKernel) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+func (p *PolyKernel) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	result := vectorX.Dot(vectorY)
-	result = math.Pow(result+1, float64(self.degree))
+	result = math.Pow(result+1, float64(p.degree))
 
 	return result
 }
 
 // Distance computes distance under the polynomial kernel (maybe not needed?)
-func (self *PolyKernel) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+func (p *PolyKernel) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	subVector := mat64.NewDense(0, 0, nil)
 	subVector.Sub(vectorX, vectorY)
-	result := self.InnerProduct(subVector, subVector)
+	result := p.InnerProduct(subVector, subVector)
 
 	return math.Sqrt(result)
 }

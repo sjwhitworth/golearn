@@ -19,7 +19,7 @@ func cranberraDistanceStep(num float64, denom float64) float64 {
 	return num / denom
 }
 
-func (self *Cranberra) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+func (c *Cranberra) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	r1, c1 := vectorX.Dims()
 	r2, c2 := vectorY.Dims()
 	if r1 != r2 || c1 != c2 {

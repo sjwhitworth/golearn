@@ -17,11 +17,11 @@ func NewRBFKernel(gamma float64) *RBFKernel {
 
 // InnerProduct computes the inner product through a kernel trick
 // K(x, y) = exp(-gamma * ||x - y||^2)
-func (self *RBFKernel) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
+func (r *RBFKernel) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 	euclidean := NewEuclidean()
 	distance := euclidean.Distance(vectorX, vectorY)
 
-	result := math.Exp(-self.gamma * math.Pow(distance, 2))
+	result := math.Exp(-r.gamma * math.Pow(distance, 2))
 
 	return result
 }
