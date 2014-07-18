@@ -49,7 +49,7 @@ func NewProblem(X [][]float64, y []float64, bias float64) *Problem {
 
 	prob.c_prob.x = convert_features(X, bias)
 	c_y := make([]C.int, len(y))
-	for i := 0; i < len(y); i += 1 {
+	for i := 0; i < len(y); i++ {
 		c_y[i] = C.int(y[i])
 	}
 	prob.c_prob.y = &c_y[0]
@@ -70,26 +70,26 @@ func Predict(model *Model, x []float64) float64 {
 }
 func convert_vector(x []float64, bias float64) *C.struct_feature_node {
 	n_ele := 0
-	for i := 0; i < len(x); i += 1 {
+	for i := 0; i < len(x); i++ {
 		if x[i] > 0 {
-			n_ele += 1
+			n_ele++
 		}
 	}
 	n_ele += 2
 
 	c_x := make([]C.struct_feature_node, n_ele)
 	j := 0
-	for i := 0; i < len(x); i += 1 {
+	for i := 0; i < len(x); i++ {
 		if x[i] > 0 {
 			c_x[j].index = C.int(i + 1)
 			c_x[j].value = C.double(x[i])
-			j += 1
+			j++
 		}
 	}
 	if bias > 0 {
 		c_x[j].index = C.int(0)
 		c_x[j].value = C.double(0)
-		j += 1
+		j++
 	}
 	c_x[j].index = C.int(-1)
 	return &c_x[0]
@@ -98,12 +98,12 @@ func convert_features(X [][]float64, bias float64) **C.struct_feature_node {
 	n_samples := len(X)
 	n_elements := 0
 
-	for i := 0; i < n_samples; i += 1 {
-		for j := 0; j < len(X[i]); j += 1 {
+	for i := 0; i < n_samples; i++ {
+		for j := 0; j < len(X[i]); j++ {
 			if X[i][j] != 0.0 {
-				n_elements += 1
+				n_elements++
 			}
-			n_elements += 1 //for bias
+			n_elements++ //for bias
 		}
 	}
 
@@ -113,23 +113,23 @@ func convert_features(X [][]float64, bias float64) **C.struct_feature_node {
 	x := make([]*C.struct_feature_node, n_samples)
 	var c_x **C.struct_feature_node
 
-	for i := 0; i < n_samples; i += 1 {
+	for i := 0; i < n_samples; i++ {
 		x[i] = &x_space[cursor]
 
-		for j := 0; j < len(X[i]); j += 1 {
+		for j := 0; j < len(X[i]); j++ {
 			if X[i][j] != 0.0 {
 				x_space[cursor].index = C.int(j + 1)
 				x_space[cursor].value = C.double(X[i][j])
-				cursor += 1
+				cursor++
 			}
 			if bias > 0 {
 				x_space[cursor].index = C.int(0)
 				x_space[cursor].value = C.double(bias)
-				cursor += 1
+				cursor++
 			}
 		}
 		x_space[cursor].index = C.int(-1)
-		cursor += 1
+		cursor++
 	}
 	c_x = &x[0]
 	return c_x

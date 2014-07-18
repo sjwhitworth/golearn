@@ -198,7 +198,6 @@ func InstancesTrainTestSplit(src *Instances, prop float64) (*Instances, *Instanc
 		rawTestMatrix.SetRow(i, rowDat)
 	}
 
-
 	trainingRet := NewInstancesFromDense(src.attributes, len(trainingRows), rawTrainMatrix)
 	testRet := NewInstancesFromDense(src.attributes, len(testingRows), rawTestMatrix)
 	return trainingRet, testRet
@@ -217,7 +216,7 @@ func (inst *Instances) CountAttrValues(a Attribute) map[string]int {
 	for i := 0; i < inst.Rows; i++ {
 		sysVal := inst.Get(i, attrIndex)
 		stringVal := a.GetStringFromSysVal(sysVal)
-		ret[stringVal] += 1
+		ret[stringVal]++
 	}
 	return ret
 }

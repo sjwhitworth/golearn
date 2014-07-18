@@ -23,7 +23,7 @@ func GetConfusionMatrix(ref *base.Instances, gen *base.Instances) map[string]map
 		referenceClass := ref.GetClass(i)
 		predictedClass := gen.GetClass(i)
 		if _, ok := ret[referenceClass]; ok {
-			ret[referenceClass][predictedClass] += 1
+			ret[referenceClass][predictedClass]++
 		} else {
 			ret[referenceClass] = make(map[string]int)
 			ret[referenceClass][predictedClass] = 1

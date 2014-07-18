@@ -75,7 +75,7 @@ func (KNN *KNNClassifier) PredictOne(vector []float64) string {
 		labels = append(labels, label)
 
 		if _, ok := maxmap[label]; ok {
-			maxmap[label] += 1
+			maxmap[label]++
 		} else {
 			maxmap[label] = 1
 		}

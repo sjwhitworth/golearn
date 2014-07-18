@@ -129,7 +129,7 @@ func ChiMBuildFrequencyTable(attr int, inst *base.Instances) []*FrequencyTableEn
 		for _, entry := range ret {
 			if entry.Value == valueConv {
 				found = true
-				entry.Frequency[class] += 1
+				entry.Frequency[class]++
 			}
 		}
 		if !found {
