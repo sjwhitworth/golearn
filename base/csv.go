@@ -98,7 +98,7 @@ func ParseCSVSniffAttributeTypes(filepath string, hasHeaders bool) []Attribute {
 	for _, entry := range columns {
 		entry = strings.Trim(entry, " ")
 		matched, err := regexp.MatchString("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$", entry)
-		fmt.Println(entry, matched)
+		//fmt.Println(entry, matched)
 		if err != nil {
 			panic(err)
 		}
