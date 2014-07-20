@@ -58,3 +58,16 @@ func TestLinearRegression(t *testing.T) {
 		fmt.Printf("Expected: %f || Predicted: %f\n", testData.Get(i, testData.ClassIndex), predictions.Get(i, predictions.ClassIndex))
 	}
 }
+
+func BenchmarkLinearRegressionOneRow(b *testing.B) {
+	// Omits error handling in favor of brevity
+	trainData, _ := base.ParseCSVToInstances("../examples/datasets/exams.csv", true)
+	testData, _ := base.ParseCSVToInstances("../examples/datasets/exam.csv", true)
+	lr := NewLinearRegression()
+	lr.Fit(trainData)
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		lr.Predict(testData)
+	}
+}
