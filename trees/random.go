@@ -25,7 +25,7 @@ func (r *RandomTreeRuleGenerator) GenerateSplitAttribute(f *base.Instances) base
 			break
 		}
 		selectedAttribute := rand.Intn(maximumAttribute)
-		fmt.Println(selectedAttribute, attrCounter, consideredAttributes, len(consideredAttributes))
+		base.Logger.Println(selectedAttribute, attrCounter, consideredAttributes, len(consideredAttributes))
 		if selectedAttribute != f.ClassIndex {
 			matched := false
 			for _, a := range consideredAttributes {

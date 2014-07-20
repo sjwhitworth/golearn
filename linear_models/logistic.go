@@ -40,7 +40,7 @@ func convertInstancesToProblemVec(X *base.Instances) [][]float64 {
 			problemVecCounter++
 		}
 	}
-	fmt.Println(problemVec, X)
+	base.Logger.Println(problemVec, X)
 	return problemVec
 }
 
@@ -70,7 +70,7 @@ func (lr *LogisticRegression) Predict(X *base.Instances) *base.Instances {
 				rowCounter++
 			}
 		}
-		fmt.Println(Predict(lr.model, row), row)
+		base.Logger.Println(Predict(lr.model, row), row)
 		ret.Set(i, 0, Predict(lr.model, row))
 	}
 	return ret
