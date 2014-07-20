@@ -13,11 +13,7 @@ twitter: [@golearn_ml](http://www.twitter.com/golearn_ml)
 Install
 =======
 
-```
-go get github.com/sjwhitworth/golearn
-cd src/github.com/sjwhitworth/golearn
-go get ./...
-```
+See [here](https://github.com/sjwhitworth/golearn/wiki/Installation) for installation instructions.
 
 Getting Started
 =======
