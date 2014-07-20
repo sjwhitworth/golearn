@@ -55,9 +55,9 @@ func (KNN *KNNClassifier) PredictOne(vector []float64) string {
 	}
 
 	for i := 0; i < rows; i++ {
-		row := KNN.Data.RowView(i)
+		row := KNN.TrainingData.GetRowVectorWithoutClass(i)
 		rowMat := util.FloatsToMatrix(row)
-		distance := distanceFunc.Distance(rowMat, vector)
+		distance := distanceFunc.Distance(rowMat, convertedVector)
 		rownumbers[i] = distance
 	}
 
