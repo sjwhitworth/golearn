@@ -13,11 +13,7 @@ twitter: [@golearn_ml](http://www.twitter.com/golearn_ml)
 Install
 =======
 
-```
-go get github.com/sjwhitworth/golearn
-cd src/github.com/sjwhitworth/golearn
-go get ./...
-```
+See [here](https://github.com/sjwhitworth/golearn/wiki/Installation) for installation instructions.
 
 Getting Started
 =======
@@ -26,7 +22,7 @@ Data are loaded in as Instances. You can then perform matrix like operations on 
 GoLearn implements the scikit-learn interface of Fit/Predict, so you can easily swap out estimators for trial and error.
 GoLearn also includes helper functions for data, like cross validation, and train and test splitting.
 
-```
+```go
 // Load in a dataset, with headers. Header attributes will be stored.
 // Think of instances as a Data Frame structure in R or Pandas.
 // You can also create instances from scratch.
@@ -57,7 +53,7 @@ fmt.Println(evaluation.GetSummary(confusionMat))
 ```
 Iris-virginica	28	2	  56	0.9333	0.9333  0.9333
 Iris-setosa	    29	0	  59	1.0000  1.0000	1.0000
-Iris-versicolor	27	2	  57  0.9310	0.9310  0.9310
+Iris-versicolor	27	2	  57	0.9310	0.9310  0.9310
 Overall accuracy: 0.9545
 ```
 
@@ -66,10 +62,17 @@ Examples
 
 GoLearn comes with practical examples. Dive in and see what is going on.
 
-```
-cd examples/
+```bash
+cd $GOPATH/src/github.com/sjwhitworth/golearn/examples/knnclassifier
 go run knnclassifier_iris.go
+```
+```bash
+cd $GOPATH/src/github.com/sjwhitworth/golearn/examples/instances
 go run instances.go
+```
+```bash
+cd $GOPATH/src/github.com/sjwhitworth/golearn/examples/trees
+go run trees.go
 ```
 
 Join the team

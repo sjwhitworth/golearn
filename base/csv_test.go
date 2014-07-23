@@ -5,12 +5,12 @@ import "testing"
 func TestParseCSVGetRows(testEnv *testing.T) {
 	lineCount := ParseCSVGetRows("../examples/datasets/iris.csv")
 	if lineCount != 150 {
-		testEnv.Error("Should have %d lines, has %d", 150, lineCount)
+		testEnv.Errorf("Should have %d lines, has %d", 150, lineCount)
 	}
 
 	lineCount = ParseCSVGetRows("../examples/datasets/iris_headers.csv")
 	if lineCount != 151 {
-		testEnv.Error("Should have %d lines, has %d", 151, lineCount)
+		testEnv.Errorf("Should have %d lines, has %d", 151, lineCount)
 	}
 
 }
@@ -18,14 +18,14 @@ func TestParseCSVGetRows(testEnv *testing.T) {
 func TestParseCCSVGetAttributes(testEnv *testing.T) {
 	attrs := ParseCSVGetAttributes("../examples/datasets/iris_headers.csv", true)
 	if attrs[0].GetType() != Float64Type {
-		testEnv.Error("First attribute should be a float, %s", attrs[0])
+		testEnv.Errorf("First attribute should be a float, %s", attrs[0])
 	}
 	if attrs[0].GetName() != "Sepal length" {
-		testEnv.Error(attrs[0].GetName())
+		testEnv.Errorf(attrs[0].GetName())
 	}
 
 	if attrs[4].GetType() != CategoricalType {
-		testEnv.Error("Final attribute should be categorical, %s", attrs[4])
+		testEnv.Errorf("Final attribute should be categorical, %s", attrs[4])
 	}
 	if attrs[4].GetName() != "Species" {
 		testEnv.Error(attrs[4])
@@ -35,19 +35,19 @@ func TestParseCCSVGetAttributes(testEnv *testing.T) {
 func TestParseCsvSniffAttributeTypes(testEnv *testing.T) {
 	attrs := ParseCSVSniffAttributeTypes("../examples/datasets/iris_headers.csv", true)
 	if attrs[0].GetType() != Float64Type {
-		testEnv.Error("First attribute should be a float, %s", attrs[0])
+		testEnv.Errorf("First attribute should be a float, %s", attrs[0])
 	}
 	if attrs[1].GetType() != Float64Type {
-		testEnv.Error("Second attribute should be a float, %s", attrs[1])
+		testEnv.Errorf("Second attribute should be a float, %s", attrs[1])
 	}
 	if attrs[2].GetType() != Float64Type {
-		testEnv.Error("Third attribute should be a float, %s", attrs[2])
+		testEnv.Errorf("Third attribute should be a float, %s", attrs[2])
 	}
 	if attrs[3].GetType() != Float64Type {
-		testEnv.Error("Fourth attribute should be a float, %s", attrs[3])
+		testEnv.Errorf("Fourth attribute should be a float, %s", attrs[3])
 	}
 	if attrs[4].GetType() != CategoricalType {
-		testEnv.Error("Final attribute should be categorical, %s", attrs[4])
+		testEnv.Errorf("Final attribute should be categorical, %s", attrs[4])
 	}
 }
 

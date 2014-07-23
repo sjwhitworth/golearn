@@ -142,7 +142,7 @@ func NewInstances(attrs []Attribute, rows int) *Instances {
 func CheckNewInstancesFromRaw(attrs []Attribute, rows int, data []float64) error {
 	size := rows * len(attrs)
 	if size < len(data) {
-		return errors.New("base: data length is larger than the rows * attribute space.")
+		return errors.New("base: data length is larger than the rows * attribute space")
 	} else if size > len(data) {
 		return errors.New("base: data is smaller than the rows * attribute space")
 	}
@@ -198,7 +198,6 @@ func InstancesTrainTestSplit(src *Instances, prop float64) (*Instances, *Instanc
 		rawTestMatrix.SetRow(i, rowDat)
 	}
 
-
 	trainingRet := NewInstancesFromDense(src.attributes, len(trainingRows), rawTrainMatrix)
 	testRet := NewInstancesFromDense(src.attributes, len(testingRows), rawTestMatrix)
 	return trainingRet, testRet
@@ -217,7 +216,7 @@ func (inst *Instances) CountAttrValues(a Attribute) map[string]int {
 	for i := 0; i < inst.Rows; i++ {
 		sysVal := inst.Get(i, attrIndex)
 		stringVal := a.GetStringFromSysVal(sysVal)
-		ret[stringVal] += 1
+		ret[stringVal]++
 	}
 	return ret
 }
@@ -320,7 +319,7 @@ func (inst *Instances) GetRowVector(row int) []float64 {
 	return inst.storage.RowView(row)
 }
 
-// GetRowVector returns a row of system representation
+// GetRowVectorWithoutClass returns a row of system representation
 // values at the given row index, excluding the class attribute
 func (inst *Instances) GetRowVectorWithoutClass(row int) []float64 {
 	rawRow := make([]float64, inst.Cols)
@@ -337,7 +336,7 @@ func (inst *Instances) GetClass(row int) string {
 	return attr.GetStringFromSysVal(val)
 }
 
-// GetClassDist returns a map containing the count of each
+// GetClassDistribution returns a map containing the count of each
 // class type (indexed by the class' string representation)
 func (inst *Instances) GetClassDistribution() map[string]int {
 	ret := make(map[string]int)
@@ -351,13 +350,13 @@ func (inst *Instances) GetClassDistribution() map[string]int {
 	return ret
 }
 
-func (Inst *Instances) GetClassAttrPtr() *Attribute {
-	attr := Inst.GetAttr(Inst.ClassIndex)
+func (inst *Instances) GetClassAttrPtr() *Attribute {
+	attr := inst.GetAttr(inst.ClassIndex)
 	return &attr
 }
 
-func (Inst *Instances) GetClassAttr() Attribute {
-	return Inst.GetAttr(Inst.ClassIndex)
+func (inst *Instances) GetClassAttr() Attribute {
+	return inst.GetAttr(inst.ClassIndex)
 }
 
 //
