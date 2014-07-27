@@ -48,9 +48,9 @@ func NewProblem(X [][]float64, y []float64, bias float64) *Problem {
 	prob.c_prob.n = C.int(len(X[0]) + 1)
 
 	prob.c_prob.x = convert_features(X, bias)
-	c_y := make([]C.int, len(y))
+	c_y := make([]C.double, len(y))
 	for i := 0; i < len(y); i++ {
-		c_y[i] = C.int(y[i])
+		c_y[i] = C.double(y[i])
 	}
 	prob.c_prob.y = &c_y[0]
 	prob.c_prob.bias = C.double(-1)
