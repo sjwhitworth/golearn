@@ -13,12 +13,16 @@ func TestRandomForest1(testEnv *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	trainData, testData := base.InstancesTrainTestSplit(inst, 0.60)
-	filt := filters.NewChiMergeFilter(trainData, 0.90)
-	filt.AddAllNumericAttributes()
-	filt.Build()
-	filt.Run(testData)
-	filt.Run(trainData)
+
+	filt := filters.NewChiMergeFilter(inst, 0.90)
+	for _, a := range base.NonClassFloatAttributes(inst) {
+		filt.AddAttribute(a)
+	}
+	filt.Train()
+	instf := base.NewLazilyFilteredInstances(inst, filt)
+
+	trainData, testData := base.InstancesTrainTestSplit(instf, 0.60)
+
 	rf := NewRandomForest(10, 3)
 	rf.Fit(trainData)
 	predictions := rf.Predict(testData)

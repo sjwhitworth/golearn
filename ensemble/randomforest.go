@@ -8,7 +8,7 @@ import (
 )
 
 // RandomForest classifies instances using an ensemble
-// of bagged random decision trees
+// of bagged random decision trees.
 type RandomForest struct {
 	base.BaseClassifier
 	ForestSize int
@@ -18,7 +18,7 @@ type RandomForest struct {
 
 // NewRandomForest generates and return a new random forests
 // forestSize controls the number of trees that get built
-// features controls the number of features used to build each tree
+// features controls the number of features used to build each tree.
 func NewRandomForest(forestSize int, features int) *RandomForest {
 	ret := &RandomForest{
 		base.BaseClassifier{},
@@ -30,7 +30,7 @@ func NewRandomForest(forestSize int, features int) *RandomForest {
 }
 
 // Fit builds the RandomForest on the specified instances
-func (f *RandomForest) Fit(on *base.Instances) {
+func (f *RandomForest) Fit(on base.FixedDataGrid) {
 	f.Model = new(meta.BaggedModel)
 	f.Model.RandomFeatures = f.Features
 	for i := 0; i < f.ForestSize; i++ {
@@ -40,11 +40,12 @@ func (f *RandomForest) Fit(on *base.Instances) {
 	f.Model.Fit(on)
 }
 
-// Predict generates predictions from a trained RandomForest
-func (f *RandomForest) Predict(with *base.Instances) *base.Instances {
+// Predict generates predictions from a trained RandomForest.
+func (f *RandomForest) Predict(with base.FixedDataGrid) base.FixedDataGrid {
 	return f.Model.Predict(with)
 }
 
+// String returns a human-readable representation of this tree.
 func (f *RandomForest) String() string {
 	return fmt.Sprintf("RandomForest(ForestSize: %d, Features:%d, %s\n)", f.ForestSize, f.Features, f.Model)
 }
