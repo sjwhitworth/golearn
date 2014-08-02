@@ -24,16 +24,17 @@ func TestKnnClassifier(t *testing.T) {
 		cls := NewKnnClassifier("euclidean", 2)
 		cls.Fit(trainingData)
 		predictions := cls.Predict(testingData)
+		So(predictions, ShouldNotEqual, nil)
 
 		Convey("When predicting the label for our first vector", func() {
-			result := predictions.GetClass(0)
+			result := base.GetClass(predictions, 0)
 			Convey("The result should be 'blue", func() {
 				So(result, ShouldEqual, "blue")
 			})
 		})
 
 		Convey("When predicting the label for our first vector", func() {
-			result2 := predictions.GetClass(1)
+			result2 := base.GetClass(predictions, 1)
 			Convey("The result should be 'red", func() {
 				So(result2, ShouldEqual, "red")
 			})

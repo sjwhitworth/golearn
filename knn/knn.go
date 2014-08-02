@@ -14,7 +14,7 @@ import (
 // The accepted distance functions at this time are 'euclidean' and 'manhattan'.
 type KNNClassifier struct {
 	base.BaseEstimator
-	TrainingData      *base.Instances
+	TrainingData      base.FixedDataGrid
 	DistanceFunc      string
 	NearestNeighbours int
 }
@@ -28,20 +28,12 @@ func NewKnnClassifier(distfunc string, neighbours int) *KNNClassifier {
 }
 
 // Fit stores the training data for later
-func (KNN *KNNClassifier) Fit(trainingData *base.Instances) {
+func (KNN *KNNClassifier) Fit(trainingData base.FixedDataGrid) {
 	KNN.TrainingData = trainingData
 }
 
-// PredictOne returns a classification for the vector, based on a vector input, using the KNN algorithm.
-// See http://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm.
-func (KNN *KNNClassifier) PredictOne(vector []float64) string {
-
-	rows := KNN.TrainingData.Rows
-	rownumbers := make(map[int]float64)
-	labels := make([]string, 0)
-	maxmap := make(map[string]int)
-
-	convertedVector := util.FloatsToMatrix(vector)
+// Predict returns a classification for the vector, based on a vector input, using the KNN algorithm.
+func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 
 	// Check what distance function we are using
 	var distanceFunc pairwiseMetrics.PairwiseDistanceFunc
@@ -52,40 +44,96 @@ func (KNN *KNNClassifier) PredictOne(vector []float64) string {
 		distanceFunc = pairwiseMetrics.NewManhattan()
 	default:
 		panic("unsupported distance function")
+
+	}
+	// Check compatability
+	allAttrs := base.CheckCompatable(what, KNN.TrainingData)
+	if allAttrs == nil {
+		// Don't have the same Attributes
+		return nil
 	}
 
-	for i := 0; i < rows; i++ {
-		row := KNN.TrainingData.GetRowVectorWithoutClass(i)
-		rowMat := util.FloatsToMatrix(row)
-		distance := distanceFunc.Distance(rowMat, convertedVector)
-		rownumbers[i] = distance
-	}
-
-	sorted := util.SortIntMap(rownumbers)
-	values := sorted[:KNN.NearestNeighbours]
-
-	for _, elem := range values {
-		label := KNN.TrainingData.GetClass(elem)
-		labels = append(labels, label)
-
-		if _, ok := maxmap[label]; ok {
-			maxmap[label]++
-		} else {
-			maxmap[label] = 1
+	// Remove the Attributes which aren't numeric
+	allNumericAttrs := make([]base.Attribute, 0)
+	for _, a := range allAttrs {
+		if fAttr, ok := a.(*base.FloatAttribute); ok {
+			allNumericAttrs = append(allNumericAttrs, fAttr)
 		}
 	}
 
-	sortedlabels := util.SortStringMap(maxmap)
-	label := sortedlabels[0]
+	// Generate return vector
+	ret := base.GeneratePredictionVector(what)
 
-	return label
-}
+	// Resolve Attribute specifications for both
+	whatAttrSpecs := base.ResolveAllAttributes(what, allNumericAttrs)
+	trainAttrSpecs := base.ResolveAllAttributes(KNN.TrainingData, allNumericAttrs)
 
-func (KNN *KNNClassifier) Predict(what *base.Instances) *base.Instances {
-	ret := what.GeneratePredictionVector()
-	for i := 0; i < what.Rows; i++ {
-		ret.SetAttrStr(i, 0, KNN.PredictOne(what.GetRowVectorWithoutClass(i)))
-	}
+	// Reserve storage for most the most similar items
+	distances := make(map[int]float64)
+
+	// Reserve storage for voting map
+	maxmap := make(map[string]int)
+
+	// Reserve storage for row computations
+	trainRowBuf := make([]float64, len(allNumericAttrs))
+	predRowBuf := make([]float64, len(allNumericAttrs))
+
+	// Iterate over all outer rows
+	what.MapOverRows(whatAttrSpecs, func(predRow [][]byte, predRowNo int) (bool, error) {
+		// Read the float values out
+		for i, _ := range allNumericAttrs {
+			predRowBuf[i] = base.UnpackBytesToFloat(predRow[i])
+		}
+
+		predMat := util.FloatsToMatrix(predRowBuf)
+
+		// Find the closest match in the training data
+		KNN.TrainingData.MapOverRows(trainAttrSpecs, func(trainRow [][]byte, srcRowNo int) (bool, error) {
+
+			// Read the float values out
+			for i, _ := range allNumericAttrs {
+				trainRowBuf[i] = base.UnpackBytesToFloat(trainRow[i])
+			}
+
+			// Compute the distance
+			trainMat := util.FloatsToMatrix(trainRowBuf)
+			distances[srcRowNo] = distanceFunc.Distance(predMat, trainMat)
+			return true, nil
+		})
+
+		sorted := util.SortIntMap(distances)
+		values := sorted[:KNN.NearestNeighbours]
+
+		// Reset maxMap
+		for a := range maxmap {
+			maxmap[a] = 0
+		}
+
+		// Refresh maxMap
+		for _, elem := range values {
+			label := base.GetClass(KNN.TrainingData, elem)
+			if _, ok := maxmap[label]; ok {
+				maxmap[label]++
+			} else {
+				maxmap[label] = 1
+			}
+		}
+
+		// Sort the maxMap
+		var maxClass string
+		maxVal := -1
+		for a := range maxmap {
+			if maxmap[a] > maxVal {
+				maxVal = maxmap[a]
+				maxClass = a
+			}
+		}
+
+		base.SetClass(ret, predRowNo, maxClass)
+		return true, nil
+
+	})
+
 	return ret
 }
 
