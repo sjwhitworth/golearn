@@ -49,3 +49,21 @@ func TestCategoricalAttributeVal(t *testing.T) {
 		})
 	})
 }
+
+func TestBinaryAttribute(t *testing.T) {
+	attr := new(BinaryAttribute)
+	Convey("Given some binary Attribute", t, func() {
+		Convey("SetName, GetName should be equal", func() {
+			attr.SetName("Hello")
+			So(attr.GetName(), ShouldEqual, "Hello")
+		})
+		Convey("Non-zero values should equal 1", func() {
+			sysVal := attr.GetSysValFromString("1")
+			So(sysVal[0], ShouldEqual, 1)
+		})
+		Convey("Zero values should equal 0", func() {
+			sysVal := attr.GetSysValFromString("0")
+			So(sysVal[0], ShouldEqual, 0)
+		})
+	})
+}

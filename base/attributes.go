@@ -5,6 +5,7 @@ const (
 	CategoricalType = iota
 	// Float64Type should be replaced with a FractionalNumeric type [DEPRECATED].
 	Float64Type
+	BinaryType
 )
 
 // Attributes disambiguate columns of the feature matrix and declare their types.
