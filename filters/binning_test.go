@@ -2,27 +2,39 @@ package filters
 
 import (
 	base "github.com/sjwhitworth/golearn/base"
-	"math"
+	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
 func TestBinning(testEnv *testing.T) {
+	//
+	// Read the data
 	inst1, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	inst2, err := base.ParseCSVToInstances("../examples/datasets/iris_binned.csv", true)
-	inst3, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
 		panic(err)
 	}
-	filt := NewBinningFilter(inst1, 10)
-	filt.AddAttribute(inst1.GetAttr(0))
-	filt.Build()
-	filt.Run(inst1)
-	for i := 0; i < inst1.Rows; i++ {
-		val1 := inst1.Get(i, 0)
-		val2 := inst2.Get(i, 0)
-		val3 := inst3.Get(i, 0)
-		if math.Abs(val1-val2) >= 1 {
-			testEnv.Error(val1, val2, val3, i)
-		}
+
+	inst2, err := base.ParseCSVToInstances("../examples/datasets/iris_binned.csv", true)
+	if err != nil {
+		panic(err)
 	}
+	//
+	// Construct the binning filter
+	binAttr := inst1.AllAttributes()[0]
+	filt := NewBinningFilter(inst1, 10)
+	filt.AddAttribute(binAttr)
+	filt.Train()
+	inst1f := base.NewLazilyFilteredInstances(inst1, filt)
+
+	// Retrieve the categorical version of the original Attribute
+
+	//
+	// Create the LazilyFilteredInstances
+	// and check the values
+	Convey("Discretized version should match reference", testEnv, func() {
+		_, rows := inst1.Size()
+		for i := 0; i < rows; i++ {
+			So(inst1f.RowString(i), ShouldEqual, inst2.RowString(i))
+		}
+	})
 }

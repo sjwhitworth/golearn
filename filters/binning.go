@@ -9,113 +9,110 @@ import (
 // BinningFilter does equal-width binning for numeric
 // Attributes (aka "histogram binning")
 type BinningFilter struct {
-	Attributes []int
-	Instances  *base.Instances
-	BinCount   int
-	MinVals    map[int]float64
-	MaxVals    map[int]float64
-	trained    bool
+	AbstractDiscretizeFilter
+	bins    int
+	minVals map[base.Attribute]float64
+	maxVals map[base.Attribute]float64
 }
 
 // NewBinningFilter creates a BinningFilter structure
 // with some helpful default initialisations.
-func NewBinningFilter(inst *base.Instances, bins int) BinningFilter {
-	return BinningFilter{
-		make([]int, 0),
-		inst,
+func NewBinningFilter(d base.FixedDataGrid, bins int) *BinningFilter {
+	return &BinningFilter{
+		AbstractDiscretizeFilter{
+			make(map[base.Attribute]bool),
+			false,
+			d,
+		},
 		bins,
-		make(map[int]float64),
-		make(map[int]float64),
-		false,
+		make(map[base.Attribute]float64),
+		make(map[base.Attribute]float64),
 	}
 }
 
-// AddAttribute adds the index of the given attribute `a'
-// to the BinningFilter for discretisation.
-func (b *BinningFilter) AddAttribute(a base.Attribute) {
-	attrIndex := b.Instances.GetAttrIndex(a)
-	if attrIndex == -1 {
-		panic("invalid attribute")
-	}
-	b.Attributes = append(b.Attributes, attrIndex)
-}
-
-// AddAllNumericAttributes adds every suitable attribute
-// to the BinningFilter for discretiation
-func (b *BinningFilter) AddAllNumericAttributes() {
-	for i := 0; i < b.Instances.Cols; i++ {
-		if i == b.Instances.ClassIndex {
-			continue
-		}
-		attr := b.Instances.GetAttr(i)
-		if attr.GetType() != base.Float64Type {
-			continue
-		}
-		b.Attributes = append(b.Attributes, i)
-	}
-}
-
-// Build computes and stores the bin values
+// Train computes and stores the bin values
 // for the training instances.
-func (b *BinningFilter) Build() {
-	for _, attr := range b.Attributes {
-		maxVal := math.Inf(-1)
-		minVal := math.Inf(1)
-		for i := 0; i < b.Instances.Rows; i++ {
-			val := b.Instances.Get(i, attr)
-			if val > maxVal {
-				maxVal = val
+func (b *BinningFilter) Train() error {
+
+	as := b.getAttributeSpecs()
+	// Set up the AttributeSpecs, and values
+	for attr := range b.attrs {
+		if !b.attrs[attr] {
+			continue
+		}
+		b.minVals[attr] = float64(math.Inf(1))
+		b.maxVals[attr] = float64(math.Inf(-1))
+	}
+
+	err := b.train.MapOverRows(as, func(row [][]byte, rowNo int) (bool, error) {
+		for i, a := range row {
+			attr := as[i].GetAttribute()
+			attrf := attr.(*base.FloatAttribute)
+			val := float64(attrf.GetFloatFromSysVal(a))
+			if val > b.maxVals[attr] {
+				b.maxVals[attr] = val
 			}
-			if val < minVal {
-				minVal = val
+			if val < b.minVals[attr] {
+				b.minVals[attr] = val
 			}
 		}
-		b.MaxVals[attr] = maxVal
-		b.MinVals[attr] = minVal
-		b.trained = true
+		return true, nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("Training error: %s", err)
 	}
+	b.trained = true
+	return nil
 }
 
-// Run applies a trained BinningFilter to a set of Instances,
-// discretising any numeric attributes added.
-//
-// IMPORTANT: Run discretises in-place, so make sure to take
-// a copy if the original instances are still needed
-//
-// IMPORTANT: This function panic()s if the filter has not been
-// trained. Call Build() before running this function
-//
-// IMPORTANT: Call Build() after adding any additional attributes.
-// Otherwise, the training structure will be out of date from
-// the values expected and could cause a panic.
-func (b *BinningFilter) Run(on *base.Instances) {
-	if !b.trained {
-		panic("Call Build() beforehand")
+// Transform takes an Attribute and byte sequence and returns
+// the transformed byte sequence.
+func (b *BinningFilter) Transform(a base.Attribute, field []byte) []byte {
+
+	if !b.attrs[a] {
+		return field
 	}
-	for attr := range b.Attributes {
-		minVal := b.MinVals[attr]
-		maxVal := b.MaxVals[attr]
-		disc := 0
-		// Casts to float32 to replicate a floating point precision error
-		delta := float32(maxVal - minVal)
-		delta /= float32(b.BinCount)
-		for i := 0; i < on.Rows; i++ {
-			val := on.Get(i, attr)
-			if val <= minVal {
-				disc = 0
-			} else {
-				disc = int(math.Floor(float64(float32(val-minVal) / delta)))
-				if disc >= b.BinCount {
-					disc = b.BinCount - 1
-				}
+	af, ok := a.(*base.FloatAttribute)
+	if !ok {
+		panic("Attribute is the wrong type")
+	}
+	minVal := b.minVals[a]
+	maxVal := b.maxVals[a]
+	disc := 0
+	// Casts to float64 to replicate a floating point precision error
+	delta := float64(maxVal-minVal) / float64(b.bins)
+	val := float64(af.GetFloatFromSysVal(field))
+	if val <= minVal {
+		disc = 0
+	} else {
+		disc = int(math.Floor(float64(float64(val-minVal)/delta + 0.0001)))
+	}
+	return base.PackU64ToBytes(uint64(disc))
+}
+
+// GetAttributesAfterFiltering gets a list of before/after
+// Attributes as base.FilteredAttributes
+func (b *BinningFilter) GetAttributesAfterFiltering() []base.FilteredAttribute {
+	oldAttrs := b.train.AllAttributes()
+	ret := make([]base.FilteredAttribute, len(oldAttrs))
+	for i, a := range oldAttrs {
+		if b.attrs[a] {
+			retAttr := new(base.CategoricalAttribute)
+			minVal := b.minVals[a]
+			maxVal := b.maxVals[a]
+			delta := float64(maxVal-minVal) / float64(b.bins)
+			retAttr.SetName(a.GetName())
+			for i := 0; i <= b.bins; i++ {
+				floatVal := float64(i)*delta + minVal
+				fmtStr := fmt.Sprintf("%%.%df", a.(*base.FloatAttribute).Precision)
+				binVal := fmt.Sprintf(fmtStr, floatVal)
+				retAttr.GetSysValFromString(binVal)
 			}
-			on.Set(i, attr, float64(disc))
+			ret[i] = base.FilteredAttribute{a, retAttr}
+		} else {
+			ret[i] = base.FilteredAttribute{a, a}
 		}
-		newAttribute := new(base.CategoricalAttribute)
-		newAttribute.SetName(on.GetAttr(attr).GetName())
-		for i := 0; i < b.BinCount; i++ {
-			newAttribute.GetSysValFromString(fmt.Sprintf("%d", i))
-		}
-		on.ReplaceAttr(attr, newAttribute)
 	}
+	return ret
 }
