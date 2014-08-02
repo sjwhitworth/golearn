@@ -34,7 +34,7 @@ func main() {
 
 	// If two decimal places isn't enough, you can update the
 	// Precision field on any FloatAttribute
-	if attr, ok := rawData.GetAttr(0).(*base.FloatAttribute); !ok {
+	if attr, ok := rawData.AllAttributes()[0].(*base.FloatAttribute); !ok {
 		panic("Invalid cast")
 	} else {
 		attr.Precision = 4
@@ -44,8 +44,15 @@ func main() {
 
 	// We can update the set of Instances, although the API
 	// for doing so is not very sophisticated.
-	rawData.SetAttrStr(0, 0, "1.00")
-	rawData.SetAttrStr(0, rawData.ClassIndex, "Iris-unusual")
+
+	// First, have to resolve Attribute Specifications
+	as := base.ResolveAllAttributes(rawData, rawData.AllAttributes())
+
+	// Attribute Specifications describe where a given column lives
+	rawData.Set(as[0], 0, as[0].GetAttribute().GetSysValFromString("1.00"))
+
+	// A SetClass method exists as a shortcut
+	base.SetClass(rawData, 0, "Iris-unusual")
 	fmt.Println(rawData)
 
 	// There is a way of creating new Instances from scratch.
@@ -64,6 +71,21 @@ func main() {
 	attrs[1].GetSysValFromString("A")
 
 	// Now let's create the final instances set
-	newInst := base.NewInstancesFromRaw(attrs, 1, newData)
+	newInst := base.NewDenseInstances()
+
+	// Add the attributes
+	newSpecs := make([]base.AttributeSpec, len(attrs))
+	for i, a := range attrs {
+		newSpecs[i] = newInst.AddAttribute(a)
+	}
+
+	// Allocate space
+	newInst.Extend(1)
+
+	// Write the data
+	newInst.Set(newSpecs[0], 0, newSpecs[0].GetAttribute().GetSysValFromString("1.0"))
+	newInst.Set(newSpecs[1], 0, newSpecs[1].GetAttribute().GetSysValFromString("A"))
+
 	fmt.Println(newInst)
+
 }
