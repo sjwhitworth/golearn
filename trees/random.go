@@ -14,32 +14,32 @@ type RandomTreeRuleGenerator struct {
 
 // GenerateSplitAttribute returns the best attribute out of those randomly chosen
 // which maximises Information Gain
-func (r *RandomTreeRuleGenerator) GenerateSplitAttribute(f *base.Instances) base.Attribute {
+func (r *RandomTreeRuleGenerator) GenerateSplitAttribute(f base.FixedDataGrid) base.Attribute {
 
 	// First step is to generate the random attributes that we'll consider
-	maximumAttribute := f.GetAttributeCount()
-	consideredAttributes := make([]int, r.Attributes)
+	allAttributes := base.AttributeDifferenceReferences(f.AllAttributes(), f.AllClassAttributes())
+	maximumAttribute := len(allAttributes)
+	consideredAttributes := make([]base.Attribute, 0)
+
 	attrCounter := 0
 	for {
 		if len(consideredAttributes) >= r.Attributes {
 			break
 		}
-		selectedAttribute := rand.Intn(maximumAttribute)
-		base.Logger.Println(selectedAttribute, attrCounter, consideredAttributes, len(consideredAttributes))
-		if selectedAttribute != f.ClassIndex {
-			matched := false
-			for _, a := range consideredAttributes {
-				if a == selectedAttribute {
-					matched = true
-					break
-				}
+		selectedAttrIndex := rand.Intn(maximumAttribute)
+		selectedAttribute := allAttributes[selectedAttrIndex]
+		matched := false
+		for _, a := range consideredAttributes {
+			if a.Equals(selectedAttribute) {
+				matched = true
+				break
 			}
-			if matched {
-				continue
-			}
-			consideredAttributes = append(consideredAttributes, selectedAttribute)
-			attrCounter++
 		}
+		if matched {
+			continue
+		}
+		consideredAttributes = append(consideredAttributes, selectedAttribute)
+		attrCounter++
 	}
 
 	return r.internalRule.GetSplitAttributeFromSelection(consideredAttributes, f)
@@ -67,12 +67,12 @@ func NewRandomTree(attrs int) *RandomTree {
 }
 
 // Fit builds a RandomTree suitable for prediction
-func (rt *RandomTree) Fit(from *base.Instances) {
+func (rt *RandomTree) Fit(from base.FixedDataGrid) {
 	rt.Root = InferID3Tree(from, rt.Rule)
 }
 
 // Predict returns a set of Instances containing predictions
-func (rt *RandomTree) Predict(from *base.Instances) *base.Instances {
+func (rt *RandomTree) Predict(from base.FixedDataGrid) base.FixedDataGrid {
 	return rt.Root.Predict(from)
 }
 
@@ -83,6 +83,6 @@ func (rt *RandomTree) String() string {
 
 // Prune removes nodes from the tree which are detrimental
 // to determining the accuracy of the test set (with)
-func (rt *RandomTree) Prune(with *base.Instances) {
+func (rt *RandomTree) Prune(with base.FixedDataGrid) {
 	rt.Root.Prune(with)
 }

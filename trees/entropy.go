@@ -17,35 +17,40 @@ type InformationGainRuleGenerator struct {
 //
 // IMPORTANT: passing a base.Instances with no Attributes other than the class
 // variable will panic()
-func (r *InformationGainRuleGenerator) GenerateSplitAttribute(f *base.Instances) base.Attribute {
-	allAttributes := make([]int, 0)
-	for i := 0; i < f.Cols; i++ {
-		if i != f.ClassIndex {
-			allAttributes = append(allAttributes, i)
-		}
-	}
-	return r.GetSplitAttributeFromSelection(allAttributes, f)
+func (r *InformationGainRuleGenerator) GenerateSplitAttribute(f base.FixedDataGrid) base.Attribute {
+
+	attrs := f.AllAttributes()
+	classAttrs := f.AllClassAttributes()
+	candidates := base.AttributeDifferenceReferences(attrs, classAttrs)
+
+	return r.GetSplitAttributeFromSelection(candidates, f)
 }
 
 // GetSplitAttributeFromSelection returns the class Attribute which maximises
 // the information gain amongst consideredAttributes
 //
 // IMPORTANT: passing a zero-length consideredAttributes parameter will panic()
-func (r *InformationGainRuleGenerator) GetSplitAttributeFromSelection(consideredAttributes []int, f *base.Instances) base.Attribute {
+func (r *InformationGainRuleGenerator) GetSplitAttributeFromSelection(consideredAttributes []base.Attribute, f base.FixedDataGrid) base.Attribute {
+
+	var selectedAttribute base.Attribute
+
+	// Parameter check
+	if len(consideredAttributes) == 0 {
+		panic("More Attributes should be considered")
+	}
 
 	// Next step is to compute the information gain at this node
 	// for each randomly chosen attribute, and pick the one
 	// which maximises it
 	maxGain := math.Inf(-1)
-	selectedAttribute := -1
 
 	// Compute the base entropy
-	classDist := f.GetClassDistribution()
+	classDist := base.GetClassDistribution(f)
 	baseEntropy := getBaseEntropy(classDist)
 
 	// Compute the information gain for each attribute
 	for _, s := range consideredAttributes {
-		proposedClassDist := f.GetClassDistributionAfterSplit(f.GetAttr(s))
+		proposedClassDist := base.GetClassDistributionAfterSplit(f, s)
 		localEntropy := getSplitEntropy(proposedClassDist)
 		informationGain := baseEntropy - localEntropy
 		if informationGain > maxGain {
@@ -55,7 +60,7 @@ func (r *InformationGainRuleGenerator) GetSplitAttributeFromSelection(considered
 	}
 
 	// Pick the one which maximises IG
-	return f.GetAttr(selectedAttribute)
+	return selectedAttribute
 }
 
 //

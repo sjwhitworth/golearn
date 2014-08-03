@@ -21,7 +21,7 @@ const (
 // RuleGenerator implementations analyse instances and determine
 // the best value to split on
 type RuleGenerator interface {
-	GenerateSplitAttribute(*base.Instances) base.Attribute
+	GenerateSplitAttribute(base.FixedDataGrid) base.Attribute
 }
 
 // DecisionTreeNode represents a given portion of a decision tree
@@ -31,14 +31,19 @@ type DecisionTreeNode struct {
 	SplitAttr base.Attribute
 	ClassDist map[string]int
 	Class     string
-	ClassAttr *base.Attribute
+	ClassAttr base.Attribute
+}
+
+func getClassAttr(from base.FixedDataGrid) base.Attribute {
+	allClassAttrs := from.AllClassAttributes()
+	return allClassAttrs[0]
 }
 
 // InferID3Tree builds a decision tree using a RuleGenerator
 // from a set of Instances (implements the ID3 algorithm)
-func InferID3Tree(from *base.Instances, with RuleGenerator) *DecisionTreeNode {
+func InferID3Tree(from base.FixedDataGrid, with RuleGenerator) *DecisionTreeNode {
 	// Count the number of classes at this node
-	classes := from.CountClassValues()
+	classes := base.GetClassDistribution(from)
 	// If there's only one class, return a DecisionTreeLeaf with
 	// the only class available
 	if len(classes) == 1 {
@@ -52,7 +57,7 @@ func InferID3Tree(from *base.Instances, with RuleGenerator) *DecisionTreeNode {
 			nil,
 			classes,
 			maxClass,
-			from.GetClassAttrPtr(),
+			getClassAttr(from),
 		}
 		return ret
 	}
@@ -69,28 +74,29 @@ func InferID3Tree(from *base.Instances, with RuleGenerator) *DecisionTreeNode {
 
 	// If there are no more Attributes left to split on,
 	// return a DecisionTreeLeaf with the majority class
-	if from.GetAttributeCount() == 2 {
+	cols, _ := from.Size()
+	if cols == 2 {
 		ret := &DecisionTreeNode{
 			LeafNode,
 			nil,
 			nil,
 			classes,
 			maxClass,
-			from.GetClassAttrPtr(),
+			getClassAttr(from),
 		}
 		return ret
 	}
 
+	// Generate a return structure
 	ret := &DecisionTreeNode{
 		RuleNode,
 		nil,
 		nil,
 		classes,
 		maxClass,
-		from.GetClassAttrPtr(),
+		getClassAttr(from),
 	}
 
-	// Generate a return structure
 	// Generate the splitting attribute
 	splitOnAttribute := with.GenerateSplitAttribute(from)
 	if splitOnAttribute == nil {
@@ -98,7 +104,7 @@ func InferID3Tree(from *base.Instances, with RuleGenerator) *DecisionTreeNode {
 		return ret
 	}
 	// Split the attributes based on this attribute's value
-	splitInstances := from.DecomposeOnAttributeValues(splitOnAttribute)
+	splitInstances := base.DecomposeOnAttributeValues(from, splitOnAttribute)
 	// Create new children from these attributes
 	ret.Children = make(map[string]*DecisionTreeNode)
 	for k := range splitInstances {
@@ -146,13 +152,13 @@ func (d *DecisionTreeNode) String() string {
 }
 
 // computeAccuracy is a helper method for Prune()
-func computeAccuracy(predictions *base.Instances, from *base.Instances) float64 {
+func computeAccuracy(predictions base.FixedDataGrid, from base.FixedDataGrid) float64 {
 	cf := eval.GetConfusionMatrix(from, predictions)
 	return eval.GetAccuracy(cf)
 }
 
 // Prune eliminates branches which hurt accuracy
-func (d *DecisionTreeNode) Prune(using *base.Instances) {
+func (d *DecisionTreeNode) Prune(using base.FixedDataGrid) {
 	// If you're a leaf, you're already pruned
 	if d.Children == nil {
 		return
@@ -162,9 +168,13 @@ func (d *DecisionTreeNode) Prune(using *base.Instances) {
 	}
 
 	// Recursively prune children of this node
-	sub := using.DecomposeOnAttributeValues(d.SplitAttr)
+	sub := base.DecomposeOnAttributeValues(using, d.SplitAttr)
 	for k := range d.Children {
 		if sub[k] == nil {
+			continue
+		}
+		subH, subV := sub[k].Size()
+		if subH == 0 || subV == 0 {
 			continue
 		}
 		d.Children[k].Prune(sub[k])
@@ -185,24 +195,30 @@ func (d *DecisionTreeNode) Prune(using *base.Instances) {
 }
 
 // Predict outputs a base.Instances containing predictions from this tree
-func (d *DecisionTreeNode) Predict(what *base.Instances) *base.Instances {
-	outputAttrs := make([]base.Attribute, 1)
-	outputAttrs[0] = what.GetClassAttr()
-	predictions := base.NewInstances(outputAttrs, what.Rows)
-	for i := 0; i < what.Rows; i++ {
+func (d *DecisionTreeNode) Predict(what base.FixedDataGrid) base.FixedDataGrid {
+	predictions := base.GeneratePredictionVector(what)
+	classAttr := getClassAttr(predictions)
+	classAttrSpec, err := predictions.GetAttribute(classAttr)
+	if err != nil {
+		panic(err)
+	}
+	predAttrs := base.AttributeDifferenceReferences(what.AllAttributes(), predictions.AllClassAttributes())
+	predAttrSpecs := base.ResolveAttributes(what, predAttrs)
+	what.MapOverRows(predAttrSpecs, func(row [][]byte, rowNo int) (bool, error) {
 		cur := d
 		for {
 			if cur.Children == nil {
-				predictions.SetAttrStr(i, 0, cur.Class)
+				predictions.Set(classAttrSpec, rowNo, classAttr.GetSysValFromString(cur.Class))
 				break
 			} else {
 				at := cur.SplitAttr
-				j := what.GetAttrIndex(at)
-				if j == -1 {
-					predictions.SetAttrStr(i, 0, cur.Class)
+				ats, err := what.GetAttribute(at)
+				if err != nil {
+					predictions.Set(classAttrSpec, rowNo, classAttr.GetSysValFromString(cur.Class))
 					break
 				}
-				classVar := at.GetStringFromSysVal(what.Get(i, j))
+
+				classVar := ats.GetAttribute().GetStringFromSysVal(what.Get(ats, rowNo))
 				if next, ok := cur.Children[classVar]; ok {
 					cur = next
 				} else {
@@ -217,7 +233,8 @@ func (d *DecisionTreeNode) Predict(what *base.Instances) *base.Instances {
 				}
 			}
 		}
-	}
+		return true, nil
+	})
 	return predictions
 }
 
@@ -245,7 +262,7 @@ func NewID3DecisionTree(prune float64) *ID3DecisionTree {
 }
 
 // Fit builds the ID3 decision tree
-func (t *ID3DecisionTree) Fit(on *base.Instances) {
+func (t *ID3DecisionTree) Fit(on base.FixedDataGrid) {
 	rule := new(InformationGainRuleGenerator)
 	if t.PruneSplit > 0.001 {
 		trainData, testData := base.InstancesTrainTestSplit(on, t.PruneSplit)
@@ -257,7 +274,7 @@ func (t *ID3DecisionTree) Fit(on *base.Instances) {
 }
 
 // Predict outputs predictions from the ID3 decision tree
-func (t *ID3DecisionTree) Predict(what *base.Instances) *base.Instances {
+func (t *ID3DecisionTree) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 	return t.Root.Predict(what)
 }
 

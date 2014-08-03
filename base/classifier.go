@@ -10,17 +10,17 @@ type Classifier interface {
 	// and constructs a new set of Instances of equivalent
 	// length with only the class Attribute and fills it in
 	// with predictions.
-	Predict(*Instances) *Instances
+	Predict(FixedDataGrid) FixedDataGrid
 	// Takes a set of instances and updates the Classifier's
 	// internal structures to enable prediction
-	Fit(*Instances)
+	Fit(FixedDataGrid)
 	// Why not make every classifier return a nice-looking string?
 	String() string
 }
 
 // BaseClassifier stores options common to every classifier.
 type BaseClassifier struct {
-	TrainingData *Instances
+	TrainingData *DataGrid
 }
 
 type BaseRegressor struct {
