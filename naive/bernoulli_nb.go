@@ -71,7 +71,7 @@ func (nb *BernoulliNBClassifier) Fit(X base.FixedDataGrid) {
 	// Check that all Attributes are binary
 	classAttrs := X.AllClassAttributes()
 	allAttrs := X.AllAttributes()
-	featAttrs := base.AttributeDifferenceReferences(allAttrs, classAttrs)
+	featAttrs := base.AttributeDifference(allAttrs, classAttrs)
 	for i := range featAttrs {
 		if _, ok := featAttrs[i].(*base.BinaryAttribute); !ok {
 			panic(fmt.Sprintf("%v: Should be BinaryAttribute", featAttrs[i]))
