@@ -14,11 +14,11 @@ const (
 	// EDF_VERSION is the file format version
 	EDF_VERSION = 1
 	// EDF_LENGTH is th number of OS pages in each slice
-	EDF_LENGTH = 1024 * 1024
+	EDF_LENGTH = 32
 	// EDF_SIZE sets the maximum size of the mapping, represented with
 	// EDF_LENGTH segments
-	// Currently set arbitrarily to 4 GiB
-	EDF_SIZE = 4 * (1024 * 1024 * 1024)
+	// Currently set arbitrarily to 128 MiB
+	EDF_SIZE = 128 * (1024 * 1024)
 )
 
 const (

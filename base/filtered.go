@@ -75,7 +75,7 @@ func (l *LazilyFilteredInstances) AllAttributes() []Attribute {
 	for i, a := range l.attrs {
 		ret[i] = a.New
 	}
-	for a := range l.unfilteredMap {
+	for _, a := range l.src.AllAttributes() {
 		if l.unfilteredMap[a] {
 			ret = append(ret, a)
 		}
