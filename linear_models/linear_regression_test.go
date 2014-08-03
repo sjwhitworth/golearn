@@ -54,8 +54,10 @@ func TestLinearRegression(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for i := 0; i < predictions.Rows; i++ {
-		fmt.Printf("Expected: %f || Predicted: %f\n", testData.Get(i, testData.ClassIndex), predictions.Get(i, predictions.ClassIndex))
+	_, rows := predictions.Size()
+
+	for i := 0; i < rows; i++ {
+		fmt.Printf("Expected: %s || Predicted: %s\n", base.GetClass(testData, i), base.GetClass(predictions, i))
 	}
 }
 
