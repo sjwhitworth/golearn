@@ -112,7 +112,7 @@ func (b *BaggedModel) Predict(from base.FixedDataGrid) base.FixedDataGrid {
 		for { // Need to resolve the voting problem
 			incoming, ok := <-votes
 			if ok {
-				cSpecs := base.ResolveAllAttributes(incoming, incoming.AllClassAttributes())
+				cSpecs := base.ResolveAttributes(incoming, incoming.AllClassAttributes())
 				incoming.MapOverRows(cSpecs, func(row [][]byte, predRow int) (bool, error) {
 					// Check if we've seen this class before...
 					if _, ok := voting[predRow]; !ok {

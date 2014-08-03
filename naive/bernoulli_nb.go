@@ -1,8 +1,8 @@
 package naive
 
 import (
-    "math"
-    base "github.com/sjwhitworth/golearn/base"
+	base "github.com/sjwhitworth/golearn/base"
+	"math"
 )
 
 // A Bernoulli Naive Bayes Classifier. Naive Bayes classifiers assumes
@@ -37,91 +37,103 @@ import (
 // Information Retrieval. Cambridge University Press, pp. 234-265.
 // http://nlp.stanford.edu/IR-book/html/htmledition/the-bernoulli-model-1.html
 type BernoulliNBClassifier struct {
-    base.BaseEstimator
-    // Conditional probability for each term. This vector should be
-    // accessed in the following way: p(f|c) = condProb[c][f].
-    // Logarithm is used in order to avoid underflow.
-    condProb map[string][]float64
-    // Number of instances in each class. This is necessary in order to
-    // calculate the laplace smooth value during the Predict step.
-    classInstances map[string]int
-    // Number of instances used in training.
-    trainingInstances int
-    // Number of features in the training set
-    features int
+	base.BaseEstimator
+	// Conditional probability for each term. This vector should be
+	// accessed in the following way: p(f|c) = condProb[c][f].
+	// Logarithm is used in order to avoid underflow.
+	condProb map[string][]float64
+	// Number of instances in each class. This is necessary in order to
+	// calculate the laplace smooth value during the Predict step.
+	classInstances map[string]int
+	// Number of instances used in training.
+	trainingInstances int
+	// Number of features in the training set
+	features int
 }
 
 // Create a new Bernoulli Naive Bayes Classifier. The argument 'classes'
 // is the number of possible labels in the classification task.
 func NewBernoulliNBClassifier() *BernoulliNBClassifier {
-    nb := BernoulliNBClassifier{}
-    nb.condProb = make(map[string][]float64)
-    nb.features = 0
-    nb.trainingInstances = 0
-    return &nb
+	nb := BernoulliNBClassifier{}
+	nb.condProb = make(map[string][]float64)
+	nb.features = 0
+	nb.trainingInstances = 0
+	return &nb
 }
 
 // Fill data matrix with Bernoulli Naive Bayes model. All values
 // necessary for calculating prior probability and p(f_i)
-func (nb *BernoulliNBClassifier) Fit(X *base.Instances) {
+func (nb *BernoulliNBClassifier) Fit(X base.FixedDataGrid) {
 
-    // Number of features and instances in this training set
-    nb.trainingInstances = X.Rows
-    nb.features = 0
-    if X.Rows > 0 {
-        nb.features = len(X.GetRowVectorWithoutClass(0))
-    }
+	// Check that all Attributes are binary
+	classAttrs := X.AllClassAttributes()
+	allAttrs := X.AllAttributes()
+	featAttrs := base.AttributeDifferenceReference(allAttrs, classAttrs)
+	for i := range featAttrs {
+		if _, ok := featAttrs[i].(*base.BinaryAttribute); !ok {
+			panic(fmt.Sprintf("%v: Should be BinaryAttribute", featAttrs[i]))
+		}
+	}
+	featAttrSpecs := base.ResolveAllAttributes(featAttrs, X)
 
-    // Number of instances in class
-    nb.classInstances = make(map[string]int)
+	// Check that only one classAttribute is defined
+	if len(classAttrs) > 0 {
+		panic("Only one class Attribute can be used")
+	}
 
-    // Number of documents with given term (by class)
-    docsContainingTerm := make(map[string][]int)
+	// Number of features and instances in this training set
+	nb.features, nb.trainingInstances() = X.Size()
 
-    // This algorithm could be vectorized after binarizing the data
-    // matrix. Since mat64 doesn't have this function, a iterative
-    // version is used.
-    for r := 0; r < X.Rows; r++ {
-        class := X.GetClass(r)
-        docVector := X.GetRowVectorWithoutClass(r)
+	// Number of instances in class
+	nb.classInstances = make(map[string]int)
 
-        // increment number of instances in class
-        t, ok := nb.classInstances[class]
-            if !ok { t = 0 }
-            nb.classInstances[class] = t + 1
+	// Number of documents with given term (by class)
+	docsContainingTerm := make(map[string][]int)
 
+	// This algorithm could be vectorized after binarizing the data
+	// matrix. Since mat64 doesn't have this function, a iterative
+	// version is used.
+	X.MapOverRows(featAttrSpecs, func(docVector [][]byte, r int) (bool, error) {
+		class := base.GetClass(X, r)
 
-        for feat := 0; feat < len(docVector); feat++ {
-            v := docVector[feat]
-            // In Bernoulli Naive Bayes the presence and absence of
-            // features are considered. All non-zero values are
-            // treated as presence.
-            if v > 0 {
-                // Update number of times this feature appeared within
-                // given label.
-                t, ok := docsContainingTerm[class]
-                if !ok {
-                    t = make([]int, nb.features)
-                    docsContainingTerm[class] = t
-                }
-                t[feat] += 1
-            }
-        }
-    }
+		// increment number of instances in class
+		t, ok := nb.classInstances[class]
+		if !ok {
+			t = 0
+		}
+		nb.classInstances[class] = t + 1
 
-    // Pre-calculate conditional probabilities for each class
-    for c, _ := range nb.classInstances {
-        nb.condProb[c] = make([]float64, nb.features)
-        for feat := 0; feat < nb.features; feat++ {
-            classTerms, _ := docsContainingTerm[c]
-            numDocs := classTerms[feat]
-            docsInClass, _ := nb.classInstances[c]
+		for feat := 0; feat < len(docVector); feat++ {
+			v := docVector[feat]
+			// In Bernoulli Naive Bayes the presence and absence of
+			// features are considered. All non-zero values are
+			// treated as presence.
+			if v[0] > 0 {
+				// Update number of times this feature appeared within
+				// given label.
+				t, ok := docsContainingTerm[class]
+				if !ok {
+					t = make([]int, nb.features)
+					docsContainingTerm[class] = t
+				}
+				t[feat] += 1
+			}
+		}
+	})
 
-            classCondProb, _ := nb.condProb[c]
-            // Calculate conditional probability with laplace smoothing
-            classCondProb[feat] = float64(numDocs + 1) / float64(docsInClass + 1)
-        }
-    }
+	// Pre-calculate conditional probabilities for each class
+	for c, _ := range nb.classInstances {
+		nb.condProb[c] = make([]float64, nb.features)
+		for feat := 0; feat < nb.features; feat++ {
+			classTerms, _ := docsContainingTerm[c]
+			numDocs := classTerms[feat]
+			docsInClass, _ := nb.classInstances[c]
+
+			classCondProb, _ := nb.condProb[c]
+			// Calculate conditional probability with laplace smoothing
+			classCondProb[feat] = float64(numDocs+1) / float64(docsInClass+1)
+		}
+	}
 }
 
 // Use trained model to predict test vector's class. The following
@@ -134,43 +146,43 @@ func (nb *BernoulliNBClassifier) Fit(X *base.Instances) {
 // IMPORTANT: PredictOne panics if Fit was not called or if the
 // document vector and train matrix have a different number of columns.
 func (nb *BernoulliNBClassifier) PredictOne(vector []float64) string {
-    if nb.features == 0 {
-        panic("Fit should be called before predicting")
-    }
+	if nb.features == 0 {
+		panic("Fit should be called before predicting")
+	}
 
-    if len(vector) != nb.features {
-        panic("Different dimensions in Train and Test sets")
-    }
+	if len(vector) != nb.features {
+		panic("Different dimensions in Train and Test sets")
+	}
 
-    // Currently only the predicted class is returned.
-    bestScore := -math.MaxFloat64
-    bestClass := ""
+	// Currently only the predicted class is returned.
+	bestScore := -math.MaxFloat64
+	bestClass := ""
 
-    for class, classCount := range nb.classInstances {
-        // Init classScore with log(prior)
-        classScore := math.Log((float64(classCount))/float64(nb.trainingInstances))
-        for f := 0; f < nb.features; f++ {
-            if vector[f] > 0 {
-                // Test document has feature c
-                classScore += math.Log(nb.condProb[class][f])
-            } else {
-                if nb.condProb[class][f] == 1.0 {
-                    // special case when prob = 1.0, consider laplace
-                    // smooth
-                    classScore += math.Log(1.0 / float64(nb.classInstances[class] + 1))
-                } else {
-                    classScore += math.Log(1.0 - nb.condProb[class][f])
-                }
-            }
-        }
+	for class, classCount := range nb.classInstances {
+		// Init classScore with log(prior)
+		classScore := math.Log((float64(classCount)) / float64(nb.trainingInstances))
+		for f := 0; f < nb.features; f++ {
+			if vector[f] > 0 {
+				// Test document has feature c
+				classScore += math.Log(nb.condProb[class][f])
+			} else {
+				if nb.condProb[class][f] == 1.0 {
+					// special case when prob = 1.0, consider laplace
+					// smooth
+					classScore += math.Log(1.0 / float64(nb.classInstances[class]+1))
+				} else {
+					classScore += math.Log(1.0 - nb.condProb[class][f])
+				}
+			}
+		}
 
-        if classScore > bestScore {
-            bestScore = classScore
-            bestClass = class
-        }
-    }
+		if classScore > bestScore {
+			bestScore = classScore
+			bestClass = class
+		}
+	}
 
-    return bestClass
+	return bestClass
 }
 
 // Predict is just a wrapper for the PredictOne function.
@@ -178,9 +190,9 @@ func (nb *BernoulliNBClassifier) PredictOne(vector []float64) string {
 // IMPORTANT: Predict panics if Fit was not called or if the
 // document vector and train matrix have a different number of columns.
 func (nb *BernoulliNBClassifier) Predict(what *base.Instances) *base.Instances {
-    ret := what.GeneratePredictionVector()
-    for i := 0; i < what.Rows; i++ {
-        ret.SetAttrStr(i, 0, nb.PredictOne(what.GetRowVectorWithoutClass(i)))
-    }
-    return ret
+	ret := what.GeneratePredictionVector()
+	for i := 0; i < what.Rows; i++ {
+		ret.SetAttrStr(i, 0, nb.PredictOne(what.GetRowVectorWithoutClass(i)))
+	}
+	return ret
 }

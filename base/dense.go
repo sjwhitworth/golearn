@@ -379,7 +379,7 @@ func (inst *DenseInstances) Size() (int, int) {
 
 // swapRows swaps over rows i and j
 func (inst *DenseInstances) swapRows(i, j int) {
-	as := GetAllAttributeSpecs(inst)
+	as := ResolveAllAttributes(inst)
 	for _, a := range as {
 		v1 := inst.Get(a, i)
 		v2 := inst.Get(a, j)
@@ -424,7 +424,7 @@ func (inst *DenseInstances) String() string {
 	var buffer bytes.Buffer
 
 	// Get all Attribute information
-	as := GetAllAttributeSpecs(inst)
+	as := ResolveAllAttributes(inst)
 
 	// Print header
 	cols, rows := inst.Size()

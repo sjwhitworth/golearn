@@ -34,7 +34,7 @@ func convertInstancesToProblemVec(X base.FixedDataGrid) [][]float64 {
 
 	// Retrieve numeric non-class Attributes
 	numericAttrs := base.NonClassFloatAttributes(X)
-	numericAttrSpecs := base.ResolveAllAttributes(X, numericAttrs)
+	numericAttrSpecs := base.ResolveAttributes(X, numericAttrs)
 
 	// Convert each row
 	X.MapOverRows(numericAttrSpecs, func(row [][]byte, rowNo int) (bool, error) {
@@ -66,7 +66,7 @@ func convertInstancesToLabelVec(X base.FixedDataGrid) []float64 {
 	_, rows := X.Size()
 	labelVec := make([]float64, rows)
 	// Resolve class Attribute specification
-	classAttrSpecs := base.ResolveAllAttributes(X, classAttrs)
+	classAttrSpecs := base.ResolveAttributes(X, classAttrs)
 	X.MapOverRows(classAttrSpecs, func(row [][]byte, rowNo int) (bool, error) {
 		labelVec[rowNo] = base.UnpackBytesToFloat(row[0])
 		return true, nil
@@ -90,10 +90,10 @@ func (lr *LogisticRegression) Predict(X base.FixedDataGrid) base.FixedDataGrid {
 	}
 	// Generate return structure
 	ret := base.GeneratePredictionVector(X)
-	classAttrSpecs := base.ResolveAllAttributes(ret, classAttrs)
+	classAttrSpecs := base.ResolveAttributes(ret, classAttrs)
 	// Retrieve numeric non-class Attributes
 	numericAttrs := base.NonClassFloatAttributes(X)
-	numericAttrSpecs := base.ResolveAllAttributes(X, numericAttrs)
+	numericAttrSpecs := base.ResolveAttributes(X, numericAttrs)
 
 	// Allocate row storage
 	row := make([]float64, len(numericAttrSpecs))

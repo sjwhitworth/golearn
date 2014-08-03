@@ -112,7 +112,7 @@ func TestChiMerge2(testEnv *testing.T) {
 
 	// Sort the instances
 	allAttrs := inst.AllAttributes()
-	sortAttrSpecs := base.ResolveAllAttributes(inst, allAttrs)[0:1]
+	sortAttrSpecs := base.ResolveAttributes(inst, allAttrs)[0:1]
 	instSorted, err := base.Sort(inst, base.Ascending, sortAttrSpecs)
 	if err != nil {
 		panic(err)

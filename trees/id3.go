@@ -203,7 +203,7 @@ func (d *DecisionTreeNode) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 		panic(err)
 	}
 	predAttrs := base.AttributeDifferenceReferences(what.AllAttributes(), predictions.AllClassAttributes())
-	predAttrSpecs := base.ResolveAllAttributes(what, predAttrs)
+	predAttrSpecs := base.ResolveAttributes(what, predAttrs)
 	what.MapOverRows(predAttrSpecs, func(row [][]byte, rowNo int) (bool, error) {
 		cur := d
 		for {

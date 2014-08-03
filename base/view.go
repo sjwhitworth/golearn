@@ -78,7 +78,7 @@ func NewInstancesViewFromRows(src FixedDataGrid, rows map[int]int) *InstancesVie
 func NewInstancesViewFromVisible(src FixedDataGrid, rows []int, attrs []Attribute) *InstancesView {
 	ret := &InstancesView{
 		src,
-		GetSomeAttributeSpecs(src, attrs),
+		ResolveAttributes(src, attrs),
 		make(map[int]int),
 		make(map[Attribute]bool),
 		true,
@@ -99,7 +99,7 @@ func NewInstancesViewFromVisible(src FixedDataGrid, rows []int, attrs []Attribut
 func NewInstancesViewFromAttrs(src FixedDataGrid, attrs []Attribute) *InstancesView {
 	ret := &InstancesView{
 		src,
-		GetSomeAttributeSpecs(src, attrs),
+		ResolveAttributes(src, attrs),
 		nil,
 		make(map[Attribute]bool),
 		false,
@@ -252,7 +252,7 @@ func (v *InstancesView) String() string {
 	maxRows := 30
 
 	// Get all Attribute information
-	as := GetAllAttributeSpecs(v)
+	as := ResolveAllAttributes(v)
 
 	// Print header
 	cols, rows := v.Size()
@@ -305,7 +305,7 @@ func (v *InstancesView) String() string {
 // RowString returns a string representation of a given row.
 func (v *InstancesView) RowString(row int) string {
 	var buffer bytes.Buffer
-	as := GetAllAttributeSpecs(v)
+	as := ResolveAllAttributes(v)
 	first := true
 	for _, a := range as {
 		val := v.Get(a, row)

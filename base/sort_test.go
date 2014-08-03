@@ -44,8 +44,8 @@ func TestSortDesc(testEnv *testing.T) {
 		return
 	}
 
-	as1 := GetAllAttributeSpecs(inst1)
-	as2 := GetAllAttributeSpecs(inst2)
+	as1 := ResolveAllAttributes(inst1)
+	as2 := ResolveAllAttributes(inst2)
 
 	if isSortedDesc(inst1, as1[0]) {
 		testEnv.Error("Can't test descending sort order")
@@ -71,7 +71,7 @@ func TestSortDesc(testEnv *testing.T) {
 
 func TestSortAsc(testEnv *testing.T) {
 	inst, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	as1 := GetAllAttributeSpecs(inst)
+	as1 := ResolveAllAttributes(inst)
 	if isSortedAsc(inst, as1[0]) {
 		testEnv.Error("Can't test ascending sort on something ascending already")
 	}
@@ -90,7 +90,7 @@ func TestSortAsc(testEnv *testing.T) {
 		testEnv.Error(err)
 		return
 	}
-	as2 := GetAllAttributeSpecs(inst2)
+	as2 := ResolveAllAttributes(inst2)
 	if !isSortedAsc(inst2, as2[0]) {
 		testEnv.Error("This file should be sorted in ascending order")
 	}

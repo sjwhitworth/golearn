@@ -38,9 +38,9 @@ func NonClassAttributes(d DataGrid) []Attribute {
 	return AttributeDifferenceReferences(allAttrs, classAttrs)
 }
 
-// ResolveAllAttributes returns AttributeSpecs describing
+// ResolveAttributes returns AttributeSpecs describing
 // all of the Attributes.
-func ResolveAllAttributes(d DataGrid, attrs []Attribute) []AttributeSpec {
+func ResolveAttributes(d DataGrid, attrs []Attribute) []AttributeSpec {
 	ret := make([]AttributeSpec, len(attrs))
 	for i, a := range attrs {
 		spec, err := d.GetAttribute(a)
@@ -52,25 +52,9 @@ func ResolveAllAttributes(d DataGrid, attrs []Attribute) []AttributeSpec {
 	return ret
 }
 
-// GetAllAttributeSpecs retrieves every Attribute specification
-// from a given DataGrid. Useful in conjunction with MapOverRows.
-func GetAllAttributeSpecs(from DataGrid) []AttributeSpec {
-	attrs := from.AllAttributes()
-	return GetSomeAttributeSpecs(from, attrs)
-}
-
-// GetSomeAttributeSpecs returns a subset of Attribute specifications
-// from a given DataGrid.
-func GetSomeAttributeSpecs(from DataGrid, attrs []Attribute) []AttributeSpec {
-	ret := make([]AttributeSpec, len(attrs))
-	for i, a := range attrs {
-		as, err := from.GetAttribute(a)
-		if err != nil {
-			panic(err)
-		}
-		ret[i] = as
-	}
-	return ret
+// ResolveAllAttributes returns every AttributeSpec
+func ResolveAllAttributes(d DataGrid) []AttributeSpec {
+    return ResolveAttributes(d, d.AllAttributes())
 }
 
 func buildAttrSet(a []Attribute) map[Attribute]bool {

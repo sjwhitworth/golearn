@@ -129,7 +129,7 @@ func ParseCSVBuildInstances(filepath string, hasHeaders bool, u UpdatableDataGri
 
 	rowCounter := 0
 
-	specs := ResolveAllAttributes(u, u.AllAttributes())
+	specs := ResolveAttributes(u, u.AllAttributes())
 
 	for {
 		record, err := reader.Read()

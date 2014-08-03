@@ -65,8 +65,8 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 	ret := base.GeneratePredictionVector(what)
 
 	// Resolve Attribute specifications for both
-	whatAttrSpecs := base.ResolveAllAttributes(what, allNumericAttrs)
-	trainAttrSpecs := base.ResolveAllAttributes(KNN.TrainingData, allNumericAttrs)
+	whatAttrSpecs := base.ResolveAttributes(what, allNumericAttrs)
+	trainAttrSpecs := base.ResolveAttributes(KNN.TrainingData, allNumericAttrs)
 
 	// Reserve storage for most the most similar items
 	distances := make(map[int]float64)

@@ -46,7 +46,7 @@ func main() {
 	// for doing so is not very sophisticated.
 
 	// First, have to resolve Attribute Specifications
-	as := base.ResolveAllAttributes(rawData, rawData.AllAttributes())
+	as := base.ResolveAttributes(rawData, rawData.AllAttributes())
 
 	// Attribute Specifications describe where a given column lives
 	rawData.Set(as[0], 0, as[0].GetAttribute().GetSysValFromString("1.00"))

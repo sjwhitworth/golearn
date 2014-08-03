@@ -144,7 +144,7 @@ func DecomposeOnAttributeValues(inst FixedDataGrid, at Attribute) map[string]Fix
 	rowMaps := make(map[string][]int)
 
 	// Build full Attribute set
-	fullAttrSpec := ResolveAllAttributes(inst, newAttrs)
+	fullAttrSpec := ResolveAttributes(inst, newAttrs)
 	fullAttrSpec = append(fullAttrSpec, attrSpec)
 
 	// Decompose

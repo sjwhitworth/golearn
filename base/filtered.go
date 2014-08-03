@@ -153,7 +153,7 @@ func (l *LazilyFilteredInstances) MapOverRows(asv []AttributeSpec, mapFunc func(
 func (l *LazilyFilteredInstances) RowString(row int) string {
 	var buffer bytes.Buffer
 
-	as := GetAllAttributeSpecs(l) // Retrieve all Attribute data
+	as := ResolveAllAttributes(l) // Retrieve all Attribute data
 	first := true                 // Decide whether to prefix
 
 	for _, a := range as {
@@ -188,7 +188,7 @@ func (l *LazilyFilteredInstances) String() string {
 	}
 
 	// Get all Attribute information
-	as := GetAllAttributeSpecs(l)
+	as := ResolveAllAttributes(l)
 
 	// Print header
 	buffer.WriteString("Lazily filtered instances using ")
