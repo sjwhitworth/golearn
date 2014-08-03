@@ -162,7 +162,8 @@ func (c *ChiMergeFilter) GetAttributesAfterFiltering() []base.FilteredAttribute 
 	return ret
 }
 
-func (c *ChiMergeFilter) Transform(a base.Attribute, field []byte) []byte {
+// Transform returns the byte sequence after discretisation
+func (c *ChiMergeFilter) Transform(a base.Attribute, n base.Attribute, field []byte) []byte {
 	// Do we use this Attribute?
 	if !c.attrs[a] {
 		return field
@@ -180,4 +181,8 @@ func (c *ChiMergeFilter) Transform(a base.Attribute, field []byte) []byte {
 	}
 
 	return base.PackU64ToBytes(uint64(dis))
+}
+
+func (c *ChiMergeFilter) String() string {
+	return fmt.Sprintf("ChiMergeFilter(%d Attributes, %.2f Significance)", len(c.tables), c.Significance)
 }

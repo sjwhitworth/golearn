@@ -1,57 +1,62 @@
 package base
 
 import (
-    "fmt"
+	"fmt"
 )
 
 // CategoricalAttribute is an Attribute implementation
 // which stores discrete string values
 // - useful for representing classes.
 type CategoricalAttribute struct {
-    Name   string
-    values []string
+	Name   string
+	values []string
 }
 
 // NewCategoricalAttribute creates a blank CategoricalAttribute.
 func NewCategoricalAttribute() *CategoricalAttribute {
-    return &CategoricalAttribute{
-        "",
-        make([]string, 0),
-    }
+	return &CategoricalAttribute{
+		"",
+		make([]string, 0),
+	}
+}
+
+// GetValues returns all the values currently defined
+func (Attr *CategoricalAttribute) GetValues() []string {
+	return Attr.values
 }
 
 // GetName returns the human-readable name assigned to this attribute.
 func (Attr *CategoricalAttribute) GetName() string {
-    return Attr.Name
+	return Attr.Name
 }
 
 // SetName sets the human-readable name on this attribute.
 func (Attr *CategoricalAttribute) SetName(name string) {
-    Attr.Name = name
+	Attr.Name = name
 }
 
 // GetType returns CategoricalType to avoid casting overhead.
 func (Attr *CategoricalAttribute) GetType() int {
-    return CategoricalType
+	return CategoricalType
 }
 
 // GetSysVal returns the system representation of userVal as an index into the Values slice
 // If the userVal can't be found, it returns nothing.
 func (Attr *CategoricalAttribute) GetSysVal(userVal string) []byte {
-    for idx, val := range Attr.values {
-        if val == userVal {
-            return PackU64ToBytes(uint64(idx))
-        }
-    }
-    return nil
+	for idx, val := range Attr.values {
+		if val == userVal {
+			return PackU64ToBytes(uint64(idx))
+		}
+	}
+	return nil
 }
 
 // GetUsrVal returns a human-readable representation of the given sysVal.
 //
 // IMPORTANT: this function doesn't check the boundaries of the array.
 func (Attr *CategoricalAttribute) GetUsrVal(sysVal []byte) string {
-    idx := UnpackBytesToU64(sysVal)
-    return Attr.values[idx]
+	idx := UnpackBytesToU64(sysVal)
+	return Attr.values[idx]
 }
 
 // GetSysValFromString returns the system representation of rawVal
@@ -67,21 +72,21 @@ func (Attr *CategoricalAttribute) GetUsrVal(sysVal []byte) string {
 // the Values slide becomes ["iris-setosa", "iris-virginica", "iris-versicolor"]
 // and 2.00 is returned as the system representation.
 func (Attr *CategoricalAttribute) GetSysValFromString(rawVal string) []byte {
-    // Match in raw values
-    catIndex := -1
-    for i, s := range Attr.values {
-        if s == rawVal {
-            catIndex = i
-            break
-        }
-    }
-    if catIndex == -1 {
-        Attr.values = append(Attr.values, rawVal)
-        catIndex = len(Attr.values) - 1
-    }
+	// Match in raw values
+	catIndex := -1
+	for i, s := range Attr.values {
+		if s == rawVal {
+			catIndex = i
+			break
+		}
+	}
+	if catIndex == -1 {
+		Attr.values = append(Attr.values, rawVal)
+		catIndex = len(Attr.values) - 1
+	}
 
-    ret := PackU64ToBytes(uint64(catIndex))
-    return ret
+	ret := PackU64ToBytes(uint64(catIndex))
+	return ret
 }
 
 // String returns a human-readable summary of this Attribute.
@@ -89,7 +94,7 @@ func (Attr *CategoricalAttribute) GetSysValFromString(rawVal string) []byte {
 // Returns a string containing the list of human-readable values this
 // CategoricalAttribute can take.
 func (Attr *CategoricalAttribute) String() string {
-    return fmt.Sprintf("CategoricalAttribute(\"%s\", %s)", Attr.Name, Attr.values)
+	return fmt.Sprintf("CategoricalAttribute(\"%s\", %s)", Attr.Name, Attr.values)
 }
 
 // GetStringFromSysVal returns a human-readable value from the given system-representation
@@ -99,11 +104,11 @@ func (Attr *CategoricalAttribute) String() string {
 // the length of the array.
 // TODO: Return a user-configurable default instead.
 func (Attr *CategoricalAttribute) GetStringFromSysVal(rawVal []byte) string {
-    convVal := int(UnpackBytesToU64(rawVal))
-    if convVal >= len(Attr.values) {
-        panic(fmt.Sprintf("Out of range: %d in %d (%s)", convVal, len(Attr.values), Attr))
-    }
-    return Attr.values[convVal]
+	convVal := int(UnpackBytesToU64(rawVal))
+	if convVal >= len(Attr.values) {
+		panic(fmt.Sprintf("Out of range: %d in %d (%s)", convVal, len(Attr.values), Attr))
+	}
+	return Attr.values[convVal]
 }
 
 // Equals checks equality against another Attribute.
@@ -112,49 +117,49 @@ func (Attr *CategoricalAttribute) GetStringFromSysVal(rawVal []byte) string {
 // the same values and have the same name. Otherwise, this function
 // returns false.
 func (Attr *CategoricalAttribute) Equals(other Attribute) bool {
-    attribute, ok := other.(*CategoricalAttribute)
-    if !ok {
-        // Not the same type, so can't be equal
-        return false
-    }
-    if Attr.GetName() != attribute.GetName() {
-        return false
-    }
+	attribute, ok := other.(*CategoricalAttribute)
+	if !ok {
+		// Not the same type, so can't be equal
+		return false
+	}
+	if Attr.GetName() != attribute.GetName() {
+		return false
+	}
 
-    // Check that this CategoricalAttribute has the same
-    // values as the other, in the same order
-    if len(attribute.values) != len(Attr.values) {
-        return false
-    }
+	// Check that this CategoricalAttribute has the same
+	// values as the other, in the same order
+	if len(attribute.values) != len(Attr.values) {
+		return false
+	}
 
-    for i, a := range Attr.values {
-        if a != attribute.values[i] {
-            return false
-        }
-    }
+	for i, a := range Attr.values {
+		if a != attribute.values[i] {
+			return false
+		}
+	}
 
-    return true
+	return true
 }
 
 // Compatable checks that this CategoricalAttribute has the same
 // values as another, in the same order.
 func (Attr *CategoricalAttribute) Compatable(other Attribute) bool {
-    attribute, ok := other.(*CategoricalAttribute)
-    if !ok {
-        return false
-    }
+	attribute, ok := other.(*CategoricalAttribute)
+	if !ok {
+		return false
+	}
 
-    // Check that this CategoricalAttribute has the same
-    // values as the other, in the same order
-    if len(attribute.values) != len(Attr.values) {
-        return false
-    }
+	// Check that this CategoricalAttribute has the same
+	// values as the other, in the same order
+	if len(attribute.values) != len(Attr.values) {
+		return false
+	}
 
-    for i, a := range Attr.values {
-        if a != attribute.values[i] {
-            return false
-        }
-    }
+	for i, a := range Attr.values {
+		if a != attribute.values[i] {
+			return false
+		}
+	}
 
-    return true
+	return true
 }

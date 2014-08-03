@@ -14,8 +14,10 @@ type Filter interface {
 	AddAttribute(Attribute) error
 	// Allows mapping old to new Attributes
 	GetAttributesAfterFiltering() []FilteredAttribute
-	// Accepts an old Attribute and a byte sequence
-	Transform(Attribute, []byte) []byte
+	// Gets a string for printing
+	String() string
+	// Accepts an old Attribute, the new one and returns a sequence
+	Transform(Attribute, Attribute, []byte) []byte
 	// Builds the filter
 	Train() error
 }

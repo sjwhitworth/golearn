@@ -1,0 +1,4 @@
+floatAttr,shouldBe1Binary,shouldBe3Binary
+1.0,true,stoicism
+1.0,false,heroism
+0.0,false,romanticism

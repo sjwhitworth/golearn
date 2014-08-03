@@ -10,6 +10,13 @@ type BinaryAttribute struct {
 	Name string
 }
 
+// NewBinaryAttribute creates a BinaryAttribute with the given name
+func NewBinaryAttribute(name string) *BinaryAttribute {
+	return &BinaryAttribute{
+		name,
+	}
+}
+
 // GetName returns the name of this Attribute.
 func (b *BinaryAttribute) GetName() string {
 	return b.Name

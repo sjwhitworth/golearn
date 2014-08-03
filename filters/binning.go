@@ -30,6 +30,10 @@ func NewBinningFilter(d base.FixedDataGrid, bins int) *BinningFilter {
 	}
 }
 
+func (b *BinningFilter) String() string {
+	return fmt.Sprintf("BinningFilter(%d Attribute(s), %d bin(s)", b.attrs, b.bins)
+}
+
 // Train computes and stores the bin values
 // for the training instances.
 func (b *BinningFilter) Train() error {
@@ -68,7 +72,7 @@ func (b *BinningFilter) Train() error {
 
 // Transform takes an Attribute and byte sequence and returns
 // the transformed byte sequence.
-func (b *BinningFilter) Transform(a base.Attribute, field []byte) []byte {
+func (b *BinningFilter) Transform(a base.Attribute, n base.Attribute, field []byte) []byte {
 
 	if !b.attrs[a] {
 		return field

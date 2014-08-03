@@ -118,7 +118,7 @@ func (l *LazilyFilteredInstances) Get(as AttributeSpec, row int) []byte {
 		panic(fmt.Sprintf("Attribute %s could not be resolved. (Error: %s)", as, err))
 	}
 	byteSeq := l.src.Get(asOld, row)
-	newByteSeq := l.filter.Transform(asOld.attr, byteSeq)
+	newByteSeq := l.filter.Transform(asOld.attr, as.attr, byteSeq)
 	return newByteSeq
 }
 
@@ -141,7 +141,7 @@ func (l *LazilyFilteredInstances) MapOverRows(asv []AttributeSpec, mapFunc func(
 	newRowBuf := make([][]byte, len(asv))
 	return l.src.MapOverRows(oldAsv, func(oldRow [][]byte, oldRowNo int) (bool, error) {
 		for i, b := range oldRow {
-			newField := l.filter.Transform(oldAsv[i].attr, b)
+			newField := l.filter.Transform(oldAsv[i].attr, asv[i].attr, b)
 			newRowBuf[i] = newField
 		}
 		return mapFunc(newRowBuf, oldRowNo)
@@ -180,12 +180,19 @@ func (l *LazilyFilteredInstances) Size() (int, int) {
 func (l *LazilyFilteredInstances) String() string {
 	var buffer bytes.Buffer
 
+	// Decide on rows to print
+	_, rows := l.Size()
+	maxRows := 5
+	if rows < maxRows {
+		maxRows = rows
+	}
+
 	// Get all Attribute information
 	as := GetAllAttributeSpecs(l)
 
 	// Print header
 	buffer.WriteString("Lazily filtered instances using ")
-	buffer.WriteString(fmt.Sprintf("%s", l.filter))
+	buffer.WriteString(fmt.Sprintf("%s\n", l.filter))
 	buffer.WriteString(fmt.Sprintf("Attributes: \n"))
 
 	for _, a := range as {
@@ -197,7 +204,7 @@ func (l *LazilyFilteredInstances) String() string {
 	}
 
 	buffer.WriteString("\nData:\n")
-	for i := 0; i < 5; i++ {
+	for i := 0; i < maxRows; i++ {
 		buffer.WriteString("\t")
 		for _, a := range as {
 			val := l.Get(a, i)
