@@ -17,8 +17,8 @@ const (
 	EDF_LENGTH = 1024 * 1024
 	// EDF_SIZE sets the maximum size of the mapping, represented with
 	// EDF_LENGTH segments
-	// Currently set arbitrarily to 4 GiB
-	EDF_SIZE = 4 * (1024 * 1024 * 1024)
+	// Currently set arbitrarily to 256 MiB
+	EDF_SIZE = 256 * (1024 * 1024)
 )
 
 const (
