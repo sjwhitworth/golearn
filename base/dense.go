@@ -12,7 +12,8 @@ import (
 // in a large grid.
 type DenseInstances struct {
 	storage    *edf.EdfFile
-	ponds      map[string]*Pond
+	pondMap    map[string]int
+	ponds      []*Pond
 	lock       sync.Mutex
 	fixed      bool
 	classAttrs map[AttributeSpec]bool
@@ -29,7 +30,8 @@ func NewDenseInstances() *DenseInstances {
 	}
 	return &DenseInstances{
 		storage,
-		make(map[string]*Pond),
+		make(map[string]int),
+		make([]*Pond, 0),
 		sync.Mutex{},
 		false,
 		make(map[AttributeSpec]bool),
@@ -80,9 +82,9 @@ func (inst *DenseInstances) createPond(name string, size int) {
 	pond.attributes = make([]Attribute, 0)
 	pond.size = size
 	pond.alloc = make([][]byte, 0)
-
 	// Store within instances
-	inst.ponds[name] = pond
+	inst.pondMap[name] = len(inst.ponds)
+	inst.ponds = append(inst.ponds, pond)
 }
 
 // CreatePond adds a new Pond to this set of instances
@@ -112,12 +114,12 @@ func (inst *DenseInstances) GetPond(name string) (*Pond, error) {
 	defer inst.lock.Unlock()
 
 	// Check if the pond exists
-	if _, ok := inst.ponds[name]; !ok {
+	if id, ok := inst.pondMap[name]; !ok {
 		return nil, fmt.Errorf("Pond '%s' doesn't exist", name)
+	} else {
+		// Return the pond
+		return inst.ponds[id], nil
 	}
-
-	// Return the pond
-	return inst.ponds[name], nil
 }
 
 //
@@ -148,14 +150,14 @@ func (inst *DenseInstances) AddAttribute(a Attribute) AttributeSpec {
 	}
 
 	// Create the pond if it doesn't exist
-	if _, ok := inst.ponds[pond]; !ok {
+	if _, ok := inst.pondMap[pond]; !ok {
 		inst.createPond(pond, 8)
 	}
-	p := inst.ponds[pond]
-
+	id := inst.pondMap[pond]
+	p := inst.ponds[id]
 	p.attributes = append(p.attributes, a)
 	inst.attributes = append(inst.attributes, a)
-	return AttributeSpec{pond, len(p.attributes) - 1, a}
+	return AttributeSpec{id, len(p.attributes) - 1, a}
 }
 
 // AddAttributeToPond adds an Attribute to a given pond
@@ -164,20 +166,21 @@ func (inst *DenseInstances) AddAttributeToPond(newAttribute Attribute, pond stri
 	defer inst.lock.Unlock()
 
 	// Check if the pond exists
-	if _, ok := inst.ponds[pond]; !ok {
-		return AttributeSpec{"", 0, nil}, fmt.Errorf("Pond '%s' doesn't exist. Call CreatePond() first", pond)
+	if _, ok := inst.pondMap[pond]; !ok {
+		return AttributeSpec{-1, 0, nil}, fmt.Errorf("Pond '%s' doesn't exist. Call CreatePond() first", pond)
 	}
 
-	p := inst.ponds[pond]
+	id := inst.pondMap[pond]
+	p := inst.ponds[id]
 	for i, a := range p.attributes {
 		if !a.Compatable(newAttribute) {
-			return AttributeSpec{"", 0, nil}, fmt.Errorf("Attribute %s is not compatable with %s in pond '%s' (position %d)", newAttribute, a, pond, i)
+			return AttributeSpec{-1, 0, nil}, fmt.Errorf("Attribute %s is not compatable with %s in pond '%s' (position %d)", newAttribute, a, pond, i)
 		}
 	}
 
 	p.attributes = append(p.attributes, newAttribute)
 	inst.attributes = append(inst.attributes, newAttribute)
-	return AttributeSpec{pond, len(p.attributes) - 1, newAttribute}, nil
+	return AttributeSpec{id, len(p.attributes) - 1, newAttribute}, nil
 }
 
 // GetAttribute returns an Attribute equal to the argument.
@@ -189,16 +192,15 @@ func (inst *DenseInstances) GetAttribute(get Attribute) (AttributeSpec, error) {
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
-	for pondName := range inst.ponds {
-		p := inst.ponds[pondName]
-		for i, a := range p.attributes {
+	for i, p := range inst.ponds {
+		for j, a := range p.attributes {
 			if a.Equals(get) {
-				return AttributeSpec{pondName, i, a}, nil
+				return AttributeSpec{i, j, a}, nil
 			}
 		}
 	}
 
-	return AttributeSpec{"", 0, nil}, fmt.Errorf("Couldn't resolve %s", get)
+	return AttributeSpec{-1, 0, nil}, fmt.Errorf("Couldn't resolve %s", get)
 }
 
 // AllAttributes returns a slice of all Attributes.
@@ -310,14 +312,14 @@ func (inst *DenseInstances) Extend(rows int) error {
 //
 // IMPORTANT: Will panic() if the val is not the right length
 func (inst *DenseInstances) Set(a AttributeSpec, row int, val []byte) {
-	inst.ponds[a.pondName].set(a.position, row, val)
+	inst.ponds[a.pond].set(a.position, row, val)
 }
 
 // Get gets a particular Attribute (given as an AttributeSpec) on a particular
 // row.
 // AttributeSpecs can be obtained using GetAttribute() or AddAttribute()
 func (inst *DenseInstances) Get(a AttributeSpec, row int) []byte {
-	return inst.ponds[a.pondName].get(a.position, row)
+	return inst.ponds[a.pond].get(a.position, row)
 }
 
 // RowString returns a string representation of a given row.
@@ -343,7 +345,7 @@ func (inst *DenseInstances) RowString(row int) string {
 func (inst *DenseInstances) allocateRowVector(asv []AttributeSpec) [][]byte {
 	ret := make([][]byte, len(asv))
 	for i, as := range asv {
-		p := inst.ponds[as.pondName]
+		p := inst.ponds[as.pond]
 		ret[i] = make([]byte, p.size)
 	}
 	return ret
@@ -357,7 +359,7 @@ func (inst *DenseInstances) MapOverRows(asv []AttributeSpec, mapFunc func([][]by
 	rowBuf := make([][]byte, len(asv))
 	for i := 0; i < inst.maxRow; i++ {
 		for j, as := range asv {
-			p := inst.ponds[as.pondName]
+			p := inst.ponds[as.pond]
 			rowBuf[j] = p.get(as.position, i)
 		}
 		ok, err := mapFunc(rowBuf, i)

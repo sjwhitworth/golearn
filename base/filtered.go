@@ -57,7 +57,7 @@ func (l *LazilyFilteredInstances) GetAttribute(target Attribute) (AttributeSpec,
 		return l.src.GetAttribute(target)
 	}
 	var ret AttributeSpec
-	ret.pondName = ""
+	ret.pond = -1
 	for i, a := range l.attrs {
 		if a.New.Equals(target) {
 			ret.position = i
