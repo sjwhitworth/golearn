@@ -46,7 +46,7 @@ func (p *Pond) Storage() []PondStorageRef {
 	ret := make([]PondStorageRef, len(p.alloc))
 	rowSize := p.RowSize()
 	for i, b := range p.alloc {
-		ret[i] = PondStorageRef{b, len(b)/rowSize}
+		ret[i] = PondStorageRef{b, len(b) / rowSize}
 	}
 	return ret
 }

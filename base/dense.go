@@ -208,7 +208,14 @@ func (inst *DenseInstances) AllAttributes() []Attribute {
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
-	return inst.attributes
+	ret := make([]Attribute, 0)
+	for _, p := range inst.ponds {
+		for _, a := range p.attributes {
+			ret = append(ret, a)
+		}
+	}
+
+	return ret
 }
 
 // AddClassAttribute sets an Attribute to be a class Attribute.

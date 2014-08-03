@@ -71,13 +71,16 @@ func (l *LazilyFilteredInstances) GetAttribute(target Attribute) (AttributeSpec,
 // AllAttributes returns every Attribute defined in the source datagrid,
 // in addition to the revised Attributes created by the filter.
 func (l *LazilyFilteredInstances) AllAttributes() []Attribute {
-	ret := make([]Attribute, len(l.attrs))
-	for i, a := range l.attrs {
-		ret[i] = a.New
-	}
+	ret := make([]Attribute, 0)
 	for _, a := range l.src.AllAttributes() {
 		if l.unfilteredMap[a] {
 			ret = append(ret, a)
+		} else {
+			for _, b := range l.attrs {
+				if a.Equals(b.Old) {
+					ret = append(ret, b.New)
+				}
+			}
 		}
 	}
 	return ret
