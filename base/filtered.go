@@ -11,23 +11,39 @@ import (
 // LazilyFilteredInstances map a Filter over an underlying
 // FixedDataGrid and are a memory-efficient way of applying them.
 type LazilyFilteredInstances struct {
-	filter     Filter
-	src        FixedDataGrid
-	attrs      []FilteredAttribute
-	classAttrs map[Attribute]bool
+	filter        Filter
+	src           FixedDataGrid
+	attrs         []FilteredAttribute
+	classAttrs    map[Attribute]bool
+	unfilteredMap map[Attribute]bool
 }
 
 // NewLazilyFitleredInstances returns a new FixedDataGrid after
 // applying the given Filter to the Attributes it includes. Unfiltered
 // Attributes are passed through without modification.
 func NewLazilyFilteredInstances(src FixedDataGrid, f Filter) *LazilyFilteredInstances {
+
+	// Get the Attributes after filtering
 	attrs := f.GetAttributesAfterFiltering()
+
+	// Build a set of Attributes which have undergone filtering
+	unFilteredMap := make(map[Attribute]bool)
+	for _, a := range src.AllAttributes() {
+		unFilteredMap[a] = true
+	}
+	for _, a := range attrs {
+		unFilteredMap[a.Old] = false
+	}
+
+	// Create the return structure
 	ret := &LazilyFilteredInstances{
 		f,
 		src,
 		attrs,
 		make(map[Attribute]bool),
+		unFilteredMap,
 	}
+
 	// Transfer class Attributes
 	for _, a := range src.AllClassAttributes() {
 		ret.AddClassAttribute(a)
@@ -37,6 +53,9 @@ func NewLazilyFilteredInstances(src FixedDataGrid, f Filter) *LazilyFilteredInst
 
 // GetAttribute returns an AttributeSpecification for a given Attribute
 func (l *LazilyFilteredInstances) GetAttribute(target Attribute) (AttributeSpec, error) {
+	if l.unfilteredMap[target] {
+		return l.src.GetAttribute(target)
+	}
 	var ret AttributeSpec
 	ret.pondName = ""
 	for i, a := range l.attrs {
@@ -56,12 +75,21 @@ func (l *LazilyFilteredInstances) AllAttributes() []Attribute {
 	for i, a := range l.attrs {
 		ret[i] = a.New
 	}
+	for a := range l.unfilteredMap {
+		if l.unfilteredMap[a] {
+			ret = append(ret, a)
+		}
+	}
 	return ret
 }
 
 // AddClassAttribute adds a given Attribute (either before or after filtering)
 // to the set of defined class Attributes.
 func (l *LazilyFilteredInstances) AddClassAttribute(cls Attribute) error {
+	if l.unfilteredMap[cls] {
+		l.classAttrs[cls] = true
+		return nil
+	}
 	for _, a := range l.attrs {
 		if a.Old.Equals(cls) || a.New.Equals(cls) {
 			l.classAttrs[a.New] = true
@@ -74,6 +102,10 @@ func (l *LazilyFilteredInstances) AddClassAttribute(cls Attribute) error {
 // RemoveClassAttribute removes a given Attribute (either before or
 // after filtering) from the set of defined class Attributes.
 func (l *LazilyFilteredInstances) RemoveClassAttribute(cls Attribute) error {
+	if l.unfilteredMap[cls] {
+		l.classAttrs[cls] = false
+		return nil
+	}
 	for _, a := range l.attrs {
 		if a.Old.Equals(cls) || a.New.Equals(cls) {
 			l.classAttrs[a.New] = false
@@ -99,6 +131,9 @@ func (l *LazilyFilteredInstances) AllClassAttributes() []Attribute {
 }
 
 func (l *LazilyFilteredInstances) transformNewToOldAttribute(as AttributeSpec) (AttributeSpec, error) {
+	if l.unfilteredMap[as.GetAttribute()] {
+		return as, nil
+	}
 	for _, a := range l.attrs {
 		if a.Old.Equals(as.attr) || a.New.Equals(as.attr) {
 			as, err := l.src.GetAttribute(a.Old)
@@ -118,6 +153,9 @@ func (l *LazilyFilteredInstances) Get(as AttributeSpec, row int) []byte {
 		panic(fmt.Sprintf("Attribute %s could not be resolved. (Error: %s)", as, err))
 	}
 	byteSeq := l.src.Get(asOld, row)
+	if l.unfilteredMap[as.attr] {
+		return byteSeq
+	}
 	newByteSeq := l.filter.Transform(asOld.attr, as.attr, byteSeq)
 	return newByteSeq
 }

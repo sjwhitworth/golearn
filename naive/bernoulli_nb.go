@@ -1,6 +1,7 @@
 package naive
 
 import (
+	"fmt"
 	base "github.com/sjwhitworth/golearn/base"
 	"math"
 )
@@ -47,8 +48,10 @@ type BernoulliNBClassifier struct {
 	classInstances map[string]int
 	// Number of instances used in training.
 	trainingInstances int
-	// Number of features in the training set
+	// Number of features used in training
 	features int
+	// Attributes used to Train
+	attrs []base.Attribute
 }
 
 // Create a new Bernoulli Naive Bayes Classifier. The argument 'classes'
@@ -68,21 +71,23 @@ func (nb *BernoulliNBClassifier) Fit(X base.FixedDataGrid) {
 	// Check that all Attributes are binary
 	classAttrs := X.AllClassAttributes()
 	allAttrs := X.AllAttributes()
-	featAttrs := base.AttributeDifferenceReference(allAttrs, classAttrs)
+	featAttrs := base.AttributeDifferenceReferences(allAttrs, classAttrs)
 	for i := range featAttrs {
 		if _, ok := featAttrs[i].(*base.BinaryAttribute); !ok {
 			panic(fmt.Sprintf("%v: Should be BinaryAttribute", featAttrs[i]))
 		}
 	}
-	featAttrSpecs := base.ResolveAllAttributes(featAttrs, X)
+	featAttrSpecs := base.ResolveAttributes(X, featAttrs)
 
 	// Check that only one classAttribute is defined
-	if len(classAttrs) > 0 {
+	if len(classAttrs) != 1 {
 		panic("Only one class Attribute can be used")
 	}
 
 	// Number of features and instances in this training set
-	nb.features, nb.trainingInstances() = X.Size()
+	_, nb.trainingInstances = X.Size()
+	nb.attrs = featAttrs
+	nb.features = len(featAttrs)
 
 	// Number of instances in class
 	nb.classInstances = make(map[string]int)
@@ -119,6 +124,7 @@ func (nb *BernoulliNBClassifier) Fit(X base.FixedDataGrid) {
 				t[feat] += 1
 			}
 		}
+		return true, nil
 	})
 
 	// Pre-calculate conditional probabilities for each class
@@ -145,7 +151,7 @@ func (nb *BernoulliNBClassifier) Fit(X base.FixedDataGrid) {
 //
 // IMPORTANT: PredictOne panics if Fit was not called or if the
 // document vector and train matrix have a different number of columns.
-func (nb *BernoulliNBClassifier) PredictOne(vector []float64) string {
+func (nb *BernoulliNBClassifier) PredictOne(vector [][]byte) string {
 	if nb.features == 0 {
 		panic("Fit should be called before predicting")
 	}
@@ -162,7 +168,7 @@ func (nb *BernoulliNBClassifier) PredictOne(vector []float64) string {
 		// Init classScore with log(prior)
 		classScore := math.Log((float64(classCount)) / float64(nb.trainingInstances))
 		for f := 0; f < nb.features; f++ {
-			if vector[f] > 0 {
+			if vector[f][0] > 0 {
 				// Test document has feature c
 				classScore += math.Log(nb.condProb[class][f])
 			} else {
@@ -189,10 +195,17 @@ func (nb *BernoulliNBClassifier) PredictOne(vector []float64) string {
 //
 // IMPORTANT: Predict panics if Fit was not called or if the
 // document vector and train matrix have a different number of columns.
-func (nb *BernoulliNBClassifier) Predict(what *base.Instances) *base.Instances {
-	ret := what.GeneratePredictionVector()
-	for i := 0; i < what.Rows; i++ {
-		ret.SetAttrStr(i, 0, nb.PredictOne(what.GetRowVectorWithoutClass(i)))
-	}
+func (nb *BernoulliNBClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
+	// Generate return vector
+	ret := base.GeneratePredictionVector(what)
+
+	// Get the features
+	featAttrSpecs := base.ResolveAttributes(what, nb.attrs)
+
+	what.MapOverRows(featAttrSpecs, func(row [][]byte, i int) (bool, error) {
+		base.SetClass(ret, i, nb.PredictOne(row))
+		return true, nil
+	})
+
 	return ret
 }

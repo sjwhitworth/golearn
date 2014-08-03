@@ -54,7 +54,7 @@ func ResolveAttributes(d DataGrid, attrs []Attribute) []AttributeSpec {
 
 // ResolveAllAttributes returns every AttributeSpec
 func ResolveAllAttributes(d DataGrid) []AttributeSpec {
-    return ResolveAttributes(d, d.AllAttributes())
+	return ResolveAttributes(d, d.AllAttributes())
 }
 
 func buildAttrSet(a []Attribute) map[Attribute]bool {
