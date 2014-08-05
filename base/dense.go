@@ -12,8 +12,8 @@ import (
 // in a large grid.
 type DenseInstances struct {
 	storage    *edf.EdfFile
-	pondMap    map[string]int
-	ponds      []*Pond
+	agMap      map[string]int
+	ags        []AttributeGroup
 	lock       sync.Mutex
 	fixed      bool
 	classAttrs map[AttributeSpec]bool
@@ -31,7 +31,7 @@ func NewDenseInstances() *DenseInstances {
 	return &DenseInstances{
 		storage,
 		make(map[string]int),
-		make([]*Pond, 0),
+		make([]AttributeGroup, 0),
 		sync.Mutex{},
 		false,
 		make(map[AttributeSpec]bool),
@@ -41,12 +41,15 @@ func NewDenseInstances() *DenseInstances {
 }
 
 //
-// Pond functions
+// AttributeGroup functions
 //
 
-// createPond adds a new Pond to this set of Instances
+// createAttributeGroup adds a new AttributeGroup to this set of Instances
 // IMPORTANT: do not call unless you've acquired the lock
-func (inst *DenseInstances) createPond(name string, size int) {
+func (inst *DenseInstances) createAttributeGroup(name string, size int) {
+
+	var agAdd AttributeGroup
+
 	if inst.fixed {
 		panic("Can't add additional Attributes")
 	}
@@ -65,7 +68,7 @@ func (inst *DenseInstances) createPond(name string, size int) {
 		}
 	}
 	if ok {
-		panic("Can't create pond: pond thread already exists")
+		panic("Can't create AttributeGroup: thread already exists")
 	}
 
 	// Write the pool's thread into the file
@@ -75,28 +78,38 @@ func (inst *DenseInstances) createPond(name string, size int) {
 		panic(fmt.Sprintf("Can't write thread: %s", err))
 	}
 
-	// Create the pond information
-	pond := new(Pond)
-	pond.threadNo = thread.GetId()
-	pond.parent = inst
-	pond.attributes = make([]Attribute, 0)
-	pond.size = size
-	pond.alloc = make([][]byte, 0)
-	// Store within instances
-	inst.pondMap[name] = len(inst.ponds)
-	inst.ponds = append(inst.ponds, pond)
+	// Create the AttributeGroup information
+	if size != 0 {
+		ag := new(FixedAttributeGroup)
+		ag.threadNo = thread.GetId()
+		ag.parent = inst
+		ag.attributes = make([]Attribute, 0)
+		ag.size = size
+		ag.alloc = make([][]byte, 0)
+		agAdd = ag
+	} else {
+		ag := new(BinaryAttributeGroup)
+		ag.threadNo = thread.GetId()
+		ag.parent = inst
+		ag.attributes = make([]Attribute, 0)
+		ag.size = size
+		ag.alloc = make([][]byte, 0)
+		agAdd = ag
+	}
+	inst.agMap[name] = len(inst.ags)
+	inst.ags = append(inst.ags, agAdd)
 }
 
-// CreatePond adds a new Pond to this set of instances
-// with a given name. If the size is 0, a bit-pond is added
-// if the size of not 0, then the size of each pond attribute
+// CreateAttributeGroup adds a new AttributeGroup to this set of instances
+// with a given name. If the size is 0, a bit-ag is added
+// if the size of not 0, then the size of each ag attribute
 // is set to that number of bytes.
-func (inst *DenseInstances) CreatePond(name string, size int) (err error) {
+func (inst *DenseInstances) CreateAttributeGroup(name string, size int) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool
 			if err, ok = r.(error); !ok {
-				err = fmt.Errorf("CreatePond: %v (not created)", r)
+				err = fmt.Errorf("CreateAttributeGroup: %v (not created)", r)
 			}
 		}
 	}()
@@ -104,21 +117,21 @@ func (inst *DenseInstances) CreatePond(name string, size int) (err error) {
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
-	inst.createPond(name, size)
+	inst.createAttributeGroup(name, size)
 	return nil
 }
 
-// GetPond returns a reference to a Pond of a given name /
-func (inst *DenseInstances) GetPond(name string) (*Pond, error) {
+// GetAttributeGroup returns a reference to a AttributeGroup of a given name /
+func (inst *DenseInstances) GetAttributeGroup(name string) (AttributeGroup, error) {
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
-	// Check if the pond exists
-	if id, ok := inst.pondMap[name]; !ok {
-		return nil, fmt.Errorf("Pond '%s' doesn't exist", name)
+	// Check if the ag exists
+	if id, ok := inst.agMap[name]; !ok {
+		return nil, fmt.Errorf("AttributeGroup '%s' doesn't exist", name)
 	} else {
-		// Return the pond
-		return inst.ponds[id], nil
+		// Return the ag
+		return inst.ags[id], nil
 	}
 }
 
@@ -127,7 +140,7 @@ func (inst *DenseInstances) GetPond(name string) (*Pond, error) {
 //
 
 // AddAttribute adds an Attribute to this set of DenseInstances
-// Creates a default Pond for it if a suitable one doesn't exist.
+// Creates a default AttributeGroup for it if a suitable one doesn't exist.
 // Returns an AttributeSpec for subsequent Set() calls.
 //
 // IMPORTANT: will panic if storage has been allocated via Extend.
@@ -139,48 +152,54 @@ func (inst *DenseInstances) AddAttribute(a Attribute) AttributeSpec {
 		panic("Can't add additional Attributes")
 	}
 
-	// Generate a default Pond name
-	pond := "FLOAT"
+	// Generate a default AttributeGroup name
+	ag := "FLOAT"
 	if _, ok := a.(*CategoricalAttribute); ok {
-		pond = "CAT"
+		ag = "CAT"
 	} else if _, ok := a.(*FloatAttribute); ok {
-		pond = "FLOAT"
+		ag = "FLOAT"
+	} else if _, ok := a.(*BinaryAttribute); ok {
+		ag = "BIN"
 	} else {
 		panic("Unrecognised Attribute type")
 	}
 
-	// Create the pond if it doesn't exist
-	if _, ok := inst.pondMap[pond]; !ok {
-		inst.createPond(pond, 8)
+	// Create the ag if it doesn't exist
+	if _, ok := inst.agMap[ag]; !ok {
+		if ag != "BIN" {
+			inst.createAttributeGroup(ag, 8)
+		} else {
+			inst.createAttributeGroup(ag, 0)
+		}
 	}
-	id := inst.pondMap[pond]
-	p := inst.ponds[id]
-	p.attributes = append(p.attributes, a)
+	id := inst.agMap[ag]
+	p := inst.ags[id]
+	p.AddAttribute(a)
 	inst.attributes = append(inst.attributes, a)
-	return AttributeSpec{id, len(p.attributes) - 1, a}
+	return AttributeSpec{id, len(p.Attributes()) - 1, a}
 }
 
-// AddAttributeToPond adds an Attribute to a given pond
-func (inst *DenseInstances) AddAttributeToPond(newAttribute Attribute, pond string) (AttributeSpec, error) {
+// AddAttributeToAttributeGroup adds an Attribute to a given ag
+func (inst *DenseInstances) AddAttributeToAttributeGroup(newAttribute Attribute, ag string) (AttributeSpec, error) {
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
-	// Check if the pond exists
-	if _, ok := inst.pondMap[pond]; !ok {
-		return AttributeSpec{-1, 0, nil}, fmt.Errorf("Pond '%s' doesn't exist. Call CreatePond() first", pond)
+	// Check if the ag exists
+	if _, ok := inst.agMap[ag]; !ok {
+		return AttributeSpec{-1, 0, nil}, fmt.Errorf("Pond '%s' doesn't exist. Call CreatePond() first", ag)
 	}
 
-	id := inst.pondMap[pond]
-	p := inst.ponds[id]
-	for i, a := range p.attributes {
+	id := inst.agMap[ag]
+	p := inst.ags[id]
+	for i, a := range p.Attributes() {
 		if !a.Compatable(newAttribute) {
-			return AttributeSpec{-1, 0, nil}, fmt.Errorf("Attribute %s is not compatable with %s in pond '%s' (position %d)", newAttribute, a, pond, i)
+			return AttributeSpec{-1, 0, nil}, fmt.Errorf("Attribute %s is not compatable with %s in pond '%s' (position %d)", newAttribute, a, ag, i)
 		}
 	}
 
-	p.attributes = append(p.attributes, newAttribute)
+	p.AddAttribute(newAttribute)
 	inst.attributes = append(inst.attributes, newAttribute)
-	return AttributeSpec{id, len(p.attributes) - 1, newAttribute}, nil
+	return AttributeSpec{id, len(p.Attributes()) - 1, newAttribute}, nil
 }
 
 // GetAttribute returns an Attribute equal to the argument.
@@ -192,8 +211,8 @@ func (inst *DenseInstances) GetAttribute(get Attribute) (AttributeSpec, error) {
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
-	for i, p := range inst.ponds {
-		for j, a := range p.attributes {
+	for i, p := range inst.ags {
+		for j, a := range p.Attributes() {
 			if a.Equals(get) {
 				return AttributeSpec{i, j, a}, nil
 			}
@@ -209,8 +228,8 @@ func (inst *DenseInstances) AllAttributes() []Attribute {
 	defer inst.lock.Unlock()
 
 	ret := make([]Attribute, 0)
-	for _, p := range inst.ponds {
-		for _, a := range p.attributes {
+	for _, p := range inst.ags {
+		for _, a := range p.Attributes() {
 			ret = append(ret, a)
 		}
 	}
@@ -280,10 +299,9 @@ func (inst *DenseInstances) Extend(rows int) error {
 	// Get the size of each page
 	pageSize := inst.storage.GetPageSize()
 
-	for pondName := range inst.ponds {
-		p := inst.ponds[pondName]
+	for _, p := range inst.ags {
 
-		// Compute pond row storage requirements
+		// Compute ag row storage requirements
 		rowSize := p.RowSize()
 
 		// How many rows can we store per page?
@@ -293,14 +311,14 @@ func (inst *DenseInstances) Extend(rows int) error {
 		pagesNeeded := uint32(math.Ceil(float64(rows) / rowsPerPage))
 
 		// Allocate those pages
-		r, err := inst.storage.AllocPages(pagesNeeded, p.threadNo)
+		r, err := inst.storage.AllocPages(pagesNeeded, p.getThreadNo())
 		if err != nil {
 			panic(fmt.Sprintf("Allocation error: %s (rowSize %d, pageSize %d, rowsPerPage %.2f, tried to allocate %d page(s) and extend by %d row(s))", err, rowSize, pageSize, rowsPerPage, pagesNeeded, rows))
 		}
 		// Resolve and assign those pages
 		byteBlock := inst.storage.ResolveRange(r)
 		for _, block := range byteBlock {
-			p.alloc = append(p.alloc, block)
+			p.addStorage(block)
 		}
 	}
 	inst.fixed = true
@@ -319,43 +337,29 @@ func (inst *DenseInstances) Extend(rows int) error {
 //
 // IMPORTANT: Will panic() if the val is not the right length
 func (inst *DenseInstances) Set(a AttributeSpec, row int, val []byte) {
-	inst.ponds[a.pond].set(a.position, row, val)
+	inst.ags[a.pond].set(a.position, row, val)
 }
 
 // Get gets a particular Attribute (given as an AttributeSpec) on a particular
 // row.
 // AttributeSpecs can be obtained using GetAttribute() or AddAttribute()
 func (inst *DenseInstances) Get(a AttributeSpec, row int) []byte {
-	return inst.ponds[a.pond].get(a.position, row)
+	return inst.ags[a.pond].get(a.position, row)
 }
 
 // RowString returns a string representation of a given row.
 func (inst *DenseInstances) RowString(row int) string {
 	var buffer bytes.Buffer
 	first := true
-	for name := range inst.ponds {
+	for _, p := range inst.ags {
 		if first {
 			first = false
 		} else {
 			buffer.WriteString(" ")
 		}
-		p := inst.ponds[name]
 		p.appendToRowBuf(row, &buffer)
 	}
 	return buffer.String()
-}
-
-//
-// Row handling functions
-//
-
-func (inst *DenseInstances) allocateRowVector(asv []AttributeSpec) [][]byte {
-	ret := make([][]byte, len(asv))
-	for i, as := range asv {
-		p := inst.ponds[as.pond]
-		ret[i] = make([]byte, p.size)
-	}
-	return ret
 }
 
 // MapOverRows passes each row map into a function.
@@ -366,7 +370,7 @@ func (inst *DenseInstances) MapOverRows(asv []AttributeSpec, mapFunc func([][]by
 	rowBuf := make([][]byte, len(asv))
 	for i := 0; i < inst.maxRow; i++ {
 		for j, as := range asv {
-			p := inst.ponds[as.pond]
+			p := inst.ags[as.pond]
 			rowBuf[j] = p.get(as.position, i)
 		}
 		ok, err := mapFunc(rowBuf, i)
