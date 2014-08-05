@@ -8,7 +8,7 @@ import (
 func TestFloatAttributeSysVal(t *testing.T) {
 	Convey("Given some float", t, func() {
 		x := "1.21"
-		attr := NewFloatAttribute()
+		attr := NewFloatAttribute("")
 		Convey("When the float gets packed", func() {
 			packed := attr.GetSysValFromString(x)
 			Convey("And then unpacked", func() {

@@ -63,8 +63,7 @@ func main() {
 
 	// Let's create some attributes
 	attrs := make([]base.Attribute, 2)
-	attrs[0] = base.NewFloatAttribute()
-	attrs[0].SetName("Arbitrary Float Quantity")
+	attrs[0] = base.NewFloatAttribute("Arbitrary Float Quantity")
 	attrs[1] = new(base.CategoricalAttribute)
 	attrs[1].SetName("Class")
 	// Insert a standard class

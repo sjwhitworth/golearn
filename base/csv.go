@@ -107,7 +107,7 @@ func ParseCSVSniffAttributeTypes(filepath string, hasHeaders bool) []Attribute {
 			panic(err)
 		}
 		if matched {
-			attrs = append(attrs, NewFloatAttribute())
+			attrs = append(attrs, NewFloatAttribute(""))
 		} else {
 			attrs = append(attrs, new(CategoricalAttribute))
 		}
