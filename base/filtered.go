@@ -93,13 +93,17 @@ func (l *LazilyFilteredInstances) AddClassAttribute(cls Attribute) error {
 		l.classAttrs[cls] = true
 		return nil
 	}
+	matched := false
 	for _, a := range l.attrs {
 		if a.Old.Equals(cls) || a.New.Equals(cls) {
 			l.classAttrs[a.New] = true
-			return nil
+			matched = true
 		}
 	}
-	return fmt.Errorf("Attribute %s could not be resolved", cls)
+	if !matched {
+		return fmt.Errorf("Attribute %s could not be resolved", cls)
+	}
+	return nil
 }
 
 // RemoveClassAttribute removes a given Attribute (either before or
