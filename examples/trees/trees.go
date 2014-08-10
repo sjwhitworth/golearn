@@ -5,15 +5,15 @@ package main
 import (
 	"fmt"
 	base "github.com/sjwhitworth/golearn/base"
+	ensemble "github.com/sjwhitworth/golearn/ensemble"
 	eval "github.com/sjwhitworth/golearn/evaluation"
 	filters "github.com/sjwhitworth/golearn/filters"
-	ensemble "github.com/sjwhitworth/golearn/ensemble"
 	trees "github.com/sjwhitworth/golearn/trees"
 	"math/rand"
 	"time"
 )
 
-func main () {
+func main() {
 
 	var tree base.Classifier
 
@@ -27,12 +27,14 @@ func main () {
 
 	// Discretise the iris dataset with Chi-Merge
 	filt := filters.NewChiMergeFilter(iris, 0.99)
-	filt.AddAllNumericAttributes()
-	filt.Build()
-	filt.Run(iris)
+	for _, a := range base.NonClassFloatAttributes(iris) {
+		filt.AddAttribute(a)
+	}
+	filt.Train()
+	irisf := base.NewLazilyFilteredInstances(iris, filt)
 
 	// Create a 60-40 training-test split
-	trainData, testData := base.InstancesTrainTestSplit(iris, 0.60)
+	trainData, testData := base.InstancesTrainTestSplit(irisf, 0.60)
 
 	//
 	// First up, use ID3

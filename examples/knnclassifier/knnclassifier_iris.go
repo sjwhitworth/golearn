@@ -12,7 +12,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	rawData.Shuffle()
+
 	//Initialises a new KNN classifier
 	cls := knn.NewKnnClassifier("euclidean", 2)
 
