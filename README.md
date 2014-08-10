@@ -5,6 +5,9 @@ GoLearn
 [![GoDoc](https://godoc.org/github.com/sjwhitworth/golearn?status.png)](https://godoc.org/github.com/sjwhitworth/golearn)
 [![Build Status](https://travis-ci.org/sjwhitworth/golearn.png?branch=master)](https://travis-ci.org/sjwhitworth/golearn)<br>
 
+<script data-gittip-username="sjwhitworth"
+        src="//gttp.co/v1.js"></script>
+
 GoLearn is a 'batteries included' machine learning library for Go. **Simplicity**, paired with customisability, is the goal.
 We are in active development, and would love comments from users out in the wild. Drop us a line on Twitter.
 
