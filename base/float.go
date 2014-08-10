@@ -14,8 +14,8 @@ type FloatAttribute struct {
 
 // NewFloatAttribute returns a new FloatAttribute with a default
 // precision of 2 decimal places
-func NewFloatAttribute() *FloatAttribute {
-    return &FloatAttribute{"", 2}
+func NewFloatAttribute(name string) *FloatAttribute {
+    return &FloatAttribute{name, 2}
 }
 
 // Compatable checks whether this FloatAttribute can be ponded with another

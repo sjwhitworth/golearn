@@ -1,4 +1,4 @@
-floatAttr,shouldBe1Binary,shouldBe3Binary
-1.0,true,stoicism
-1.0,false,heroism
-0.0,false,romanticism
+floatAttr,shouldBe1Binary,shouldBe3Binary,arbitraryClass
+1.0,true,stoicism,hi
+1.0,false,heroism,there
+0.0,false,romanticism,world
