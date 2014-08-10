@@ -2,7 +2,7 @@ package edf
 
 import (
 	"fmt"
-	mmap "github.com/riobard/go-mmap"
+	mmap "github.com/Sentimentron/go-mmap"
 	"os"
 	"runtime"
 )
