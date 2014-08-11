@@ -334,7 +334,6 @@ func (e *EdfFile) truncate(size int64) error {
 // called will result in crashes.
 func (e *EdfFile) Unmap(flags int) error {
 	// Sync the file
-	e.Sync()
 	if flags != EDF_UNMAP_NOSYNC {
 		e.Sync()
 	}
