@@ -42,6 +42,8 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 		distanceFunc = pairwiseMetrics.NewEuclidean()
 	case "manhattan":
 		distanceFunc = pairwiseMetrics.NewManhattan()
+	case "cosine":
+		distanceFunc = pairwiseMetrics.NewCosine()
 	default:
 		panic("unsupported distance function")
 
@@ -173,6 +175,8 @@ func (KNN *KNNRegressor) Predict(vector *mat64.Dense, K int) float64 {
 		distanceFunc = pairwiseMetrics.NewEuclidean()
 	case "manhattan":
 		distanceFunc = pairwiseMetrics.NewManhattan()
+	case "cosine":
+		distanceFunc = pairwiseMetrics.NewCosine()
 	default:
 		panic("unsupported distance function")
 	}
