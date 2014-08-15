@@ -65,7 +65,7 @@ func EdfAnonMap() (*EdfFile, error) {
 
 	// Figure out the flags
 	protFlags := mmap.PROT_READ | mmap.PROT_WRITE
-	mapFlags := mmap.MAP_FILE | mmap.MAP_SHARED
+    mapFlags := mmap.MAP_PRIVATE
 	// Create mapping references
 	ret.m = make([]mmap.Mmap, 0)
 	// Get the page size
