@@ -33,7 +33,7 @@ func TestKnnClassifier(t *testing.T) {
 			})
 		})
 
-		Convey("When predicting the label for our first vector", func() {
+		Convey("When predicting the label for our second vector", func() {
 			result2 := base.GetClass(predictions, 1)
 			Convey("The result should be 'red", func() {
 				So(result2, ShouldEqual, "red")
