@@ -55,5 +55,6 @@ func TestThreadFindAndWrite(T *testing.T) {
 				})
 			})
 		})
+		os.Remove("hello.db")
 	})
 }
