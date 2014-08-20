@@ -67,12 +67,13 @@ func NewRandomTree(attrs int) *RandomTree {
 }
 
 // Fit builds a RandomTree suitable for prediction
-func (rt *RandomTree) Fit(from base.FixedDataGrid) {
+func (rt *RandomTree) Fit(from base.FixedDataGrid) error {
 	rt.Root = InferID3Tree(from, rt.Rule)
+	return nil
 }
 
 // Predict returns a set of Instances containing predictions
-func (rt *RandomTree) Predict(from base.FixedDataGrid) base.FixedDataGrid {
+func (rt *RandomTree) Predict(from base.FixedDataGrid) (base.FixedDataGrid, error) {
 	return rt.Root.Predict(from)
 }
 

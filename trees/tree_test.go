@@ -46,8 +46,11 @@ func TestRandomTreeClassification(t *testing.T) {
 	r.Attributes = 2
 
 	root := InferID3Tree(trainDataF, r)
+	predictions, err := root.Predict(testDataF)
+	if err != nil {
+		t.Fatalf("Predicting failed: %s", err.Error())
+	}
 
-	predictions := root.Predict(testDataF)
 	confusionMat, err := evaluation.GetConfusionMatrix(testDataF, predictions)
 	if err != nil {
 		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
@@ -71,9 +74,16 @@ func TestRandomTreeClassification2(t *testing.T) {
 	testDataF := base.NewLazilyFilteredInstances(testData, filt)
 
 	root := NewRandomTree(2)
-	root.Fit(trainDataF)
+	err = root.Fit(trainDataF)
+	if err != nil {
+		t.Fatalf("Fitting failed: %s", err.Error())
+	}
 
-	predictions := root.Predict(testDataF)
+	predictions, err := root.Predict(testDataF)
+	if err != nil {
+		t.Fatalf("Predicting failed: %s", err.Error())
+	}
+
 	confusionMat, err := evaluation.GetConfusionMatrix(testDataF, predictions)
 	if err != nil {
 		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
@@ -98,10 +108,18 @@ func TestPruning(t *testing.T) {
 
 	root := NewRandomTree(2)
 	fittrainData, fittestData := base.InstancesTrainTestSplit(trainDataF, 0.6)
-	root.Fit(fittrainData)
-	root.Prune(fittestData)
 
-	predictions := root.Predict(testDataF)
+	err = root.Fit(fittrainData)
+	if err != nil {
+		t.Fatalf("Fitting failed: %s", err.Error())
+	}
+
+	root.Prune(fittestData)
+	predictions, err := root.Predict(testDataF)
+	if err != nil {
+		t.Fatalf("Predicting failed: %s", err.Error())
+	}
+
 	confusionMat, err := evaluation.GetConfusionMatrix(testDataF, predictions)
 	if err != nil {
 		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
@@ -195,7 +213,11 @@ func TestID3Classification(t *testing.T) {
 	rule := new(InformationGainRuleGenerator)
 	root := InferID3Tree(trainData, rule)
 
-	predictions := root.Predict(testData)
+	predictions, err := root.Predict(testData)
+	if err != nil {
+		t.Fatalf("Predicting failed: %s", err.Error())
+	}
+
 	confusionMat, err := evaluation.GetConfusionMatrix(testData, predictions)
 	if err != nil {
 		t.Fatalf("Unable to get confusion matrix: %s", err.Error())

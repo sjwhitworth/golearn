@@ -23,11 +23,31 @@ func TestRandomForest1(t *testing.T) {
 	trainData, testData := base.InstancesTrainTestSplit(instf, 0.60)
 
 	rf := NewRandomForest(10, 3)
-	rf.Fit(trainData)
-	predictions := rf.Predict(testData)
+	err = rf.Fit(trainData)
+	if err != nil {
+		t.Fatalf("Fitting failed: %s", err.Error())
+	}
+	predictions, err := rf.Predict(testData)
+	if err != nil {
+		t.Fatalf("Predicting failed: %s", err.Error())
+	}
+
 	confusionMat, err := evaluation.GetConfusionMatrix(testData, predictions)
 	if err != nil {
 		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
 	}
 	_ = evaluation.GetSummary(confusionMat)
+}
+
+func TestRandomForestFitErrorWithNotEnoughFeatures(t *testing.T) {
+	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+	if err != nil {
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
+	}
+
+	rf := NewRandomForest(10, len(base.NonClassAttributes(inst))+1)
+	err = rf.Fit(inst)
+	if err == nil {
+		t.Fatalf("Fitting failed: %s", err.Error())
+	}
 }

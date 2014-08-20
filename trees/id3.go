@@ -181,12 +181,15 @@ func (d *DecisionTreeNode) Prune(using base.FixedDataGrid) {
 	}
 
 	// Get a baseline accuracy
-	baselineAccuracy := computeAccuracy(d.Predict(using), using)
+	predictions, _ := d.Predict(using)
+	baselineAccuracy := computeAccuracy(predictions, using)
 
 	// Speculatively remove the children and re-evaluate
 	tmpChildren := d.Children
 	d.Children = nil
-	newAccuracy := computeAccuracy(d.Predict(using), using)
+
+	predictions, _ = d.Predict(using)
+	newAccuracy := computeAccuracy(predictions, using)
 
 	// Keep the children removed if better, else restore
 	if newAccuracy < baselineAccuracy {
@@ -195,7 +198,7 @@ func (d *DecisionTreeNode) Prune(using base.FixedDataGrid) {
 }
 
 // Predict outputs a base.Instances containing predictions from this tree
-func (d *DecisionTreeNode) Predict(what base.FixedDataGrid) base.FixedDataGrid {
+func (d *DecisionTreeNode) Predict(what base.FixedDataGrid) (base.FixedDataGrid, error) {
 	predictions := base.GeneratePredictionVector(what)
 	classAttr := getClassAttr(predictions)
 	classAttrSpec, err := predictions.GetAttribute(classAttr)
@@ -235,7 +238,7 @@ func (d *DecisionTreeNode) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 		}
 		return true, nil
 	})
-	return predictions
+	return predictions, nil
 }
 
 //
@@ -262,7 +265,7 @@ func NewID3DecisionTree(prune float64) *ID3DecisionTree {
 }
 
 // Fit builds the ID3 decision tree
-func (t *ID3DecisionTree) Fit(on base.FixedDataGrid) {
+func (t *ID3DecisionTree) Fit(on base.FixedDataGrid) error {
 	rule := new(InformationGainRuleGenerator)
 	if t.PruneSplit > 0.001 {
 		trainData, testData := base.InstancesTrainTestSplit(on, t.PruneSplit)
@@ -271,10 +274,11 @@ func (t *ID3DecisionTree) Fit(on base.FixedDataGrid) {
 	} else {
 		t.Root = InferID3Tree(on, rule)
 	}
+	return nil
 }
 
 // Predict outputs predictions from the ID3 decision tree
-func (t *ID3DecisionTree) Predict(what base.FixedDataGrid) base.FixedDataGrid {
+func (t *ID3DecisionTree) Predict(what base.FixedDataGrid) (base.FixedDataGrid, error) {
 	return t.Root.Predict(what)
 }
 
