@@ -11,3 +11,6 @@
 *.a
 *.so
 *.dll
+
+# go test coverprofiles
+*.coverprofile
