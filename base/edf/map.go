@@ -5,6 +5,15 @@ import (
 	mmap "github.com/Sentimentron/go-mmap"
 	"os"
 	"runtime"
+	"runtime/debug"
+)
+
+type edfMode int
+
+const (
+	edfFileMode edfMode = iota
+	edfAnonMode
+	edfFreedMode
 )
 
 // EdfFile represents a mapped file on disk or
@@ -14,6 +23,7 @@ type EdfFile struct {
 	m           []mmap.Mmap
 	segmentSize uint64
 	pageSize    uint64
+	mode        edfMode
 }
 
 // GetPageSize returns the pageSize of an EdfFile
@@ -61,28 +71,24 @@ func EdfAnonMap() (*EdfFile, error) {
 
 	var err error
 
+	// Allocate return structure
 	ret := new(EdfFile)
 
-	// Figure out the flags
-	protFlags := mmap.PROT_READ | mmap.PROT_WRITE
-	mapFlags := mmap.MAP_FILE | mmap.MAP_SHARED
 	// Create mapping references
 	ret.m = make([]mmap.Mmap, 0)
+
 	// Get the page size
 	pageSize := int64(os.Getpagesize())
+
 	// Segment size is the size of each mapped region
 	ret.pageSize = uint64(pageSize)
 	ret.segmentSize = uint64(EDF_LENGTH) * uint64(os.Getpagesize())
 
-	// Map the memory
-	for i := int64(0); i < EDF_SIZE; i += int64(EDF_LENGTH) * pageSize {
-		thisMapping, err := mmap.AnonMap(int(ret.segmentSize), protFlags, mapFlags)
-		if err != nil {
-			// TODO: cleanup
-			return nil, err
-		}
-		ret.m = append(ret.m, thisMapping)
-	}
+	// Set the mode
+	ret.mode = edfAnonMode
+
+	// Allocate 4 pages initially
+	ret.truncate(4)
 
 	// Generate the header
 	ret.createHeader()
@@ -154,6 +160,9 @@ func EdfMap(f *os.File, mode int) (*EdfFile, error) {
 
 	// Make sure this gets unmapped on garbage collection
 	runtime.SetFinalizer(ret, edfCallFree)
+
+	// Set the mode
+	ret.mode = edfFileMode
 
 	return ret, err
 
@@ -283,6 +292,10 @@ func (e *EdfFile) GetThreads() (map[uint32]string, error) {
 
 // Sync writes information to physical storage.
 func (e *EdfFile) Sync() error {
+	// Do nothing if we're mapped anonymously
+	if e.mode == edfAnonMode {
+		return nil
+	}
 	for _, m := range e.m {
 		err := m.Sync(mmap.MS_SYNC)
 		if err != nil {
@@ -294,7 +307,7 @@ func (e *EdfFile) Sync() error {
 
 // truncate changes the size of the underlying file
 // The size of the address space doesn't change.
-func (e *EdfFile) truncate(size int64) error {
+func (e *EdfFile) truncateFile(size int64) error {
 	pageSize := int64(os.Getpagesize())
 	newSize := pageSize * size
 
@@ -327,24 +340,72 @@ func (e *EdfFile) truncate(size int64) error {
 	return err
 }
 
+func (e *EdfFile) truncateMem(size int64) error {
+	pageSize := int64(os.Getpagesize())
+	newSize := pageSize * size
+
+	currentSize := 0
+	for _, m := range e.m {
+		currentSize += len(m)
+	}
+
+	if int64(currentSize) > newSize {
+		return fmt.Errorf("Can't reduce size")
+	}
+
+	// Allocate some more memory
+	for i := uint64(currentSize); i < uint64(newSize); i += e.segmentSize {
+		newMap := make([]byte, e.segmentSize)
+		e.m = append(e.m, newMap)
+	}
+
+	return nil
+}
+
+func (e *EdfFile) truncate(size int64) error {
+	if e.mode == edfAnonMode {
+		return e.truncateMem(size)
+	} else if e.mode == edfFileMode {
+		return e.truncateFile(size)
+	}
+	panic("Unsupported")
+}
+
 // Unmap unlinks the EdfFile from the address space.
 // EDF_UNMAP_NOSYNC skips calling Sync() on the underlying
 // file before this happens.
 // IMPORTANT: attempts to use this mapping after Unmap() is
 // called will result in crashes.
 func (e *EdfFile) Unmap(flags int) error {
+
+	var ret error
+
+	// Check if the file has already been freed
+	if e.mode == edfFreedMode {
+		fmt.Fprintln(os.Stderr, "Potential double-free")
+		debug.PrintStack()
+		return nil
+	} else if e.mode == edfAnonMode {
+		// If it's anonymous, don't do anything
+		e.m = nil
+		e.mode = edfFreedMode
+		return nil
+	}
+
 	// Sync the file
 	if flags != EDF_UNMAP_NOSYNC {
 		e.Sync()
 	}
+
+	e.mode = edfFreedMode
 	// Unmap the file
 	for _, m := range e.m {
 		err := m.Unmap()
 		if err != nil {
-			return err
+			ret = err
 		}
 	}
-	return nil
+	return ret
 }
 
 // ResolveRange returns a slice of byte slices representing
