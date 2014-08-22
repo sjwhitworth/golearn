@@ -1,7 +1,6 @@
 package ensemble
 
 import (
-	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	eval "github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/filters"
@@ -26,8 +25,6 @@ func TestRandomForest1(testEnv *testing.T) {
 	rf := NewRandomForest(10, 3)
 	rf.Fit(trainData)
 	predictions := rf.Predict(testData)
-	fmt.Println(predictions)
 	confusionMat := eval.GetConfusionMatrix(testData, predictions)
-	fmt.Println(confusionMat)
-	fmt.Println(eval.GetSummary(confusionMat))
+	_ = eval.GetSummary(confusionMat)
 }

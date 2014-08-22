@@ -1,7 +1,6 @@
 package neural
 
 import (
-	"fmt"
 	"github.com/gonum/matrix/mat64"
 	"github.com/sjwhitworth/golearn/base"
 	. "github.com/smartystreets/goconvey/convey"
@@ -13,7 +12,6 @@ func TestLayerStructureNoHidden(t *testing.T) {
 	Convey("Creating a network...", t, func() {
 		XORData, err := base.ParseCSVToInstances("xor.csv", false)
 		So(err, ShouldEqual, nil)
-		fmt.Println(XORData)
 		Convey("Create a MultiLayerNet with no layers...", func() {
 			net := NewMultiLayerNet(make([]int, 0))
 			net.MaxIterations = 0
@@ -73,8 +71,6 @@ func TestLayerStructureNoHidden(t *testing.T) {
 			})
 
 			Convey("The right nodes should be connected in the network...", func() {
-
-				fmt.Println(net.network)
 				So(net.network.GetWeight(1, 1), ShouldAlmostEqual, 1.000)
 				So(net.network.GetWeight(2, 2), ShouldAlmostEqual, 1.000)
 				So(net.network.GetWeight(1, 3), ShouldNotAlmostEqual, 0.000)
@@ -118,7 +114,6 @@ func TestLayeredXOR(t *testing.T) {
 		XORData, err := base.ParseCSVToInstances("xor.csv", false)
 		So(err, ShouldEqual, nil)
 
-		fmt.Println(XORData)
 		net := NewMultiLayerNet([]int{3})
 		net.MaxIterations = 20000
 		net.Fit(XORData)
@@ -126,8 +121,6 @@ func TestLayeredXOR(t *testing.T) {
 		Convey("After running for 20000 iterations, should have some predictive power...", func() {
 
 			Convey("The right nodes should be connected in the network...", func() {
-
-				fmt.Println(net.network)
 				So(net.network.GetWeight(1, 1), ShouldAlmostEqual, 1.000)
 				So(net.network.GetWeight(2, 2), ShouldAlmostEqual, 1.000)
 
@@ -138,7 +131,6 @@ func TestLayeredXOR(t *testing.T) {
 			})
 			out := mat64.NewDense(6, 1, []float64{1.0, 0.0, 0.0, 0.0, 0.0, 0.0})
 			net.network.Activate(out, 2)
-			fmt.Println(out)
 			So(out.At(5, 0), ShouldAlmostEqual, 1.0, 0.1)
 
 			Convey("And Predict() should do OK too...", func() {

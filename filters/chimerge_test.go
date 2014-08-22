@@ -1,14 +1,12 @@
 package filters
 
 import (
-	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	"math"
 	"testing"
 )
 
 func TestChiMFreqTable(testEnv *testing.T) {
-
 	inst, err := base.ParseCSVToInstances("../examples/datasets/chim.csv", true)
 	if err != nil {
 		panic(err)
@@ -189,11 +187,9 @@ func TestChiMerge4(testEnv *testing.T) {
 	filt.AddAttribute(inst.AllAttributes()[1])
 	filt.Train()
 	instf := base.NewLazilyFilteredInstances(inst, filt)
-	fmt.Println(instf)
-	fmt.Println(instf.String())
 	clsAttrs := instf.AllClassAttributes()
 	if len(clsAttrs) != 1 {
-		panic(fmt.Sprintf("%d != %d", len(clsAttrs), 1))
+		testEnv.Fatalf("%d != %d", len(clsAttrs), 1)
 	}
 	if clsAttrs[0].GetName() != "Species" {
 		panic("Class Attribute wrong!")

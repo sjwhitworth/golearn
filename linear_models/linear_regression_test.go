@@ -1,7 +1,6 @@
 package linear_models
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/sjwhitworth/golearn/base"
@@ -54,11 +53,7 @@ func TestLinearRegression(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, rows := predictions.Size()
-
-	for i := 0; i < rows; i++ {
-		fmt.Printf("Expected: %s || Predicted: %s\n", base.GetClass(testData, i), base.GetClass(predictions, i))
-	}
+	_, _ = predictions.Size()
 }
 
 func BenchmarkLinearRegressionOneRow(b *testing.B) {

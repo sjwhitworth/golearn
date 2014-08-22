@@ -1,7 +1,6 @@
 package base
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -81,7 +80,7 @@ func TestLazySortAsc(testEnv *testing.T) {
 	rowStr := insts.RowString(0)
 	ref := "4.30 3.00 1.10 0.10 Iris-setosa"
 	if rowStr != ref {
-		panic(fmt.Sprintf("'%s' != '%s'", rowStr, ref))
+		testEnv.Fatalf("'%s' != '%s'", rowStr, ref)
 	}
 
 }
