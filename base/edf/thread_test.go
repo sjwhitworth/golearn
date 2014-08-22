@@ -2,8 +2,8 @@ package edf
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 	"os"
+	"testing"
 )
 
 func TestThreadDeserialize(T *testing.T) {
@@ -34,20 +34,20 @@ func TestThreadSerialize(T *testing.T) {
 
 func TestThreadFindAndWrite(T *testing.T) {
 	Convey("Creating a non-existent file should succeed", T, func() {
-		tempFile, err := os.OpenFile("hello.db", os.O_RDWR | os.O_TRUNC | os.O_CREATE, 0700) //ioutil.TempFile(os.TempDir(), "TestFileCreate")
+		tempFile, err := os.OpenFile("hello.db", os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0700) //ioutil.TempFile(os.TempDir(), "TestFileCreate")
 		So(err, ShouldEqual, nil)
 		Convey("Mapping the file should suceed", func() {
 			mapping, err := EdfMap(tempFile, EDF_CREATE)
 			So(err, ShouldEqual, nil)
-			Convey("Writing the thread should succeed", func () {
+			Convey("Writing the thread should succeed", func() {
 				t := NewThread(mapping, "MyNameISWhat")
-				Convey("Thread number should be 3", func () {
+				Convey("Thread number should be 3", func() {
 					So(t.id, ShouldEqual, 3)
 				})
 				Convey("Writing the thread should succeed", func() {
 					err := mapping.WriteThread(t)
 					So(err, ShouldEqual, nil)
-						Convey("Should be able to find the thread again later", func() {
+					Convey("Should be able to find the thread again later", func() {
 						id, err := mapping.FindThread("MyNameISWhat")
 						So(err, ShouldEqual, nil)
 						So(id, ShouldEqual, 3)
