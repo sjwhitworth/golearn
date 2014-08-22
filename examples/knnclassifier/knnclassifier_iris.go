@@ -25,6 +25,9 @@ func main() {
 	fmt.Println(predictions)
 
 	// Prints precision/recall metrics
-	confusionMat := evaluation.GetConfusionMatrix(testData, predictions)
+	confusionMat, err := evaluation.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
+	}
 	fmt.Println(evaluation.GetSummary(confusionMat))
 }

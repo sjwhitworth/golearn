@@ -48,7 +48,10 @@ func TestRandomTreeClassification(t *testing.T) {
 	root := InferID3Tree(trainDataF, r)
 
 	predictions := root.Predict(testDataF)
-	confusionMat := eval.GetConfusionMatrix(testDataF, predictions)
+	confusionMat, err := eval.GetConfusionMatrix(testDataF, predictions)
+	if err != nil {
+		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
+	}
 	_ = eval.GetSummary(confusionMat)
 }
 
@@ -71,7 +74,10 @@ func TestRandomTreeClassification2(t *testing.T) {
 	root.Fit(trainDataF)
 
 	predictions := root.Predict(testDataF)
-	confusionMat := eval.GetConfusionMatrix(testDataF, predictions)
+	confusionMat, err := eval.GetConfusionMatrix(testDataF, predictions)
+	if err != nil {
+		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
+	}
 	_ = eval.GetSummary(confusionMat)
 }
 
@@ -96,7 +102,10 @@ func TestPruning(t *testing.T) {
 	root.Prune(fittestData)
 
 	predictions := root.Predict(testDataF)
-	confusionMat := eval.GetConfusionMatrix(testDataF, predictions)
+	confusionMat, err := eval.GetConfusionMatrix(testDataF, predictions)
+	if err != nil {
+		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
+	}
 	_ = eval.GetSummary(confusionMat)
 }
 
@@ -187,7 +196,10 @@ func TestID3Classification(t *testing.T) {
 	root := InferID3Tree(trainData, rule)
 
 	predictions := root.Predict(testData)
-	confusionMat := eval.GetConfusionMatrix(testData, predictions)
+	confusionMat, err := eval.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
+	}
 	_ = eval.GetSummary(confusionMat)
 }
 

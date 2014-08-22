@@ -25,6 +25,9 @@ func TestRandomForest1(t *testing.T) {
 	rf := NewRandomForest(10, 3)
 	rf.Fit(trainData)
 	predictions := rf.Predict(testData)
-	confusionMat := eval.GetConfusionMatrix(testData, predictions)
+	confusionMat, err := eval.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
+	}
 	_ = eval.GetSummary(confusionMat)
 }

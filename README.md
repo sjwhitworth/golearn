@@ -48,7 +48,7 @@ cls.Fit(trainData)
 predictions := cls.Predict(testData)
 
 // Print a confusion matrix with precision and recall metrics.
-confusionMat := evaluation.GetConfusionMatrix(testData, predictions)
+confusionMat, _ := evaluation.GetConfusionMatrix(testData, predictions)
 fmt.Println(evaluation.GetSummary(confusionMat))
 ```
 

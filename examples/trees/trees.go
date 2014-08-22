@@ -50,7 +50,10 @@ func main() {
 
 	// Evaluate
 	fmt.Println("ID3 Performance")
-	cf := eval.GetConfusionMatrix(testData, predictions)
+	cf, err := eval.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
+	}
 	fmt.Println(eval.GetSummary(cf))
 
 	//
@@ -62,7 +65,10 @@ func main() {
 	tree.Fit(testData)
 	predictions = tree.Predict(testData)
 	fmt.Println("RandomTree Performance")
-	cf = eval.GetConfusionMatrix(testData, predictions)
+	cf, err = eval.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
+	}
 	fmt.Println(eval.GetSummary(cf))
 
 	//
@@ -72,6 +78,9 @@ func main() {
 	tree.Fit(trainData)
 	predictions = tree.Predict(testData)
 	fmt.Println("RandomForest Performance")
-	cf = eval.GetConfusionMatrix(testData, predictions)
+	cf, err = eval.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
+	}
 	fmt.Println(eval.GetSummary(cf))
 }

@@ -153,7 +153,7 @@ func (d *DecisionTreeNode) String() string {
 
 // computeAccuracy is a helper method for Prune()
 func computeAccuracy(predictions base.FixedDataGrid, from base.FixedDataGrid) float64 {
-	cf := eval.GetConfusionMatrix(from, predictions)
+	cf, _ := eval.GetConfusionMatrix(from, predictions)
 	return eval.GetAccuracy(cf)
 }
 
