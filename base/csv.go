@@ -11,10 +11,10 @@ import (
 )
 
 // ParseCSVGetRows returns the number of rows in a given file.
-func ParseCSVGetRows(filepath string) int {
+func ParseCSVGetRows(filepath string) (int, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 	defer file.Close()
 
@@ -25,11 +25,11 @@ func ParseCSVGetRows(filepath string) int {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			panic(err)
+			return 0, err
 		}
 		counter++
 	}
-	return counter
+	return counter, nil
 }
 
 // ParseCSVGetAttributes returns an ordered slice of appropriate-ly typed
@@ -157,7 +157,11 @@ func ParseCSVBuildInstances(filepath string, hasHeaders bool, u UpdatableDataGri
 func ParseCSVToInstances(filepath string, hasHeaders bool) (instances *DenseInstances, err error) {
 
 	// Read the number of rows in the file
-	rowCount := ParseCSVGetRows(filepath)
+	rowCount, err := ParseCSVGetRows(filepath)
+	if err != nil {
+		return nil, err
+	}
+
 	if hasHeaders {
 		rowCount--
 	}
@@ -176,7 +180,7 @@ func ParseCSVToInstances(filepath string, hasHeaders bool) (instances *DenseInst
 	// Read the input
 	file, err := os.Open(filepath)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer file.Close()
 	reader := csv.NewReader(file)
@@ -188,7 +192,7 @@ func ParseCSVToInstances(filepath string, hasHeaders bool) (instances *DenseInst
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			panic(err)
+			return nil, err
 		}
 		if rowCounter == 0 {
 			if hasHeaders {

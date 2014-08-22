@@ -5,16 +5,30 @@ import (
 )
 
 func TestParseCSVGetRows(testEnv *testing.T) {
-	lineCount := ParseCSVGetRows("../examples/datasets/iris.csv")
+	lineCount, err := ParseCSVGetRows("../examples/datasets/iris.csv")
+	if err != nil {
+		testEnv.Fatalf("Unable to parse CSV to get number of rows: %s", err.Error())
+	}
 	if lineCount != 150 {
 		testEnv.Errorf("Should have %d lines, has %d", 150, lineCount)
 	}
 
-	lineCount = ParseCSVGetRows("../examples/datasets/iris_headers.csv")
+	lineCount, err = ParseCSVGetRows("../examples/datasets/iris_headers.csv")
+	if err != nil {
+		testEnv.Fatalf("Unable to parse CSV to get number of rows: %s", err.Error())
+	}
+
 	if lineCount != 151 {
 		testEnv.Errorf("Should have %d lines, has %d", 151, lineCount)
 	}
 
+}
+
+func TestParseCSVGetRowsWithMissingFile(testEnv *testing.T) {
+	_, err := ParseCSVGetRows("../examples/datasets/non-existent.csv")
+	if err == nil {
+		testEnv.Fatal("Expected ParseCSVGetRows to return error when given path to non-existent file")
+	}
 }
 
 func TestParseCCSVGetAttributes(testEnv *testing.T) {
@@ -72,7 +86,7 @@ func TestParseCSVSniffAttributeNamesWithHeaders(testEnv *testing.T) {
 	}
 }
 
-func TestReadInstances(testEnv *testing.T) {
+func TestParseCSVToInstances(testEnv *testing.T) {
 	inst, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
 		testEnv.Error(err)
@@ -90,6 +104,13 @@ func TestReadInstances(testEnv *testing.T) {
 	}
 	if row3 != "6.30 3.30 6.00 2.50 Iris-virginica" {
 		testEnv.Error(row3)
+	}
+}
+
+func TestParseCSVToInstancesWithMissingFile(testEnv *testing.T) {
+	_, err := ParseCSVToInstances("../examples/datasets/non-existent.csv", true)
+	if err == nil {
+		testEnv.Fatal("Expected ParseCSVToInstances to return error when given path to non-existent file")
 	}
 }
 
