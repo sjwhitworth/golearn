@@ -9,7 +9,7 @@ import (
 func TestThreadDeserialize(t *testing.T) {
 	bytes := []byte{0, 0, 0, 6, 83, 89, 83, 84, 69, 77, 0, 0, 0, 1}
 	Convey("Given a byte slice", t, func() {
-		var thread Thread
+		var thread thread
 		size := thread.Deserialize(bytes)
 		Convey("Decoded name should be SYSTEM", func() {
 			So(thread.name, ShouldEqual, "SYSTEM")
@@ -21,7 +21,7 @@ func TestThreadDeserialize(t *testing.T) {
 }
 
 func TestThreadSerialize(t *testing.T) {
-	var thread Thread
+	var thread thread
 	refBytes := []byte{0, 0, 0, 6, 83, 89, 83, 84, 69, 77, 0, 0, 0, 1}
 	thread.name = "SYSTEM"
 	thread.id = 1
@@ -37,11 +37,11 @@ func TestThreadFindAndWrite(t *testing.T) {
 		tempFile, err := os.OpenFile("hello.db", os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0700) //ioutil.TempFile(os.TempDir(), "TestFileCreate")
 		So(err, ShouldEqual, nil)
 		Convey("Mapping the file should succeed", func() {
-			mapping, err := EdfMap(tempFile, EDF_CREATE)
+			mapping, err := edfMap(tempFile, EDF_CREATE)
 			So(err, ShouldEqual, nil)
 			Convey("Writing the thread should succeed", func() {
 				t := NewThread(mapping, "MyNameISWhat")
-				Convey("Thread number should be 3", func() {
+				Convey("thread number should be 3", func() {
 					So(t.id, ShouldEqual, 3)
 				})
 				Convey("Writing the thread should succeed", func() {

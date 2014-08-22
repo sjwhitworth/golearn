@@ -5,25 +5,25 @@ import (
 )
 
 // Threads are streams of data encapsulated within the file.
-type Thread struct {
+type thread struct {
 	name string
 	id   uint32
 }
 
 // NewThread returns a new thread.
-func NewThread(e *EdfFile, name string) *Thread {
-	return &Thread{name, e.GetThreadCount() + 1}
+func NewThread(e *EdfFile, name string) *thread {
+	return &thread{name, e.getThreadCount() + 1}
 }
 
-// GetSpaceNeeded the number of bytes needed to serialize this
-// Thread.
-func (t *Thread) GetSpaceNeeded() int {
+// getSpaceNeeded the number of bytes needed to serialize this
+// thread.
+func (t *thread) getSpaceNeeded() int {
 	return 8 + len(t.name)
 }
 
 // Serialize copies this thread to the output byte slice
 // Returns the number of bytes used.
-func (t *Thread) Serialize(out []byte) int {
+func (t *thread) Serialize(out []byte) int {
 	// ret keeps track of written bytes
 	ret := 0
 	// Write the length of the name first
@@ -42,7 +42,7 @@ func (t *Thread) Serialize(out []byte) int {
 }
 
 // Deserialize copies the input byte slice into a thread.
-func (t *Thread) Deserialize(out []byte) int {
+func (t *thread) Deserialize(out []byte) int {
 	ret := 0
 	// Read the length of the thread's name
 	nameLength := uint32FromBytes(out)
@@ -64,9 +64,9 @@ func (e *EdfFile) FindThread(targetName string) (uint32, error) {
 	var offset uint32
 	var counter uint32
 	// Resolve the initial thread block
-	blockRange := e.GetPageRange(1, 1)
+	blockRange := e.getPageRange(1, 1)
 	if blockRange.Start.Segment != blockRange.End.Segment {
-		return 0, fmt.Errorf("Thread block split across segments!")
+		return 0, fmt.Errorf("thread block split across segments!")
 	}
 	bytes := e.m[blockRange.Start.Segment][blockRange.Start.Byte:blockRange.End.Byte]
 	// Skip the first 8 bytes, since we don't support multiple thread blocks yet
@@ -93,16 +93,16 @@ func (e *EdfFile) FindThread(targetName string) (uint32, error) {
 }
 
 // WriteThread inserts a new thread into the EdfFile.
-func (e *EdfFile) WriteThread(t *Thread) error {
+func (e *EdfFile) WriteThread(t *thread) error {
 
 	offset, _ := e.FindThread(t.name)
 	if offset != 0 {
 		return fmt.Errorf("Writing a duplicate thread")
 	}
-	// Resolve the initial Thread block
-	blockRange := e.GetPageRange(1, 1)
+	// Resolve the initial thread block
+	blockRange := e.getPageRange(1, 1)
 	if blockRange.Start.Segment != blockRange.End.Segment {
-		return fmt.Errorf("Thread block split across segments!")
+		return fmt.Errorf("thread block split across segments!")
 	}
 	bytes := e.m[blockRange.Start.Segment][blockRange.Start.Byte:blockRange.End.Byte]
 	// Skip the first 8 bytes, since we don't support multiple thread blocks yet
@@ -120,7 +120,7 @@ func (e *EdfFile) WriteThread(t *Thread) error {
 	// cur should have now found an empty offset
 	// Check that we have enough room left to insert
 	roomLeft := len(bytes)
-	roomNeeded := t.GetSpaceNeeded()
+	roomNeeded := t.getSpaceNeeded()
 	if roomLeft < roomNeeded {
 		return fmt.Errorf("Not enough space available")
 	}
@@ -131,7 +131,7 @@ func (e *EdfFile) WriteThread(t *Thread) error {
 	return nil
 }
 
-// GetId returns this Thread's identifier.
-func (t *Thread) GetId() uint32 {
+// GetId returns this thread's identifier.
+func (t *thread) GetId() uint32 {
 	return t.id
 }

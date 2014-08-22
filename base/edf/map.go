@@ -31,29 +31,24 @@ func (e *EdfFile) GetPageSize() uint64 {
 	return e.pageSize
 }
 
-// GetSegmentSize returns the segmentSize of an EdfFile
-func (e *EdfFile) GetSegmentSize() uint64 {
-	return e.segmentSize
-}
-
-// EdfPosition represents a start and finish point
+// edfPosition represents a start and finish point
 // within the mapping
-type EdfPosition struct {
+type edfPosition struct {
 	Segment uint64
 	Byte    uint64
 }
 
-// EdfRange represents a start and an end segment
+// edfRange represents a start and an end segment
 // mapped in an EdfFile and also the byte offsets
 // within that segment
-type EdfRange struct {
-	Start       EdfPosition
-	End         EdfPosition
+type edfRange struct {
+	Start       edfPosition
+	End         edfPosition
 	segmentSize uint64
 }
 
-// Size returns the size (in bytes) of a given EdfRange
-func (r *EdfRange) Size() uint64 {
+// Size returns the size (in bytes) of a given edfRange
+func (r *edfRange) Size() uint64 {
 	ret := uint64(r.End.Segment-r.Start.Segment) * r.segmentSize
 	ret += uint64(r.End.Byte - r.Start.Byte)
 	return ret
@@ -62,7 +57,7 @@ func (r *EdfRange) Size() uint64 {
 // edfCallFree is a half-baked finalizer called on garbage
 // collection to ensure that the mapping gets freed
 func edfCallFree(e *EdfFile) {
-	e.Unmap(EDF_UNMAP_NOSYNC)
+	e.unmap(EDF_UNMAP_NOSYNC)
 }
 
 // EdfAnonMap maps the EdfFile structure into RAM
@@ -100,18 +95,18 @@ func EdfAnonMap() (*EdfFile, error) {
 	return ret, err
 }
 
-// EdfMap takes an os.File and returns an EdfMappedFile
+// edfMap takes an os.File and returns an EdfMappedFile
 // structure, which represents the mmap'd underlying file
 //
 // The `mode` parameter takes the following values
-//      EDF_CREATE: EdfMap will truncate the file to the right length and write the correct header information
-//      EDF_READ_WRITE: EdfMap will verify header information
-//      EDF_READ_ONLY:  EdfMap will verify header information
+//      EDF_CREATE: edfMap will truncate the file to the right length and write the correct header information
+//      EDF_READ_WRITE: edfMap will verify header information
+//      EDF_READ_ONLY:  edfMap will verify header information
 // IMPORTANT: EDF_LENGTH (edf.go) controls the size of the address
 // space mapping. This means that the file can be truncated to the
 // correct size without remapping. On 32-bit systems, this
 // is set to 2GiB.
-func EdfMap(f *os.File, mode int) (*EdfFile, error) {
+func edfMap(f *os.File, mode int) (*EdfFile, error) {
 	var err error
 
 	// Set up various things
@@ -143,7 +138,7 @@ func EdfMap(f *os.File, mode int) (*EdfFile, error) {
 
 	// Verify or generate the header
 	if mode == EDF_READ_WRITE || mode == EDF_READ_ONLY {
-		err = ret.VerifyHeader()
+		err = ret.verifyHeader()
 		if err != nil {
 			return nil, err
 		}
@@ -168,10 +163,10 @@ func EdfMap(f *os.File, mode int) (*EdfFile, error) {
 
 }
 
-// Range returns the segment offset and range of
+// getByteRange returns the segment offset and range of
 // two positions in the file.
-func (e *EdfFile) Range(byteStart uint64, byteEnd uint64) EdfRange {
-	var ret EdfRange
+func (e *EdfFile) getByteRange(byteStart uint64, byteEnd uint64) edfRange {
+	var ret edfRange
 	ret.Start.Segment = byteStart / e.segmentSize
 	ret.End.Segment = byteEnd / e.segmentSize
 	ret.Start.Byte = byteStart % e.segmentSize
@@ -180,15 +175,15 @@ func (e *EdfFile) Range(byteStart uint64, byteEnd uint64) EdfRange {
 	return ret
 }
 
-// GetPageRange returns the segment offset and range of
+// getPageRange returns the segment offset and range of
 // two pages in the file.
-func (e *EdfFile) GetPageRange(pageStart uint64, pageEnd uint64) EdfRange {
-	return e.Range(pageStart*e.pageSize, pageEnd*e.pageSize+e.pageSize-1)
+func (e *EdfFile) getPageRange(pageStart uint64, pageEnd uint64) edfRange {
+	return e.getByteRange(pageStart*e.pageSize, pageEnd*e.pageSize+e.pageSize-1)
 }
 
-// VerifyHeader checks that this version of Golearn can
+// verifyHeader checks that this version of Golearn can
 // read the file presented.
-func (e *EdfFile) VerifyHeader() error {
+func (e *EdfFile) verifyHeader() error {
 	// Check the magic bytes
 	diff := (e.m[0][0] ^ byte('G')) | (e.m[0][1] ^ byte('O'))
 	diff |= (e.m[0][2] ^ byte('L')) | (e.m[0][3] ^ byte('N'))
@@ -217,12 +212,12 @@ func (e *EdfFile) createHeader() {
 	e.m[0][3] = byte('N')
 	uint32ToBytes(EDF_VERSION, e.m[0][4:8])
 	uint32ToBytes(uint32(os.Getpagesize()), e.m[0][8:12])
-	e.Sync()
+	e.sync()
 }
 
 // writeInitialData writes system thread information
 func (e *EdfFile) writeInitialData() error {
-	var t Thread
+	var t thread
 	t.name = "SYSTEM"
 	t.id = 1
 	err := e.WriteThread(&t)
@@ -235,8 +230,8 @@ func (e *EdfFile) writeInitialData() error {
 	return err
 }
 
-// GetThreadCount returns the number of threads in this file.
-func (e *EdfFile) GetThreadCount() uint32 {
+// getThreadCount returns the number of threads in this file.
+func (e *EdfFile) getThreadCount() uint32 {
 	// The number of threads is stored in bytes 12-16 in the header
 	return uint32FromBytes(e.m[0][12:])
 }
@@ -244,7 +239,7 @@ func (e *EdfFile) GetThreadCount() uint32 {
 // incrementThreadCount increments the record of the number
 // of threads in this file
 func (e *EdfFile) incrementThreadCount() uint32 {
-	cur := e.GetThreadCount()
+	cur := e.getThreadCount()
 	cur++
 	uint32ToBytes(cur, e.m[0][12:])
 	return cur
@@ -253,14 +248,14 @@ func (e *EdfFile) incrementThreadCount() uint32 {
 // GetThreads returns the thread identifier -> name map.
 func (e *EdfFile) GetThreads() (map[uint32]string, error) {
 	ret := make(map[uint32]string)
-	count := e.GetThreadCount()
+	count := e.getThreadCount()
 	// The starting block
 	block := uint64(1)
 	for {
 		// Decode the block offset
-		r := e.GetPageRange(block, block)
+		r := e.getPageRange(block, block)
 		if r.Start.Segment != r.End.Segment {
-			return nil, fmt.Errorf("Thread range split across segments")
+			return nil, fmt.Errorf("thread range split across segments")
 		}
 		bytes := e.m[r.Start.Segment]
 		bytes = bytes[r.Start.Byte : r.End.Byte+1]
@@ -273,7 +268,7 @@ func (e *EdfFile) GetThreads() (map[uint32]string, error) {
 			if length == 0 {
 				break
 			}
-			t := &Thread{}
+			t := &thread{}
 			size := t.Deserialize(bytes)
 			bytes = bytes[size:]
 			ret[t.id] = t.name[0:len(t.name)]
@@ -285,13 +280,13 @@ func (e *EdfFile) GetThreads() (map[uint32]string, error) {
 	}
 	// Hey? What's wrong with you!
 	if len(ret) != int(count) {
-		return ret, fmt.Errorf("Thread mismatch: %d/%d, indicates possible corruption", len(ret), count)
+		return ret, fmt.Errorf("thread mismatch: %d/%d, indicates possible corruption", len(ret), count)
 	}
 	return ret, nil
 }
 
-// Sync writes information to physical storage.
-func (e *EdfFile) Sync() error {
+// sync writes information to physical storage.
+func (e *EdfFile) sync() error {
 	// Do nothing if we're mapped anonymously
 	if e.mode == edfAnonMode {
 		return nil
@@ -312,7 +307,7 @@ func (e *EdfFile) truncateFile(size int64) error {
 	newSize := pageSize * size
 
 	// Synchronise
-	// e.Sync()
+	// e.sync()
 
 	// Double-check that we're not reducing file size
 	fileInfo, err := e.f.Stat()
@@ -371,12 +366,12 @@ func (e *EdfFile) truncate(size int64) error {
 	panic("Unsupported")
 }
 
-// Unmap unlinks the EdfFile from the address space.
+// unmap unlinks the EdfFile from the address space.
 // EDF_UNMAP_NOSYNC skips calling Sync() on the underlying
 // file before this happens.
-// IMPORTANT: attempts to use this mapping after Unmap() is
+// IMPORTANT: attempts to use this mapping after unmap() is
 // called will result in crashes.
-func (e *EdfFile) Unmap(flags int) error {
+func (e *EdfFile) unmap(flags int) error {
 
 	var ret error
 
@@ -394,7 +389,7 @@ func (e *EdfFile) Unmap(flags int) error {
 
 	// Sync the file
 	if flags != EDF_UNMAP_NOSYNC {
-		e.Sync()
+		e.sync()
 	}
 
 	e.mode = edfFreedMode
@@ -409,10 +404,10 @@ func (e *EdfFile) Unmap(flags int) error {
 }
 
 // ResolveRange returns a slice of byte slices representing
-// the underlying memory referenced by EdfRange.
+// the underlying memory referenced by edfRange.
 //
 // WARNING: slow.
-func (e *EdfFile) ResolveRange(r EdfRange) [][]byte {
+func (e *EdfFile) ResolveRange(r edfRange) [][]byte {
 	var ret [][]byte
 	segCounter := 0
 	for segment := r.Start.Segment; segment <= r.End.Segment; segment++ {
@@ -426,21 +421,4 @@ func (e *EdfFile) ResolveRange(r EdfRange) [][]byte {
 		segCounter++
 	}
 	return ret
-}
-
-// IResolveRange returns a byte slice representing the current EdfRange
-// and returns a value saying whether there's more. Subsequent calls to IncrementallyResolveRange
-// should use the value returned by the previous one until no more ranges are available.
-func (e *EdfFile) IResolveRange(r EdfRange, prev uint64) ([]byte, uint64) {
-	segment := r.Start.Segment + prev
-	if segment > r.End.Segment {
-		return nil, 0
-	}
-	if segment == r.Start.Segment {
-		return e.m[segment][r.Start.Byte:], prev + 1
-	}
-	if segment == r.End.Segment {
-		return e.m[segment][:r.End.Byte+1], 0
-	}
-	return e.m[segment], prev + 1
 }

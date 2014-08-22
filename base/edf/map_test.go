@@ -40,10 +40,10 @@ func TestFileCreate(t *testing.T) {
 		tempFile, err := ioutil.TempFile(os.TempDir(), "TestFileCreate")
 		So(err, ShouldEqual, nil)
 		Convey("Mapping the file should succeed", func() {
-			mapping, err := EdfMap(tempFile, EDF_CREATE)
+			mapping, err := edfMap(tempFile, EDF_CREATE)
 			So(err, ShouldEqual, nil)
 			Convey("Unmapping the file should succeed", func() {
-				err = mapping.Unmap(EDF_UNMAP_SYNC)
+				err = mapping.unmap(EDF_UNMAP_SYNC)
 				So(err, ShouldEqual, nil)
 			})
 
@@ -91,10 +91,10 @@ func TestFileThreadCounter(t *testing.T) {
 		tempFile, err := ioutil.TempFile(os.TempDir(), "TestFileCreate")
 		So(err, ShouldEqual, nil)
 		Convey("Mapping the file should succeed", func() {
-			mapping, err := EdfMap(tempFile, EDF_CREATE)
+			mapping, err := edfMap(tempFile, EDF_CREATE)
 			So(err, ShouldEqual, nil)
 			Convey("The file should have two threads to start with", func() {
-				count := mapping.GetThreadCount()
+				count := mapping.getThreadCount()
 				So(count, ShouldEqual, 2)
 				Convey("They should be SYSTEM and FIXED", func() {
 					threads, err := mapping.GetThreads()
@@ -106,9 +106,9 @@ func TestFileThreadCounter(t *testing.T) {
 			})
 			Convey("Incrementing the threadcount should result in three threads", func() {
 				mapping.incrementThreadCount()
-				count := mapping.GetThreadCount()
+				count := mapping.getThreadCount()
 				So(count, ShouldEqual, 3)
-				Convey("Thread information should indicate corruption", func() {
+				Convey("thread information should indicate corruption", func() {
 					_, err := mapping.GetThreads()
 					So(err, ShouldNotEqual, nil)
 				})
