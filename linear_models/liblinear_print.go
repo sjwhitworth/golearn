@@ -13,13 +13,13 @@ void golearn_liblinear_print_func_cgo(char *);
 import "C"
 
 import (
-	"github.com/sjwhitworth/golearn/base"
+	"fmt"
 	"unsafe"
 )
 
 //export libLinearPrintFunc
 func libLinearPrintFunc(str *C.char) {
-	base.Logger.Println(C.GoString(str))
+	fmt.Println(C.GoString(str))
 }
 
 func libLinearHookPrintFunc() {
