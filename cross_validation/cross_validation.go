@@ -2,17 +2,17 @@ package cross_validation
 
 import (
 	"fmt"
-	mat "github.com/gonum/matrix/mat64"
+	"github.com/gonum/matrix/mat64"
 	"math/rand"
 	"sync"
 	"time"
 )
 
-func shuffleMatrix(returnDatasets []*mat.Dense, dataset mat.Matrix, testSize int, seed int64, wg *sync.WaitGroup) {
+func shuffleMatrix(returnDatasets []*mat64.Dense, dataset mat64.Matrix, testSize int, seed int64, wg *sync.WaitGroup) {
 	numGen := rand.New(rand.NewSource(seed))
 
 	// We don't want to alter the original dataset.
-	shuffledSet := mat.DenseCopyOf(dataset)
+	shuffledSet := mat64.DenseCopyOf(dataset)
 	rowCount, colCount := shuffledSet.Dims()
 	temp := make([]float64, colCount)
 
@@ -27,8 +27,8 @@ func shuffleMatrix(returnDatasets []*mat.Dense, dataset mat.Matrix, testSize int
 		}
 	}
 	trainSize := rowCount - testSize
-	returnDatasets[0] = mat.NewDense(trainSize, colCount, shuffledSet.RawMatrix().Data[:trainSize*colCount])
-	returnDatasets[1] = mat.NewDense(testSize, colCount, shuffledSet.RawMatrix().Data[trainSize*colCount:])
+	returnDatasets[0] = mat64.NewDense(trainSize, colCount, shuffledSet.RawMatrix().Data[:trainSize*colCount])
+	returnDatasets[1] = mat64.NewDense(testSize, colCount, shuffledSet.RawMatrix().Data[trainSize*colCount:])
 
 	wg.Done()
 }
@@ -36,7 +36,7 @@ func shuffleMatrix(returnDatasets []*mat.Dense, dataset mat.Matrix, testSize int
 // TrainTestSplit splits input DenseMatrix into subsets for testing.
 // The function expects a test size number (int) or percentage (float64), and a random state or nil to get "random" shuffle.
 // It returns a list containing the train-test split and an error status.
-func TrainTestSplit(size interface{}, randomState interface{}, datasets ...*mat.Dense) ([]*mat.Dense, error) {
+func TrainTestSplit(size interface{}, randomState interface{}, datasets ...*mat64.Dense) ([]*mat64.Dense, error) {
 	// Get number of instances (rows).
 	instanceCount, _ := datasets[0].Dims()
 
@@ -82,7 +82,7 @@ func TrainTestSplit(size interface{}, randomState interface{}, datasets ...*mat.
 	wg.Add(dataCount)
 
 	// Return slice will hold training and test data and optional labels matrix.
-	returnDatasets := make([]*mat.Dense, 2*dataCount)
+	returnDatasets := make([]*mat64.Dense, 2*dataCount)
 
 	for i, dataset := range datasets {
 		// Send proper returnDataset slice.

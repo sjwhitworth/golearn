@@ -2,7 +2,7 @@ package trees
 
 import (
 	"github.com/sjwhitworth/golearn/base"
-	eval "github.com/sjwhitworth/golearn/evaluation"
+	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/filters"
 	"math"
 	"testing"
@@ -48,11 +48,11 @@ func TestRandomTreeClassification(t *testing.T) {
 	root := InferID3Tree(trainDataF, r)
 
 	predictions := root.Predict(testDataF)
-	confusionMat, err := eval.GetConfusionMatrix(testDataF, predictions)
+	confusionMat, err := evaluation.GetConfusionMatrix(testDataF, predictions)
 	if err != nil {
 		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
 	}
-	_ = eval.GetSummary(confusionMat)
+	_ = evaluation.GetSummary(confusionMat)
 }
 
 func TestRandomTreeClassification2(t *testing.T) {
@@ -74,11 +74,11 @@ func TestRandomTreeClassification2(t *testing.T) {
 	root.Fit(trainDataF)
 
 	predictions := root.Predict(testDataF)
-	confusionMat, err := eval.GetConfusionMatrix(testDataF, predictions)
+	confusionMat, err := evaluation.GetConfusionMatrix(testDataF, predictions)
 	if err != nil {
 		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
 	}
-	_ = eval.GetSummary(confusionMat)
+	_ = evaluation.GetSummary(confusionMat)
 }
 
 func TestPruning(t *testing.T) {
@@ -102,11 +102,11 @@ func TestPruning(t *testing.T) {
 	root.Prune(fittestData)
 
 	predictions := root.Predict(testDataF)
-	confusionMat, err := eval.GetConfusionMatrix(testDataF, predictions)
+	confusionMat, err := evaluation.GetConfusionMatrix(testDataF, predictions)
 	if err != nil {
 		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
 	}
-	_ = eval.GetSummary(confusionMat)
+	_ = evaluation.GetSummary(confusionMat)
 }
 
 func TestInformationGain(t *testing.T) {
@@ -196,11 +196,11 @@ func TestID3Classification(t *testing.T) {
 	root := InferID3Tree(trainData, rule)
 
 	predictions := root.Predict(testData)
-	confusionMat, err := eval.GetConfusionMatrix(testData, predictions)
+	confusionMat, err := evaluation.GetConfusionMatrix(testData, predictions)
 	if err != nil {
 		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
 	}
-	_ = eval.GetSummary(confusionMat)
+	_ = evaluation.GetSummary(confusionMat)
 }
 
 func TestID3(t *testing.T) {

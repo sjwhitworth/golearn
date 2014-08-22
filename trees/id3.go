@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
-	eval "github.com/sjwhitworth/golearn/evaluation"
+	"github.com/sjwhitworth/golearn/evaluation"
 	"sort"
 )
 
@@ -153,8 +153,8 @@ func (d *DecisionTreeNode) String() string {
 
 // computeAccuracy is a helper method for Prune()
 func computeAccuracy(predictions base.FixedDataGrid, from base.FixedDataGrid) float64 {
-	cf, _ := eval.GetConfusionMatrix(from, predictions)
-	return eval.GetAccuracy(cf)
+	cf, _ := evaluation.GetConfusionMatrix(from, predictions)
+	return evaluation.GetAccuracy(cf)
 }
 
 // Prune eliminates branches which hurt accuracy

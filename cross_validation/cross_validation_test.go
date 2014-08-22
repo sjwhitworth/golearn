@@ -2,7 +2,7 @@ package cross_validation
 
 import (
 	//. "github.com/smartystreets/goconvey/convey"
-	mat "github.com/gonum/matrix/mat64"
+	"github.com/gonum/matrix/mat64"
 	"math/rand"
 	"testing"
 	"time"
@@ -10,7 +10,7 @@ import (
 
 var (
 	flatValues, flatLabels []float64
-	values, labels         *mat.Dense
+	values, labels         *mat64.Dense
 )
 
 func init() {
@@ -23,8 +23,8 @@ func init() {
 		flatLabels[int(i/4)] = float64(rand.Intn(2))
 	}
 
-	values = mat.NewDense(20, 4, flatValues)
-	labels = mat.NewDense(20, 1, flatLabels)
+	values = mat64.NewDense(20, 4, flatValues)
+	labels = mat64.NewDense(20, 1, flatLabels)
 }
 
 func TestTrainTrainTestSplit(t *testing.T) {

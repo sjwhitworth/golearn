@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/ensemble"
-	eval "github.com/sjwhitworth/golearn/evaluation"
+	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/filters"
 	"github.com/sjwhitworth/golearn/trees"
 	"math/rand"
@@ -50,11 +50,11 @@ func main() {
 
 	// Evaluate
 	fmt.Println("ID3 Performance")
-	cf, err := eval.GetConfusionMatrix(testData, predictions)
+	cf, err := evaluation.GetConfusionMatrix(testData, predictions)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
 	}
-	fmt.Println(eval.GetSummary(cf))
+	fmt.Println(evaluation.GetSummary(cf))
 
 	//
 	// Next up, Random Trees
@@ -65,11 +65,11 @@ func main() {
 	tree.Fit(testData)
 	predictions = tree.Predict(testData)
 	fmt.Println("RandomTree Performance")
-	cf, err = eval.GetConfusionMatrix(testData, predictions)
+	cf, err = evaluation.GetConfusionMatrix(testData, predictions)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
 	}
-	fmt.Println(eval.GetSummary(cf))
+	fmt.Println(evaluation.GetSummary(cf))
 
 	//
 	// Finally, Random Forests
@@ -78,9 +78,9 @@ func main() {
 	tree.Fit(trainData)
 	predictions = tree.Predict(testData)
 	fmt.Println("RandomForest Performance")
-	cf, err = eval.GetConfusionMatrix(testData, predictions)
+	cf, err = evaluation.GetConfusionMatrix(testData, predictions)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
 	}
-	fmt.Println(eval.GetSummary(cf))
+	fmt.Println(evaluation.GetSummary(cf))
 }
