@@ -3,6 +3,8 @@ package evaluation
 import (
 	"bytes"
 	"fmt"
+	"text/tabwriter"
+
 	"github.com/sjwhitworth/golearn/base"
 )
 
@@ -176,18 +178,22 @@ func GetMacroRecall(c ConfusionMatrix) float64 {
 // ConfusionMatrix
 func GetSummary(c ConfusionMatrix) string {
 	var buffer bytes.Buffer
+	w := new(tabwriter.Writer)
+	w.Init(&buffer, 0, 8, 0, '\t', 0)
+
+	fmt.Fprintln(w, "Reference Class\tTrue Positives\tFalse Positives\tTrue Negatives\tPrecision\tRecall\tF1 Score")
+	fmt.Fprintln(w, "---------------\t--------------\t---------------\t--------------\t---------\t------\t--------")
 	for k := range c {
-		buffer.WriteString(k)
-		buffer.WriteString("\t")
 		tp := GetTruePositives(k, c)
 		fp := GetFalsePositives(k, c)
 		tn := GetTrueNegatives(k, c)
 		prec := GetPrecision(k, c)
 		rec := GetRecall(k, c)
 		f1 := GetF1Score(k, c)
-		buffer.WriteString(fmt.Sprintf("%.0f\t%.0f\t%.0f\t%.4f\t%.4f\t%.4f\n", tp, fp, tn, prec, rec, f1))
-	}
 
+		fmt.Fprintf(w, "%s\t%.0f\t%.0f\t%.0f\t%.4f\t%.4f\t%.4f\n", k, tp, fp, tn, prec, rec, f1)
+	}
+	w.Flush()
 	buffer.WriteString(fmt.Sprintf("Overall accuracy: %.4f\n", GetAccuracy(c)))
 
 	return buffer.String()
