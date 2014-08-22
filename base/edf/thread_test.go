@@ -36,7 +36,7 @@ func TestThreadFindAndWrite(T *testing.T) {
 	Convey("Creating a non-existent file should succeed", T, func() {
 		tempFile, err := os.OpenFile("hello.db", os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0700) //ioutil.TempFile(os.TempDir(), "TestFileCreate")
 		So(err, ShouldEqual, nil)
-		Convey("Mapping the file should suceed", func() {
+		Convey("Mapping the file should succeed", func() {
 			mapping, err := EdfMap(tempFile, EDF_CREATE)
 			So(err, ShouldEqual, nil)
 			Convey("Writing the thread should succeed", func() {
