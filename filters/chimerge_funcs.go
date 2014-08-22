@@ -1,7 +1,6 @@
 package filters
 
 import (
-	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	"math"
 )
@@ -184,22 +183,4 @@ func chiMergeMergeZipAdjacent(freq []*FrequencyTableEntry, minIndex int) []*Freq
 	upperSlice[0] = newEntry
 	freq = append(lowerSlice, upperSlice...)
 	return freq
-}
-
-func chiMergePrintTable(freq []*FrequencyTableEntry) {
-	classes := chiCountClasses(freq)
-	fmt.Printf("Attribute value\t")
-	for k := range classes {
-		fmt.Printf("\t%s", k)
-	}
-	fmt.Printf("\tTotal\n")
-	for _, f := range freq {
-		fmt.Printf("%.2f\t", f.Value)
-		total := 0
-		for k := range classes {
-			fmt.Printf("\t%d", f.Frequency[k])
-			total += f.Frequency[k]
-		}
-		fmt.Printf("\t%d\n", total)
-	}
 }
