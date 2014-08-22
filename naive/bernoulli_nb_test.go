@@ -32,10 +32,8 @@ func convertToBinary(src base.FixedDataGrid) base.FixedDataGrid {
 
 func TestSimple(t *testing.T) {
 	Convey("Given a simple training data", t, func() {
-		trainingData, err1 := base.ParseCSVToInstances("test/simple_train.csv", false)
-		if err1 != nil {
-			t.Error(err1)
-		}
+		trainingData, err := base.ParseCSVToInstances("test/simple_train.csv", false)
+		So(err, ShouldBeNil)
 
 		nb := NewBernoulliNBClassifier()
 		nb.Fit(convertToBinary(trainingData))
@@ -92,9 +90,7 @@ func TestSimple(t *testing.T) {
 
 		Convey("Predict should work as expected", func() {
 			testData, err := base.ParseCSVToInstances("test/simple_test.csv", false)
-			if err != nil {
-				t.Error(err)
-			}
+			So(err, ShouldBeNil)
 
 			predictions := nb.Predict(convertToBinary(testData))
 

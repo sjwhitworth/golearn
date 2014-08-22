@@ -139,9 +139,8 @@ func TestLayeredXOR(t *testing.T) {
 
 				for _, a := range pred.AllAttributes() {
 					af, ok := a.(*base.FloatAttribute)
-					if !ok {
-						t.Fatalf("Expected all attributes to be FloatAttributes; actually some were not")
-					}
+					So(ok, ShouldBeTrue)
+
 					af.Precision = 1
 				}
 

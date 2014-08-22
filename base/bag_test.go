@@ -8,7 +8,6 @@ import (
 )
 
 func TestBAGSimple(t *testing.T) {
-
 	Convey("Given certain bit data", t, func() {
 		// Generate said bits
 		bVals := [][]byte{
@@ -28,14 +27,14 @@ func TestBAGSimple(t *testing.T) {
 		attrSpecs := make([]AttributeSpec, 3)
 		for _, a := range attrSpecsUnordered {
 			name := a.GetAttribute().GetName()
+			So(name, ShouldBeIn, []string{"0", "1", "2"})
+
 			if name == "0" {
 				attrSpecs[0] = a
 			} else if name == "1" {
 				attrSpecs[1] = a
 			} else if name == "2" {
 				attrSpecs[2] = a
-			} else {
-				t.Fatalf("Unexpected attribute name '%s'", name)
 			}
 		}
 
@@ -95,14 +94,14 @@ func TestBAG(t *testing.T) {
 		attrSpecs := make([]AttributeSpec, 3)
 		for _, a := range attrSpecsUnordered {
 			name := a.GetAttribute().GetName()
+			So(name, ShouldBeIn, []string{"0", "1", "2"})
+
 			if name == "0" {
 				attrSpecs[0] = a
 			} else if name == "1" {
 				attrSpecs[1] = a
 			} else if name == "2" {
 				attrSpecs[2] = a
-			} else {
-				t.Fatalf("Unexpected attribute name '%s'", name)
 			}
 		}
 

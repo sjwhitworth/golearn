@@ -8,18 +8,11 @@ import (
 
 func TestKnnClassifier(t *testing.T) {
 	Convey("Given labels, a classifier and data", t, func() {
+		trainingData, err := base.ParseCSVToInstances("knn_train.csv", false)
+		So(err, ShouldBeNil)
 
-		trainingData, err1 := base.ParseCSVToInstances("knn_train.csv", false)
-		testingData, err2 := base.ParseCSVToInstances("knn_test.csv", false)
-
-		if err1 != nil {
-			t.Error(err1)
-			return
-		}
-		if err2 != nil {
-			t.Error(err2)
-			return
-		}
+		testingData, err := base.ParseCSVToInstances("knn_test.csv", false)
+		So(err, ShouldBeNil)
 
 		cls := NewKnnClassifier("euclidean", 2)
 		cls.Fit(trainingData)

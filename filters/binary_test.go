@@ -86,9 +86,7 @@ func TestBinaryFilter(t *testing.T) {
 			for _, a := range instF.AllAttributes() {
 				name := a.GetName()
 				_, ok := origMap[name]
-				if !ok {
-					t.Errorf("Weird: %s", name)
-				}
+				So(ok, ShouldBeTrue)
 				origMap[name] = true
 			}
 			for a := range origMap {
@@ -105,10 +103,19 @@ func TestBinaryFilter(t *testing.T) {
 			}
 			// For each attribute
 			for name := range attrMap {
+				So(name, ShouldBeIn, []string{
+					"floatAttr",
+					"shouldBe1Binary",
+					"shouldBe3Binary_stoicism",
+					"shouldBe3Binary_heroism",
+					"shouldBe3Binary_romanticism",
+					"arbitraryClass",
+				})
+
 				attr := attrMap[name]
-				// Retrieve AttributeSpec
 				as, err := instF.GetAttribute(attr)
 				So(err, ShouldEqual, nil)
+
 				if name == "floatAttr" {
 					So(instF.Get(as, 0), ShouldResemble, []byte{1})
 					So(instF.Get(as, 1), ShouldResemble, []byte{1})
@@ -130,10 +137,7 @@ func TestBinaryFilter(t *testing.T) {
 					So(instF.Get(as, 1), ShouldResemble, []byte{0})
 					So(instF.Get(as, 2), ShouldResemble, []byte{1})
 				} else if name == "arbitraryClass" {
-				} else {
-					t.Error("Shouldn't have %s", name)
 				}
-
 			}
 		})
 

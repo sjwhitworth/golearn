@@ -8,16 +8,12 @@ import (
 
 func TestBinning(t *testing.T) {
 	Convey("Given some data and a reference", t, func() {
-		// Read the data
 		inst1, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-		if err != nil {
-			t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-		}
+		So(err, ShouldBeNil)
 
 		inst2, err := base.ParseCSVToInstances("../examples/datasets/iris_binned.csv", true)
-		if err != nil {
-			t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-		}
+		So(err, ShouldBeNil)
+
 		//
 		// Construct the binning filter
 		binAttr := inst1.AllAttributes()[0]

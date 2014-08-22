@@ -16,9 +16,8 @@ func TestLogisticRegression(t *testing.T) {
 
 		// Setup the problem
 		lr, err := NewLogisticRegression("l2", 1.0, 1e-6)
-		if err != nil {
-			t.Fatalf("Unable to create logistic regression: %s", err.Error())
-		}
+		So(err, ShouldBeNil)
+
 		lr.Fit(X)
 
 		Convey("When predicting the label of first vector", func() {
