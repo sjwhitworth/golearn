@@ -32,15 +32,15 @@ func isSortedDesc(inst FixedDataGrid, attr AttributeSpec) bool {
 	return true
 }
 
-func TestSortDesc(testEnv *testing.T) {
+func TestSortDesc(t *testing.T) {
 	inst1, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		testEnv.Error(err)
+		t.Error(err)
 		return
 	}
 	inst2, err := ParseCSVToInstances("../examples/datasets/iris_sorted_desc.csv", true)
 	if err != nil {
-		testEnv.Error(err)
+		t.Error(err)
 		return
 	}
 
@@ -48,57 +48,57 @@ func TestSortDesc(testEnv *testing.T) {
 	as2 := ResolveAllAttributes(inst2)
 
 	if isSortedDesc(inst1, as1[0]) {
-		testEnv.Error("Can't test descending sort order")
+		t.Error("Can't test descending sort order")
 	}
 	if !isSortedDesc(inst2, as2[0]) {
-		testEnv.Error("Reference data not sorted in descending order!")
+		t.Error("Reference data not sorted in descending order!")
 	}
 
 	Sort(inst1, Descending, as1[0:len(as1)-1])
 	if err != nil {
-		testEnv.Error(err)
+		t.Error(err)
 	}
 	if !isSortedDesc(inst1, as1[0]) {
-		testEnv.Error("Instances are not sorted in descending order")
-		testEnv.Error(inst1)
+		t.Error("Instances are not sorted in descending order")
+		t.Error(inst1)
 	}
 	if !inst2.Equal(inst1) {
-		testEnv.Error("Instances don't match")
-		testEnv.Error(inst1)
-		testEnv.Error(inst2)
+		t.Error("Instances don't match")
+		t.Error(inst1)
+		t.Error(inst2)
 	}
 }
 
-func TestSortAsc(testEnv *testing.T) {
+func TestSortAsc(t *testing.T) {
 	inst, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	as1 := ResolveAllAttributes(inst)
 	if isSortedAsc(inst, as1[0]) {
-		testEnv.Error("Can't test ascending sort on something ascending already")
+		t.Error("Can't test ascending sort on something ascending already")
 	}
 	if err != nil {
-		testEnv.Error(err)
+		t.Error(err)
 		return
 	}
 	Sort(inst, Ascending, as1[0:1])
 	if !isSortedAsc(inst, as1[0]) {
-		testEnv.Error("Instances are not sorted in ascending order")
-		testEnv.Error(inst)
+		t.Error("Instances are not sorted in ascending order")
+		t.Error(inst)
 	}
 
 	inst2, err := ParseCSVToInstances("../examples/datasets/iris_sorted_asc.csv", true)
 	if err != nil {
-		testEnv.Error(err)
+		t.Error(err)
 		return
 	}
 	as2 := ResolveAllAttributes(inst2)
 	if !isSortedAsc(inst2, as2[0]) {
-		testEnv.Error("This file should be sorted in ascending order")
+		t.Error("This file should be sorted in ascending order")
 	}
 
 	if !inst2.Equal(inst) {
-		testEnv.Error("Instances don't match")
-		testEnv.Error(inst)
-		testEnv.Error(inst2)
+		t.Error("Instances don't match")
+		t.Error(inst)
+		t.Error(inst2)
 	}
 
 }

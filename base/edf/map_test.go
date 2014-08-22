@@ -8,7 +8,7 @@ import (
 )
 
 func TestAnonMap(t *testing.T) {
-	Convey("Anonymous mapping should suceed", t, func() {
+	Convey("Anonymous mapping should succeed", t, func() {
 		mapping, err := EdfAnonMap()
 		So(err, ShouldEqual, nil)
 		bytes := mapping.m[0]
@@ -39,10 +39,10 @@ func TestFileCreate(t *testing.T) {
 	Convey("Creating a non-existent file should succeed", t, func() {
 		tempFile, err := ioutil.TempFile(os.TempDir(), "TestFileCreate")
 		So(err, ShouldEqual, nil)
-		Convey("Mapping the file should suceed", func() {
+		Convey("Mapping the file should succeed", func() {
 			mapping, err := EdfMap(tempFile, EDF_CREATE)
 			So(err, ShouldEqual, nil)
-			Convey("Unmapping the file should suceed", func() {
+			Convey("Unmapping the file should succeed", func() {
 				err = mapping.Unmap(EDF_UNMAP_SYNC)
 				So(err, ShouldEqual, nil)
 			})
@@ -90,7 +90,7 @@ func TestFileThreadCounter(t *testing.T) {
 	Convey("Creating a non-existent file should succeed", t, func() {
 		tempFile, err := ioutil.TempFile(os.TempDir(), "TestFileCreate")
 		So(err, ShouldEqual, nil)
-		Convey("Mapping the file should suceed", func() {
+		Convey("Mapping the file should succeed", func() {
 			mapping, err := EdfMap(tempFile, EDF_CREATE)
 			So(err, ShouldEqual, nil)
 			Convey("The file should have two threads to start with", func() {

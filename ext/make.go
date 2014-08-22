@@ -45,7 +45,7 @@ func main() {
 		return
 	}
 
-	os.Mkdir("lib", os.ModeDir | 0777)
+	os.Mkdir("lib", os.ModeDir|0777)
 
 	log.Println("Installing libs")
 	if runtime.GOOS == "windows" {

@@ -1,7 +1,6 @@
 package neural
 
 import (
-	"fmt"
 	"github.com/gonum/matrix/mat64"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
@@ -61,7 +60,6 @@ func TestNetworkWith1Layer(t *testing.T) {
 					for i := 1; i <= 6; i++ {
 						for j := 1; j <= 6; j++ {
 							v := n.GetWeight(i, j)
-							fmt.Println(i, j, v)
 							switch i {
 							case 1:
 								switch j {

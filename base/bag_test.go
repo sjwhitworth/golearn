@@ -35,7 +35,7 @@ func TestBAGSimple(t *testing.T) {
 			} else if name == "2" {
 				attrSpecs[2] = a
 			} else {
-				panic(name)
+				t.Fatalf("Unexpected attribute name '%s'", name)
 			}
 		}
 
@@ -102,7 +102,7 @@ func TestBAG(t *testing.T) {
 			} else if name == "2" {
 				attrSpecs[2] = a
 			} else {
-				panic(name)
+				t.Fatalf("Unexpected attribute name '%s'", name)
 			}
 		}
 

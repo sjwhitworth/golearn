@@ -1,19 +1,19 @@
 package trees
 
 import (
-	"fmt"
-	base "github.com/sjwhitworth/golearn/base"
+	"github.com/sjwhitworth/golearn/base"
 	eval "github.com/sjwhitworth/golearn/evaluation"
-	filters "github.com/sjwhitworth/golearn/filters"
+	"github.com/sjwhitworth/golearn/filters"
 	"math"
 	"testing"
 )
 
-func TestRandomTree(testEnv *testing.T) {
+func TestRandomTree(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
+
 	filt := filters.NewChiMergeFilter(inst, 0.90)
 	for _, a := range base.NonClassFloatAttributes(inst) {
 		filt.AddAttribute(a)
@@ -23,17 +23,17 @@ func TestRandomTree(testEnv *testing.T) {
 
 	r := new(RandomTreeRuleGenerator)
 	r.Attributes = 2
-	fmt.Println(instf)
-	root := InferID3Tree(instf, r)
-	fmt.Println(root)
+
+	_ = InferID3Tree(instf, r)
 }
 
-func TestRandomTreeClassification(testEnv *testing.T) {
+func TestRandomTreeClassification(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	trainData, testData := base.InstancesTrainTestSplit(inst, 0.6)
+
 	filt := filters.NewChiMergeFilter(inst, 0.90)
 	for _, a := range base.NonClassFloatAttributes(inst) {
 		filt.AddAttribute(a)
@@ -44,23 +44,21 @@ func TestRandomTreeClassification(testEnv *testing.T) {
 
 	r := new(RandomTreeRuleGenerator)
 	r.Attributes = 2
+
 	root := InferID3Tree(trainDataF, r)
-	fmt.Println(root)
+
 	predictions := root.Predict(testDataF)
-	fmt.Println(predictions)
 	confusionMat := eval.GetConfusionMatrix(testDataF, predictions)
-	fmt.Println(confusionMat)
-	fmt.Println(eval.GetMacroPrecision(confusionMat))
-	fmt.Println(eval.GetMacroRecall(confusionMat))
-	fmt.Println(eval.GetSummary(confusionMat))
+	_ = eval.GetSummary(confusionMat)
 }
 
-func TestRandomTreeClassification2(testEnv *testing.T) {
+func TestRandomTreeClassification2(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	trainData, testData := base.InstancesTrainTestSplit(inst, 0.4)
+
 	filt := filters.NewChiMergeFilter(inst, 0.90)
 	for _, a := range base.NonClassFloatAttributes(inst) {
 		filt.AddAttribute(a)
@@ -71,22 +69,19 @@ func TestRandomTreeClassification2(testEnv *testing.T) {
 
 	root := NewRandomTree(2)
 	root.Fit(trainDataF)
-	fmt.Println(root)
+
 	predictions := root.Predict(testDataF)
-	fmt.Println(predictions)
 	confusionMat := eval.GetConfusionMatrix(testDataF, predictions)
-	fmt.Println(confusionMat)
-	fmt.Println(eval.GetMacroPrecision(confusionMat))
-	fmt.Println(eval.GetMacroRecall(confusionMat))
-	fmt.Println(eval.GetSummary(confusionMat))
+	_ = eval.GetSummary(confusionMat)
 }
 
-func TestPruning(testEnv *testing.T) {
+func TestPruning(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	trainData, testData := base.InstancesTrainTestSplit(inst, 0.6)
+
 	filt := filters.NewChiMergeFilter(inst, 0.90)
 	for _, a := range base.NonClassFloatAttributes(inst) {
 		filt.AddAttribute(a)
@@ -99,17 +94,13 @@ func TestPruning(testEnv *testing.T) {
 	fittrainData, fittestData := base.InstancesTrainTestSplit(trainDataF, 0.6)
 	root.Fit(fittrainData)
 	root.Prune(fittestData)
-	fmt.Println(root)
+
 	predictions := root.Predict(testDataF)
-	fmt.Println(predictions)
 	confusionMat := eval.GetConfusionMatrix(testDataF, predictions)
-	fmt.Println(confusionMat)
-	fmt.Println(eval.GetMacroPrecision(confusionMat))
-	fmt.Println(eval.GetMacroRecall(confusionMat))
-	fmt.Println(eval.GetSummary(confusionMat))
+	_ = eval.GetSummary(confusionMat)
 }
 
-func TestInformationGain(testEnv *testing.T) {
+func TestInformationGain(t *testing.T) {
 	outlook := make(map[string]map[string]int)
 	outlook["sunny"] = make(map[string]int)
 	outlook["overcast"] = make(map[string]int)
@@ -122,16 +113,14 @@ func TestInformationGain(testEnv *testing.T) {
 
 	entropy := getSplitEntropy(outlook)
 	if math.Abs(entropy-0.694) > 0.001 {
-		testEnv.Error(entropy)
+		t.Error(entropy)
 	}
 }
 
-func TestID3Inference(testEnv *testing.T) {
-
-	// Import the "PlayTennis" dataset
+func TestID3Inference(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/tennis.csv", true)
 	if err != nil {
-		panic(err)
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	// Build the decision tree
@@ -141,81 +130,71 @@ func TestID3Inference(testEnv *testing.T) {
 	// Verify the tree
 	// First attribute should be "outlook"
 	if root.SplitAttr.GetName() != "outlook" {
-		testEnv.Error(root)
+		t.Error(root)
 	}
 	sunnyChild := root.Children["sunny"]
 	overcastChild := root.Children["overcast"]
 	rainyChild := root.Children["rainy"]
 	if sunnyChild.SplitAttr.GetName() != "humidity" {
-		testEnv.Error(sunnyChild)
+		t.Error(sunnyChild)
 	}
 	if rainyChild.SplitAttr.GetName() != "windy" {
-		fmt.Println(rainyChild.SplitAttr)
-		testEnv.Error(rainyChild)
+		t.Error(rainyChild)
 	}
 	if overcastChild.SplitAttr != nil {
-		testEnv.Error(overcastChild)
+		t.Error(overcastChild)
 	}
 
 	sunnyLeafHigh := sunnyChild.Children["high"]
 	sunnyLeafNormal := sunnyChild.Children["normal"]
 	if sunnyLeafHigh.Class != "no" {
-		testEnv.Error(sunnyLeafHigh)
+		t.Error(sunnyLeafHigh)
 	}
 	if sunnyLeafNormal.Class != "yes" {
-		testEnv.Error(sunnyLeafNormal)
+		t.Error(sunnyLeafNormal)
 	}
 	windyLeafFalse := rainyChild.Children["false"]
 	windyLeafTrue := rainyChild.Children["true"]
 	if windyLeafFalse.Class != "yes" {
-		testEnv.Error(windyLeafFalse)
+		t.Error(windyLeafFalse)
 	}
 	if windyLeafTrue.Class != "no" {
-		testEnv.Error(windyLeafTrue)
+		t.Error(windyLeafTrue)
 	}
 
 	if overcastChild.Class != "yes" {
-		testEnv.Error(overcastChild)
+		t.Error(overcastChild)
 	}
 }
 
-func TestID3Classification(testEnv *testing.T) {
+func TestID3Classification(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
-	fmt.Println(inst)
+
 	filt := filters.NewBinningFilter(inst, 10)
 	for _, a := range base.NonClassFloatAttributes(inst) {
 		filt.AddAttribute(a)
 	}
 	filt.Train()
-	fmt.Println(filt)
 	instf := base.NewLazilyFilteredInstances(inst, filt)
-	fmt.Println("INSTFA", instf.AllAttributes())
-	fmt.Println("INSTF", instf)
+
 	trainData, testData := base.InstancesTrainTestSplit(instf, 0.70)
 
 	// Build the decision tree
 	rule := new(InformationGainRuleGenerator)
 	root := InferID3Tree(trainData, rule)
-	fmt.Println(root)
+
 	predictions := root.Predict(testData)
-	fmt.Println(predictions)
 	confusionMat := eval.GetConfusionMatrix(testData, predictions)
-	fmt.Println(confusionMat)
-	fmt.Println(eval.GetMacroPrecision(confusionMat))
-	fmt.Println(eval.GetMacroRecall(confusionMat))
-	fmt.Println(eval.GetSummary(confusionMat))
+	_ = eval.GetSummary(confusionMat)
 }
 
-func TestID3(testEnv *testing.T) {
-
-	// Import the "PlayTennis" dataset
+func TestID3(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/tennis.csv", true)
-	fmt.Println(inst)
 	if err != nil {
-		panic(err)
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	// Build the decision tree
@@ -226,40 +205,40 @@ func TestID3(testEnv *testing.T) {
 	// Verify the tree
 	// First attribute should be "outlook"
 	if root.SplitAttr.GetName() != "outlook" {
-		testEnv.Error(root)
+		t.Error(root)
 	}
 	sunnyChild := root.Children["sunny"]
 	overcastChild := root.Children["overcast"]
 	rainyChild := root.Children["rainy"]
 	if sunnyChild.SplitAttr.GetName() != "humidity" {
-		testEnv.Error(sunnyChild)
+		t.Error(sunnyChild)
 	}
 	if rainyChild.SplitAttr.GetName() != "windy" {
-		testEnv.Error(rainyChild)
+		t.Error(rainyChild)
 	}
 	if overcastChild.SplitAttr != nil {
-		testEnv.Error(overcastChild)
+		t.Error(overcastChild)
 	}
 
 	sunnyLeafHigh := sunnyChild.Children["high"]
 	sunnyLeafNormal := sunnyChild.Children["normal"]
 	if sunnyLeafHigh.Class != "no" {
-		testEnv.Error(sunnyLeafHigh)
+		t.Error(sunnyLeafHigh)
 	}
 	if sunnyLeafNormal.Class != "yes" {
-		testEnv.Error(sunnyLeafNormal)
+		t.Error(sunnyLeafNormal)
 	}
 
 	windyLeafFalse := rainyChild.Children["false"]
 	windyLeafTrue := rainyChild.Children["true"]
 	if windyLeafFalse.Class != "yes" {
-		testEnv.Error(windyLeafFalse)
+		t.Error(windyLeafFalse)
 	}
 	if windyLeafTrue.Class != "no" {
-		testEnv.Error(windyLeafTrue)
+		t.Error(windyLeafTrue)
 	}
 
 	if overcastChild.Class != "yes" {
-		testEnv.Error(overcastChild)
+		t.Error(overcastChild)
 	}
 }

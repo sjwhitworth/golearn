@@ -1,7 +1,6 @@
 package filters
 
 import (
-	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
@@ -54,7 +53,7 @@ func TestFloatFilter(t *testing.T) {
 				name := a.GetName()
 				_, ok := origMap[name]
 				if !ok {
-					t.Error(fmt.Sprintf("Weird: %s", name))
+					t.Errorf("Weird: %s", name)
 				}
 				origMap[name] = true
 			}

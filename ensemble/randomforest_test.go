@@ -1,17 +1,16 @@
 package ensemble
 
 import (
-	"fmt"
-	base "github.com/sjwhitworth/golearn/base"
+	"github.com/sjwhitworth/golearn/base"
 	eval "github.com/sjwhitworth/golearn/evaluation"
-	filters "github.com/sjwhitworth/golearn/filters"
+	"github.com/sjwhitworth/golearn/filters"
 	"testing"
 )
 
-func TestRandomForest1(testEnv *testing.T) {
+func TestRandomForest1(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	filt := filters.NewChiMergeFilter(inst, 0.90)
@@ -26,8 +25,6 @@ func TestRandomForest1(testEnv *testing.T) {
 	rf := NewRandomForest(10, 3)
 	rf.Fit(trainData)
 	predictions := rf.Predict(testData)
-	fmt.Println(predictions)
 	confusionMat := eval.GetConfusionMatrix(testData, predictions)
-	fmt.Println(confusionMat)
-	fmt.Println(eval.GetSummary(confusionMat))
+	_ = eval.GetSummary(confusionMat)
 }
