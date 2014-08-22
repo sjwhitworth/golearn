@@ -31,6 +31,15 @@ func NewRandomForest(forestSize int, features int) *RandomForest {
 
 // Fit builds the RandomForest on the specified instances
 func (f *RandomForest) Fit(on base.FixedDataGrid) {
+	numNonClassAttributes := len(base.NonClassAttributes(on))
+	if numNonClassAttributes < f.Features {
+		panic(fmt.Sprintf(
+			"Random forest with %d features cannot fit data grid with %d non-class attributes",
+			f.Features,
+			numNonClassAttributes,
+		))
+	}
+
 	f.Model = new(meta.BaggedModel)
 	f.Model.RandomFeatures = f.Features
 	for i := 0; i < f.ForestSize; i++ {
