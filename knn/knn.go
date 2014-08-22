@@ -5,7 +5,7 @@ package knn
 
 import (
 	"github.com/gonum/matrix/mat64"
-	base "github.com/sjwhitworth/golearn/base"
+	"github.com/sjwhitworth/golearn/base"
 	pairwiseMetrics "github.com/sjwhitworth/golearn/metrics/pairwise"
 	util "github.com/sjwhitworth/golearn/utilities"
 )

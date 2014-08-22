@@ -3,7 +3,7 @@ package trees
 import (
 	"bytes"
 	"fmt"
-	base "github.com/sjwhitworth/golearn/base"
+	"github.com/sjwhitworth/golearn/base"
 	eval "github.com/sjwhitworth/golearn/evaluation"
 	"sort"
 )

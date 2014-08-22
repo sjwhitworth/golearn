@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	base "github.com/sjwhitworth/golearn/base"
-	evaluation "github.com/sjwhitworth/golearn/evaluation"
-	knn "github.com/sjwhitworth/golearn/knn"
+	"github.com/sjwhitworth/golearn/base"
+	"github.com/sjwhitworth/golearn/evaluation"
+	"github.com/sjwhitworth/golearn/knn"
 )
 
 func main() {
