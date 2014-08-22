@@ -6,13 +6,13 @@ import (
 	"testing"
 )
 
-func TestThreadDeserialize(T *testing.T) {
+func TestThreadDeserialize(t *testing.T) {
 	bytes := []byte{0, 0, 0, 6, 83, 89, 83, 84, 69, 77, 0, 0, 0, 1}
-	Convey("Given a byte slice", T, func() {
-		var t Thread
-		size := t.Deserialize(bytes)
+	Convey("Given a byte slice", t, func() {
+		var thread Thread
+		size := thread.Deserialize(bytes)
 		Convey("Decoded name should be SYSTEM", func() {
-			So(t.name, ShouldEqual, "SYSTEM")
+			So(thread.name, ShouldEqual, "SYSTEM")
 		})
 		Convey("Size should be the same as the array", func() {
 			So(size, ShouldEqual, len(bytes))
@@ -20,20 +20,20 @@ func TestThreadDeserialize(T *testing.T) {
 	})
 }
 
-func TestThreadSerialize(T *testing.T) {
-	var t Thread
+func TestThreadSerialize(t *testing.T) {
+	var thread Thread
 	refBytes := []byte{0, 0, 0, 6, 83, 89, 83, 84, 69, 77, 0, 0, 0, 1}
-	t.name = "SYSTEM"
-	t.id = 1
+	thread.name = "SYSTEM"
+	thread.id = 1
 	toBytes := make([]byte, len(refBytes))
-	Convey("Should serialize correctly", T, func() {
-		t.Serialize(toBytes)
+	Convey("Should serialize correctly", t, func() {
+		thread.Serialize(toBytes)
 		So(toBytes, ShouldResemble, refBytes)
 	})
 }
 
-func TestThreadFindAndWrite(T *testing.T) {
-	Convey("Creating a non-existent file should succeed", T, func() {
+func TestThreadFindAndWrite(t *testing.T) {
+	Convey("Creating a non-existent file should succeed", t, func() {
 		tempFile, err := os.OpenFile("hello.db", os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0700) //ioutil.TempFile(os.TempDir(), "TestFileCreate")
 		So(err, ShouldEqual, nil)
 		Convey("Mapping the file should succeed", func() {

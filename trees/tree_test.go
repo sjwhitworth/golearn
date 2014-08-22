@@ -8,10 +8,10 @@ import (
 	"testing"
 )
 
-func TestRandomTree(testEnv *testing.T) {
+func TestRandomTree(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	filt := filters.NewChiMergeFilter(inst, 0.90)
@@ -27,10 +27,10 @@ func TestRandomTree(testEnv *testing.T) {
 	_ = InferID3Tree(instf, r)
 }
 
-func TestRandomTreeClassification(testEnv *testing.T) {
+func TestRandomTreeClassification(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	trainData, testData := base.InstancesTrainTestSplit(inst, 0.6)
 
@@ -52,10 +52,10 @@ func TestRandomTreeClassification(testEnv *testing.T) {
 	_ = eval.GetSummary(confusionMat)
 }
 
-func TestRandomTreeClassification2(testEnv *testing.T) {
+func TestRandomTreeClassification2(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	trainData, testData := base.InstancesTrainTestSplit(inst, 0.4)
 
@@ -75,10 +75,10 @@ func TestRandomTreeClassification2(testEnv *testing.T) {
 	_ = eval.GetSummary(confusionMat)
 }
 
-func TestPruning(testEnv *testing.T) {
+func TestPruning(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	trainData, testData := base.InstancesTrainTestSplit(inst, 0.6)
 
@@ -100,7 +100,7 @@ func TestPruning(testEnv *testing.T) {
 	_ = eval.GetSummary(confusionMat)
 }
 
-func TestInformationGain(testEnv *testing.T) {
+func TestInformationGain(t *testing.T) {
 	outlook := make(map[string]map[string]int)
 	outlook["sunny"] = make(map[string]int)
 	outlook["overcast"] = make(map[string]int)
@@ -113,14 +113,14 @@ func TestInformationGain(testEnv *testing.T) {
 
 	entropy := getSplitEntropy(outlook)
 	if math.Abs(entropy-0.694) > 0.001 {
-		testEnv.Error(entropy)
+		t.Error(entropy)
 	}
 }
 
-func TestID3Inference(testEnv *testing.T) {
+func TestID3Inference(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/tennis.csv", true)
 	if err != nil {
-		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	// Build the decision tree
@@ -130,47 +130,47 @@ func TestID3Inference(testEnv *testing.T) {
 	// Verify the tree
 	// First attribute should be "outlook"
 	if root.SplitAttr.GetName() != "outlook" {
-		testEnv.Error(root)
+		t.Error(root)
 	}
 	sunnyChild := root.Children["sunny"]
 	overcastChild := root.Children["overcast"]
 	rainyChild := root.Children["rainy"]
 	if sunnyChild.SplitAttr.GetName() != "humidity" {
-		testEnv.Error(sunnyChild)
+		t.Error(sunnyChild)
 	}
 	if rainyChild.SplitAttr.GetName() != "windy" {
-		testEnv.Error(rainyChild)
+		t.Error(rainyChild)
 	}
 	if overcastChild.SplitAttr != nil {
-		testEnv.Error(overcastChild)
+		t.Error(overcastChild)
 	}
 
 	sunnyLeafHigh := sunnyChild.Children["high"]
 	sunnyLeafNormal := sunnyChild.Children["normal"]
 	if sunnyLeafHigh.Class != "no" {
-		testEnv.Error(sunnyLeafHigh)
+		t.Error(sunnyLeafHigh)
 	}
 	if sunnyLeafNormal.Class != "yes" {
-		testEnv.Error(sunnyLeafNormal)
+		t.Error(sunnyLeafNormal)
 	}
 	windyLeafFalse := rainyChild.Children["false"]
 	windyLeafTrue := rainyChild.Children["true"]
 	if windyLeafFalse.Class != "yes" {
-		testEnv.Error(windyLeafFalse)
+		t.Error(windyLeafFalse)
 	}
 	if windyLeafTrue.Class != "no" {
-		testEnv.Error(windyLeafTrue)
+		t.Error(windyLeafTrue)
 	}
 
 	if overcastChild.Class != "yes" {
-		testEnv.Error(overcastChild)
+		t.Error(overcastChild)
 	}
 }
 
-func TestID3Classification(testEnv *testing.T) {
+func TestID3Classification(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	filt := filters.NewBinningFilter(inst, 10)
@@ -191,10 +191,10 @@ func TestID3Classification(testEnv *testing.T) {
 	_ = eval.GetSummary(confusionMat)
 }
 
-func TestID3(testEnv *testing.T) {
+func TestID3(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/tennis.csv", true)
 	if err != nil {
-		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	// Build the decision tree
@@ -205,40 +205,40 @@ func TestID3(testEnv *testing.T) {
 	// Verify the tree
 	// First attribute should be "outlook"
 	if root.SplitAttr.GetName() != "outlook" {
-		testEnv.Error(root)
+		t.Error(root)
 	}
 	sunnyChild := root.Children["sunny"]
 	overcastChild := root.Children["overcast"]
 	rainyChild := root.Children["rainy"]
 	if sunnyChild.SplitAttr.GetName() != "humidity" {
-		testEnv.Error(sunnyChild)
+		t.Error(sunnyChild)
 	}
 	if rainyChild.SplitAttr.GetName() != "windy" {
-		testEnv.Error(rainyChild)
+		t.Error(rainyChild)
 	}
 	if overcastChild.SplitAttr != nil {
-		testEnv.Error(overcastChild)
+		t.Error(overcastChild)
 	}
 
 	sunnyLeafHigh := sunnyChild.Children["high"]
 	sunnyLeafNormal := sunnyChild.Children["normal"]
 	if sunnyLeafHigh.Class != "no" {
-		testEnv.Error(sunnyLeafHigh)
+		t.Error(sunnyLeafHigh)
 	}
 	if sunnyLeafNormal.Class != "yes" {
-		testEnv.Error(sunnyLeafNormal)
+		t.Error(sunnyLeafNormal)
 	}
 
 	windyLeafFalse := rainyChild.Children["false"]
 	windyLeafTrue := rainyChild.Children["true"]
 	if windyLeafFalse.Class != "yes" {
-		testEnv.Error(windyLeafFalse)
+		t.Error(windyLeafFalse)
 	}
 	if windyLeafTrue.Class != "no" {
-		testEnv.Error(windyLeafTrue)
+		t.Error(windyLeafTrue)
 	}
 
 	if overcastChild.Class != "yes" {
-		testEnv.Error(overcastChild)
+		t.Error(overcastChild)
 	}
 }

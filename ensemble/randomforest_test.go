@@ -7,10 +7,10 @@ import (
 	"testing"
 )
 
-func TestRandomForest1(testEnv *testing.T) {
+func TestRandomForest1(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	filt := filters.NewChiMergeFilter(inst, 0.90)

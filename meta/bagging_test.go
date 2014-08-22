@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-func BenchmarkBaggingRandomForestFit(testEnv *testing.B) {
+func BenchmarkBaggingRandomForestFit(t *testing.B) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -29,16 +29,16 @@ func BenchmarkBaggingRandomForestFit(testEnv *testing.B) {
 		rf.AddModel(trees.NewRandomTree(2))
 	}
 
-	testEnv.ResetTimer()
+	t.ResetTimer()
 	for i := 0; i < 20; i++ {
 		rf.Fit(instf)
 	}
 }
 
-func BenchmarkBaggingRandomForestPredict(testEnv *testing.B) {
+func BenchmarkBaggingRandomForestPredict(t *testing.B) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -55,16 +55,16 @@ func BenchmarkBaggingRandomForestPredict(testEnv *testing.B) {
 	}
 
 	rf.Fit(instf)
-	testEnv.ResetTimer()
+	t.ResetTimer()
 	for i := 0; i < 20; i++ {
 		rf.Predict(instf)
 	}
 }
 
-func TestRandomForest1(testEnv *testing.T) {
+func TestRandomForest1(t *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	trainData, testData := base.InstancesTrainTestSplit(inst, 0.6)
 

@@ -4,15 +4,15 @@ import (
 	"testing"
 )
 
-func TestLazySortDesc(testEnv *testing.T) {
+func TestLazySortDesc(t *testing.T) {
 	inst1, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		testEnv.Error(err)
+		t.Error(err)
 		return
 	}
 	inst2, err := ParseCSVToInstances("../examples/datasets/iris_sorted_desc.csv", true)
 	if err != nil {
-		testEnv.Error(err)
+		t.Error(err)
 		return
 	}
 
@@ -20,67 +20,67 @@ func TestLazySortDesc(testEnv *testing.T) {
 	as2 := ResolveAllAttributes(inst2)
 
 	if isSortedDesc(inst1, as1[0]) {
-		testEnv.Error("Can't test descending sort order")
+		t.Error("Can't test descending sort order")
 	}
 	if !isSortedDesc(inst2, as2[0]) {
-		testEnv.Error("Reference data not sorted in descending order!")
+		t.Error("Reference data not sorted in descending order!")
 	}
 
 	inst, err := LazySort(inst1, Descending, as1[0:len(as1)-1])
 	if err != nil {
-		testEnv.Error(err)
+		t.Error(err)
 	}
 	if !isSortedDesc(inst, as1[0]) {
-		testEnv.Error("Instances are not sorted in descending order")
-		testEnv.Error(inst1)
+		t.Error("Instances are not sorted in descending order")
+		t.Error(inst1)
 	}
 	if !inst2.Equal(inst) {
-		testEnv.Error("Instances don't match")
-		testEnv.Error(inst)
-		testEnv.Error(inst2)
+		t.Error("Instances don't match")
+		t.Error(inst)
+		t.Error(inst2)
 	}
 }
 
-func TestLazySortAsc(testEnv *testing.T) {
+func TestLazySortAsc(t *testing.T) {
 	inst, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	as1 := ResolveAllAttributes(inst)
 	if isSortedAsc(inst, as1[0]) {
-		testEnv.Error("Can't test ascending sort on something ascending already")
+		t.Error("Can't test ascending sort on something ascending already")
 	}
 	if err != nil {
-		testEnv.Error(err)
+		t.Error(err)
 		return
 	}
 	insts, err := LazySort(inst, Ascending, as1)
 	if err != nil {
-		testEnv.Error(err)
+		t.Error(err)
 		return
 	}
 	if !isSortedAsc(insts, as1[0]) {
-		testEnv.Error("Instances are not sorted in ascending order")
-		testEnv.Error(insts)
+		t.Error("Instances are not sorted in ascending order")
+		t.Error(insts)
 	}
 
 	inst2, err := ParseCSVToInstances("../examples/datasets/iris_sorted_asc.csv", true)
 	if err != nil {
-		testEnv.Error(err)
+		t.Error(err)
 		return
 	}
 	as2 := ResolveAllAttributes(inst2)
 	if !isSortedAsc(inst2, as2[0]) {
-		testEnv.Error("This file should be sorted in ascending order")
+		t.Error("This file should be sorted in ascending order")
 	}
 
 	if !inst2.Equal(insts) {
-		testEnv.Error("Instances don't match")
-		testEnv.Error(inst)
-		testEnv.Error(inst2)
+		t.Error("Instances don't match")
+		t.Error(inst)
+		t.Error(inst2)
 	}
 
 	rowStr := insts.RowString(0)
 	ref := "4.30 3.00 1.10 0.10 Iris-setosa"
 	if rowStr != ref {
-		testEnv.Fatalf("'%s' != '%s'", rowStr, ref)
+		t.Fatalf("'%s' != '%s'", rowStr, ref)
 	}
 
 }
