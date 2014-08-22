@@ -13,7 +13,7 @@ import (
 func BenchmarkBaggingRandomForestFit(testEnv *testing.B) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -38,7 +38,7 @@ func BenchmarkBaggingRandomForestFit(testEnv *testing.B) {
 func BenchmarkBaggingRandomForestPredict(testEnv *testing.B) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -64,7 +64,7 @@ func BenchmarkBaggingRandomForestPredict(testEnv *testing.B) {
 func TestRandomForest1(testEnv *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	trainData, testData := base.InstancesTrainTestSplit(inst, 0.6)
 

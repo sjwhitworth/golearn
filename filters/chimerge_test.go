@@ -9,7 +9,7 @@ import (
 func TestChiMFreqTable(testEnv *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/chim.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	freq := ChiMBuildFrequencyTable(inst.AllAttributes()[0], inst)
@@ -28,7 +28,7 @@ func TestChiMFreqTable(testEnv *testing.T) {
 func TestChiClassCounter(testEnv *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/chim.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	freq := ChiMBuildFrequencyTable(inst.AllAttributes()[0], inst)
 	classes := chiCountClasses(freq)
@@ -46,7 +46,7 @@ func TestChiClassCounter(testEnv *testing.T) {
 func TestStatisticValues(testEnv *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/chim.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	freq := ChiMBuildFrequencyTable(inst.AllAttributes()[0], inst)
 	chiVal := chiComputeStatistic(freq[5], freq[6])
@@ -76,11 +76,9 @@ func TestChiSquareDistValues(testEnv *testing.T) {
 }
 
 func TestChiMerge1(testEnv *testing.T) {
-
-	// Read the data
 	inst, err := base.ParseCSVToInstances("../examples/datasets/chim.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	_, rows := inst.Size()
 
@@ -105,7 +103,7 @@ func TestChiMerge2(testEnv *testing.T) {
 	//   Randy Kerber, ChiMerge: Discretisation of Numeric Attributes, 1992
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	// Sort the instances
@@ -113,7 +111,7 @@ func TestChiMerge2(testEnv *testing.T) {
 	sortAttrSpecs := base.ResolveAttributes(inst, allAttrs)[0:1]
 	instSorted, err := base.Sort(inst, base.Ascending, sortAttrSpecs)
 	if err != nil {
-		panic(err)
+		testEnv.Fatalf("Sort failed: %s", err.Error())
 	}
 
 	// Perform Chi-Merge
@@ -179,7 +177,7 @@ func TestChiMerge4(testEnv *testing.T) {
 	//   Randy Kerber, ChiMerge: Discretisation of Numeric Attributes, 1992
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	filt := NewChiMergeFilter(inst, 0.90)
@@ -191,7 +189,9 @@ func TestChiMerge4(testEnv *testing.T) {
 	if len(clsAttrs) != 1 {
 		testEnv.Fatalf("%d != %d", len(clsAttrs), 1)
 	}
-	if clsAttrs[0].GetName() != "Species" {
-		panic("Class Attribute wrong!")
+	firstClassAttributeName := clsAttrs[0].GetName()
+	expectedClassAttributeName := "Species"
+	if firstClassAttributeName != expectedClassAttributeName {
+		testEnv.Fatalf("Expected class attribute '%s'; actual class attribute '%s'", expectedClassAttributeName, firstClassAttributeName)
 	}
 }

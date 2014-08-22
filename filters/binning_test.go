@@ -11,12 +11,12 @@ func TestBinning(t *testing.T) {
 		// Read the data
 		inst1, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 		if err != nil {
-			panic(err)
+			t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 		}
 
 		inst2, err := base.ParseCSVToInstances("../examples/datasets/iris_binned.csv", true)
 		if err != nil {
-			panic(err)
+			t.Fatal("Unable to parse CSV to instances: %s", err.Error())
 		}
 		//
 		// Construct the binning filter

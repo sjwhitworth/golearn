@@ -11,7 +11,7 @@ import (
 func TestRandomTree(testEnv *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	filt := filters.NewChiMergeFilter(inst, 0.90)
@@ -30,7 +30,7 @@ func TestRandomTree(testEnv *testing.T) {
 func TestRandomTreeClassification(testEnv *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	trainData, testData := base.InstancesTrainTestSplit(inst, 0.6)
 
@@ -55,7 +55,7 @@ func TestRandomTreeClassification(testEnv *testing.T) {
 func TestRandomTreeClassification2(testEnv *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	trainData, testData := base.InstancesTrainTestSplit(inst, 0.4)
 
@@ -78,7 +78,7 @@ func TestRandomTreeClassification2(testEnv *testing.T) {
 func TestPruning(testEnv *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 	trainData, testData := base.InstancesTrainTestSplit(inst, 0.6)
 
@@ -120,7 +120,7 @@ func TestInformationGain(testEnv *testing.T) {
 func TestID3Inference(testEnv *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/tennis.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	// Build the decision tree
@@ -170,7 +170,7 @@ func TestID3Inference(testEnv *testing.T) {
 func TestID3Classification(testEnv *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	filt := filters.NewBinningFilter(inst, 10)
@@ -194,7 +194,7 @@ func TestID3Classification(testEnv *testing.T) {
 func TestID3(testEnv *testing.T) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/tennis.csv", true)
 	if err != nil {
-		panic(err)
+		testEnv.Fatal("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	// Build the decision tree
