@@ -4,130 +4,101 @@ import (
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/filters"
-	"math"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestRandomTree(t *testing.T) {
-	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
-
-	filt := filters.NewChiMergeFilter(inst, 0.90)
-	for _, a := range base.NonClassFloatAttributes(inst) {
-		filt.AddAttribute(a)
-	}
-	filt.Train()
-	instf := base.NewLazilyFilteredInstances(inst, filt)
-
-	r := new(RandomTreeRuleGenerator)
-	r.Attributes = 2
-
-	_ = InferID3Tree(instf, r)
-}
-
 func TestRandomTreeClassification(t *testing.T) {
-	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
-	trainData, testData := base.InstancesTrainTestSplit(inst, 0.6)
+	Convey("Predictions on filtered data with a Random Tree", t, func() {
+		instances, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+		So(err, ShouldBeNil)
 
-	filt := filters.NewChiMergeFilter(inst, 0.90)
-	for _, a := range base.NonClassFloatAttributes(inst) {
-		filt.AddAttribute(a)
-	}
-	filt.Train()
-	trainDataF := base.NewLazilyFilteredInstances(trainData, filt)
-	testDataF := base.NewLazilyFilteredInstances(testData, filt)
+		trainData, testData := base.InstancesTrainTestSplit(instances, 0.6)
 
-	r := new(RandomTreeRuleGenerator)
-	r.Attributes = 2
+		filter := filters.NewChiMergeFilter(instances, 0.9)
+		for _, a := range base.NonClassFloatAttributes(instances) {
+			filter.AddAttribute(a)
+		}
+		filter.Train()
+		filteredTrainData := base.NewLazilyFilteredInstances(trainData, filter)
+		filteredTestData := base.NewLazilyFilteredInstances(testData, filter)
 
-	root := InferID3Tree(trainDataF, r)
-	predictions, err := root.Predict(testDataF)
-	if err != nil {
-		t.Fatalf("Predicting failed: %s", err.Error())
-	}
+		Convey("Using InferID3Tree to create the tree and do the fitting", func() {
+			Convey("Using a RandomTreeRule", func() {
+				randomTreeRuleGenerator := new(RandomTreeRuleGenerator)
+				randomTreeRuleGenerator.Attributes = 2
+				root := InferID3Tree(filteredTrainData, randomTreeRuleGenerator)
 
-	confusionMat, err := evaluation.GetConfusionMatrix(testDataF, predictions)
-	if err != nil {
-		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
-	}
-	_ = evaluation.GetSummary(confusionMat)
+				Convey("Predicting with the tree", func() {
+					predictions, err := root.Predict(filteredTestData)
+					So(err, ShouldBeNil)
+
+					confusionMatrix, err := evaluation.GetConfusionMatrix(filteredTestData, predictions)
+					So(err, ShouldBeNil)
+
+					Convey("Predictions should be somewhat accurate", func() {
+						So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
+					})
+				})
+			})
+
+			Convey("Using a InformationGainRule", func() {
+				informationGainRuleGenerator := new(InformationGainRuleGenerator)
+				root := InferID3Tree(filteredTrainData, informationGainRuleGenerator)
+
+				Convey("Predicting with the tree", func() {
+					predictions, err := root.Predict(filteredTestData)
+					So(err, ShouldBeNil)
+
+					confusionMatrix, err := evaluation.GetConfusionMatrix(filteredTestData, predictions)
+					So(err, ShouldBeNil)
+
+					Convey("Predictions should be somewhat accurate", func() {
+						So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
+					})
+				})
+			})
+		})
+
+		Convey("Using NewRandomTree to create the tree", func() {
+			root := NewRandomTree(2)
+
+			Convey("Fitting with the tree", func() {
+				err = root.Fit(filteredTrainData)
+				So(err, ShouldBeNil)
+
+				Convey("Predicting with the tree, *without* pruning first", func() {
+					predictions, err := root.Predict(filteredTestData)
+					So(err, ShouldBeNil)
+
+					confusionMatrix, err := evaluation.GetConfusionMatrix(filteredTestData, predictions)
+					So(err, ShouldBeNil)
+
+					Convey("Predictions should be somewhat accurate", func() {
+						So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
+					})
+				})
+
+				Convey("Predicting with the tree, pruning first", func() {
+					root.Prune(filteredTestData)
+
+					predictions, err := root.Predict(filteredTestData)
+					So(err, ShouldBeNil)
+
+					confusionMatrix, err := evaluation.GetConfusionMatrix(filteredTestData, predictions)
+					So(err, ShouldBeNil)
+
+					Convey("Predictions should be somewhat accurate", func() {
+						So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.4)
+					})
+				})
+			})
+		})
+	})
 }
 
-func TestRandomTreeClassification2(t *testing.T) {
-	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
-	trainData, testData := base.InstancesTrainTestSplit(inst, 0.4)
-
-	filt := filters.NewChiMergeFilter(inst, 0.90)
-	for _, a := range base.NonClassFloatAttributes(inst) {
-		filt.AddAttribute(a)
-	}
-	filt.Train()
-	trainDataF := base.NewLazilyFilteredInstances(trainData, filt)
-	testDataF := base.NewLazilyFilteredInstances(testData, filt)
-
-	root := NewRandomTree(2)
-	err = root.Fit(trainDataF)
-	if err != nil {
-		t.Fatalf("Fitting failed: %s", err.Error())
-	}
-
-	predictions, err := root.Predict(testDataF)
-	if err != nil {
-		t.Fatalf("Predicting failed: %s", err.Error())
-	}
-
-	confusionMat, err := evaluation.GetConfusionMatrix(testDataF, predictions)
-	if err != nil {
-		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
-	}
-	_ = evaluation.GetSummary(confusionMat)
-}
-
-func TestPruning(t *testing.T) {
-	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
-	trainData, testData := base.InstancesTrainTestSplit(inst, 0.6)
-
-	filt := filters.NewChiMergeFilter(inst, 0.90)
-	for _, a := range base.NonClassFloatAttributes(inst) {
-		filt.AddAttribute(a)
-	}
-	filt.Train()
-	trainDataF := base.NewLazilyFilteredInstances(trainData, filt)
-	testDataF := base.NewLazilyFilteredInstances(testData, filt)
-
-	root := NewRandomTree(2)
-	fittrainData, fittestData := base.InstancesTrainTestSplit(trainDataF, 0.6)
-
-	err = root.Fit(fittrainData)
-	if err != nil {
-		t.Fatalf("Fitting failed: %s", err.Error())
-	}
-
-	root.Prune(fittestData)
-	predictions, err := root.Predict(testDataF)
-	if err != nil {
-		t.Fatalf("Predicting failed: %s", err.Error())
-	}
-
-	confusionMat, err := evaluation.GetConfusionMatrix(testDataF, predictions)
-	if err != nil {
-		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
-	}
-	_ = evaluation.GetSummary(confusionMat)
-}
-
-func TestInformationGain(t *testing.T) {
+func TestPRIVATEgetSplitEntropy(t *testing.T) {
 	outlook := make(map[string]map[string]int)
 	outlook["sunny"] = make(map[string]int)
 	outlook["overcast"] = make(map[string]int)
@@ -138,141 +109,62 @@ func TestInformationGain(t *testing.T) {
 	outlook["rain"]["play"] = 3
 	outlook["rain"]["noplay"] = 2
 
-	entropy := getSplitEntropy(outlook)
-	if math.Abs(entropy-0.694) > 0.001 {
-		t.Error(entropy)
-	}
+	Convey("Should calculate split entropy accurately", t, func() {
+		So(getSplitEntropy(outlook), ShouldAlmostEqual, 0.694, 0.001)
+	})
 }
 
 func TestID3Inference(t *testing.T) {
-	inst, err := base.ParseCSVToInstances("../examples/datasets/tennis.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
+	Convey("Producing a decision tree with ID3 inference on a dataset", t, func() {
+		instances, err := base.ParseCSVToInstances("../examples/datasets/tennis.csv", true)
+		So(err, ShouldBeNil)
 
-	// Build the decision tree
-	rule := new(InformationGainRuleGenerator)
-	root := InferID3Tree(inst, rule)
+		Convey("Using InferID3Tree to create the tree and do the fitting", func() {
+			rule := new(InformationGainRuleGenerator)
+			root := InferID3Tree(instances, rule)
 
-	// Verify the tree
-	// First attribute should be "outlook"
-	if root.SplitAttr.GetName() != "outlook" {
-		t.Error(root)
-	}
-	sunnyChild := root.Children["sunny"]
-	overcastChild := root.Children["overcast"]
-	rainyChild := root.Children["rainy"]
-	if sunnyChild.SplitAttr.GetName() != "humidity" {
-		t.Error(sunnyChild)
-	}
-	if rainyChild.SplitAttr.GetName() != "windy" {
-		t.Error(rainyChild)
-	}
-	if overcastChild.SplitAttr != nil {
-		t.Error(overcastChild)
-	}
+			itBuildsTheCorrectDecisionTree(root)
+		})
 
-	sunnyLeafHigh := sunnyChild.Children["high"]
-	sunnyLeafNormal := sunnyChild.Children["normal"]
-	if sunnyLeafHigh.Class != "no" {
-		t.Error(sunnyLeafHigh)
-	}
-	if sunnyLeafNormal.Class != "yes" {
-		t.Error(sunnyLeafNormal)
-	}
-	windyLeafFalse := rainyChild.Children["false"]
-	windyLeafTrue := rainyChild.Children["true"]
-	if windyLeafFalse.Class != "yes" {
-		t.Error(windyLeafFalse)
-	}
-	if windyLeafTrue.Class != "no" {
-		t.Error(windyLeafTrue)
-	}
+		Convey("Using NewID3DecisionTree to build the tree and fitting explicitly", func() {
+			tree := NewID3DecisionTree(0.0)
+			tree.Fit(instances)
+			root := tree.Root
 
-	if overcastChild.Class != "yes" {
-		t.Error(overcastChild)
-	}
+			itBuildsTheCorrectDecisionTree(root)
+		})
+	})
 }
 
-func TestID3Classification(t *testing.T) {
-	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
+func itBuildsTheCorrectDecisionTree(root *DecisionTreeNode) {
+	Convey("The root should be 'outlook'", func() {
+		So(root.SplitAttr.GetName(), ShouldEqual, "outlook")
+	})
 
-	filt := filters.NewBinningFilter(inst, 10)
-	for _, a := range base.NonClassFloatAttributes(inst) {
-		filt.AddAttribute(a)
-	}
-	filt.Train()
-	instf := base.NewLazilyFilteredInstances(inst, filt)
+	sunny := root.Children["sunny"]
+	overcast := root.Children["overcast"]
+	rainy := root.Children["rainy"]
 
-	trainData, testData := base.InstancesTrainTestSplit(instf, 0.70)
+	Convey("After the 'sunny' node, the decision should split on 'humidity'", func() {
+		So(sunny.SplitAttr.GetName(), ShouldEqual, "humidity")
+	})
+	Convey("After the 'rainy' node, the decision should split on 'windy'", func() {
+		So(rainy.SplitAttr.GetName(), ShouldEqual, "windy")
+	})
+	Convey("There should be no splits after the 'overcast' node", func() {
+		So(overcast.SplitAttr, ShouldBeNil)
+	})
 
-	// Build the decision tree
-	rule := new(InformationGainRuleGenerator)
-	root := InferID3Tree(trainData, rule)
+	highHumidity := sunny.Children["high"]
+	normalHumidity := sunny.Children["normal"]
+	windy := rainy.Children["true"]
+	notWindy := rainy.Children["false"]
 
-	predictions, err := root.Predict(testData)
-	if err != nil {
-		t.Fatalf("Predicting failed: %s", err.Error())
-	}
-
-	confusionMat, err := evaluation.GetConfusionMatrix(testData, predictions)
-	if err != nil {
-		t.Fatalf("Unable to get confusion matrix: %s", err.Error())
-	}
-	_ = evaluation.GetSummary(confusionMat)
-}
-
-func TestID3(t *testing.T) {
-	inst, err := base.ParseCSVToInstances("../examples/datasets/tennis.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
-
-	// Build the decision tree
-	tree := NewID3DecisionTree(0.0)
-	tree.Fit(inst)
-	root := tree.Root
-
-	// Verify the tree
-	// First attribute should be "outlook"
-	if root.SplitAttr.GetName() != "outlook" {
-		t.Error(root)
-	}
-	sunnyChild := root.Children["sunny"]
-	overcastChild := root.Children["overcast"]
-	rainyChild := root.Children["rainy"]
-	if sunnyChild.SplitAttr.GetName() != "humidity" {
-		t.Error(sunnyChild)
-	}
-	if rainyChild.SplitAttr.GetName() != "windy" {
-		t.Error(rainyChild)
-	}
-	if overcastChild.SplitAttr != nil {
-		t.Error(overcastChild)
-	}
-
-	sunnyLeafHigh := sunnyChild.Children["high"]
-	sunnyLeafNormal := sunnyChild.Children["normal"]
-	if sunnyLeafHigh.Class != "no" {
-		t.Error(sunnyLeafHigh)
-	}
-	if sunnyLeafNormal.Class != "yes" {
-		t.Error(sunnyLeafNormal)
-	}
-
-	windyLeafFalse := rainyChild.Children["false"]
-	windyLeafTrue := rainyChild.Children["true"]
-	if windyLeafFalse.Class != "yes" {
-		t.Error(windyLeafFalse)
-	}
-	if windyLeafTrue.Class != "no" {
-		t.Error(windyLeafTrue)
-	}
-
-	if overcastChild.Class != "yes" {
-		t.Error(overcastChild)
-	}
+	Convey("The leaf nodes should be classified 'yes' or 'no' accurately", func() {
+		So(highHumidity.Class, ShouldEqual, "no")
+		So(normalHumidity.Class, ShouldEqual, "yes")
+		So(windy.Class, ShouldEqual, "no")
+		So(notWindy.Class, ShouldEqual, "yes")
+		So(overcast.Class, ShouldEqual, "yes")
+	})
 }
