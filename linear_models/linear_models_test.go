@@ -15,7 +15,9 @@ func TestLogisticRegression(t *testing.T) {
 		So(err, ShouldEqual, nil)
 
 		// Setup the problem
-		lr := NewLogisticRegression("l2", 1.0, 1e-6)
+		lr, err := NewLogisticRegression("l2", 1.0, 1e-6)
+		So(err, ShouldBeNil)
+
 		lr.Fit(X)
 
 		Convey("When predicting the label of first vector", func() {

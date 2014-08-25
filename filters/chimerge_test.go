@@ -1,141 +1,128 @@
 package filters
 
 import (
+	"fmt"
 	"github.com/sjwhitworth/golearn/base"
-	"math"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestChiMFreqTable(t *testing.T) {
-	inst, err := base.ParseCSVToInstances("../examples/datasets/chim.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
+func TestChiMergeFrequencyTable(t *testing.T) {
+	Convey("Chi-Merge Frequency Table", t, func() {
+		instances, err := base.ParseCSVToInstances("../examples/datasets/chim.csv", true)
+		So(err, ShouldBeNil)
 
-	freq := ChiMBuildFrequencyTable(inst.AllAttributes()[0], inst)
+		frequencyTable := ChiMBuildFrequencyTable(instances.AllAttributes()[0], instances)
 
-	if freq[0].Frequency["c1"] != 1 {
-		t.Error("Wrong frequency")
-	}
-	if freq[0].Frequency["c3"] != 4 {
-		t.Errorf("Wrong frequency %s", freq[1])
-	}
-	if freq[10].Frequency["c2"] != 1 {
-		t.Error("Wrong frequency")
-	}
+		Convey("Computes frequencies correctly", func() {
+			So(frequencyTable[0].Frequency["c1"], ShouldEqual, 1)
+			So(frequencyTable[0].Frequency["c3"], ShouldEqual, 4)
+			So(frequencyTable[10].Frequency["c2"], ShouldEqual, 1)
+		})
+
+		Convey("Counts classes correctly", func() {
+			classes := chiCountClasses(frequencyTable)
+
+			So(classes["c1"], ShouldEqual, 27)
+			So(classes["c2"], ShouldEqual, 12)
+			So(classes["c3"], ShouldEqual, 21)
+		})
+
+		Convey("Computes statistics correctly", func() {
+			So(chiComputeStatistic(frequencyTable[5], frequencyTable[6]), ShouldAlmostEqual, 1.89, 0.01)
+			So(chiComputeStatistic(frequencyTable[1], frequencyTable[2]), ShouldAlmostEqual, 1.08, 0.01)
+		})
+	})
 }
 
-func TestChiClassCounter(t *testing.T) {
-	inst, err := base.ParseCSVToInstances("../examples/datasets/chim.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
-	freq := ChiMBuildFrequencyTable(inst.AllAttributes()[0], inst)
-	classes := chiCountClasses(freq)
-	if classes["c1"] != 27 {
-		t.Error(classes)
-	}
-	if classes["c2"] != 12 {
-		t.Error(classes)
-	}
-	if classes["c3"] != 21 {
-		t.Error(classes)
-	}
+func TestChiSquaredDistribution(t *testing.T) {
+	Convey("Chi-Squared Distribution percentiles are computed correctly", t, func() {
+		So(chiSquaredPercentile(2, 4.61), ShouldAlmostEqual, 0.9, 0.001)
+		So(chiSquaredPercentile(3, 7.82), ShouldAlmostEqual, 0.95, 0.001)
+		So(chiSquaredPercentile(4, 13.28), ShouldAlmostEqual, 0.99, 0.001)
+	})
 }
 
-func TestStatisticValues(t *testing.T) {
-	inst, err := base.ParseCSVToInstances("../examples/datasets/chim.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
-	freq := ChiMBuildFrequencyTable(inst.AllAttributes()[0], inst)
-	chiVal := chiComputeStatistic(freq[5], freq[6])
-	if math.Abs(chiVal-1.89) > 0.01 {
-		t.Error(chiVal)
-	}
+func TestChiMergeDiscretization(t *testing.T) {
+	Convey("Chi-Merge Discretization", t, func() {
+		chimDatasetPath := "../examples/datasets/chim.csv"
 
-	chiVal = chiComputeStatistic(freq[1], freq[2])
-	if math.Abs(chiVal-1.08) > 0.01 {
-		t.Error(chiVal)
-	}
+		Convey(fmt.Sprintf("With the '%s' dataset", chimDatasetPath), func() {
+			instances, err := base.ParseCSVToInstances(chimDatasetPath, true)
+			So(err, ShouldBeNil)
+
+			_, rows := instances.Size()
+
+			frequencies := chiMerge(instances, instances.AllAttributes()[0], 0.9, 0, rows)
+			values := []float64{}
+			for _, entry := range frequencies {
+				values = append(values, entry.Value)
+			}
+
+			Convey("Computes frequencies correctly", func() {
+				So(values, ShouldResemble, []float64{1.3, 56.2, 87.1})
+			})
+		})
+
+		irisHeadersDatasetpath := "../examples/datasets/iris_headers.csv"
+
+		Convey(fmt.Sprintf("With the '%s' dataset", irisHeadersDatasetpath), func() {
+			instances, err := base.ParseCSVToInstances(irisHeadersDatasetpath, true)
+			So(err, ShouldBeNil)
+
+			Convey("Sorting the instances first", func() {
+				allAttributes := instances.AllAttributes()
+				sortedAttributesSpecs := base.ResolveAttributes(instances, allAttributes)[0:1]
+				sortedInstances, err := base.Sort(instances, base.Ascending, sortedAttributesSpecs)
+				So(err, ShouldBeNil)
+
+				_, rows := sortedInstances.Size()
+
+				frequencies := chiMerge(sortedInstances, sortedInstances.AllAttributes()[0], 0.9, 0, rows)
+				values := []float64{}
+				for _, entry := range frequencies {
+					values = append(values, entry.Value)
+				}
+
+				Convey("Computes frequencies correctly", func() {
+					So(values, ShouldResemble, []float64{4.3, 5.5, 5.8, 6.3, 7.1})
+				})
+			})
+		})
+	})
 }
 
-func TestChiSquareDistValues(t *testing.T) {
-	chiVal1 := chiSquaredPercentile(2, 4.61)
-	chiVal2 := chiSquaredPercentile(3, 7.82)
-	chiVal3 := chiSquaredPercentile(4, 13.28)
-	if math.Abs(chiVal1-0.90) > 0.001 {
-		t.Error(chiVal1)
-	}
-	if math.Abs(chiVal2-0.95) > 0.001 {
-		t.Error(chiVal2)
-	}
-	if math.Abs(chiVal3-0.99) > 0.001 {
-		t.Error(chiVal3)
-	}
-}
+func TestChiMergeFilter(t *testing.T) {
+	Convey("Chi-Merge Filter", t, func() {
+		// See http://sci2s.ugr.es/keel/pdf/algorithm/congreso/1992-Kerber-ChimErge-AAAI92.pdf
+		//   Randy Kerber, ChiMerge: Discretisation of Numeric Attributes, 1992
+		instances, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+		So(err, ShouldBeNil)
 
-func TestChiMerge1(t *testing.T) {
-	inst, err := base.ParseCSVToInstances("../examples/datasets/chim.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
-	_, rows := inst.Size()
+		Convey("Create and train the filter", func() {
+			filter := NewChiMergeFilter(instances, 0.90)
+			filter.AddAttribute(instances.AllAttributes()[0])
+			filter.AddAttribute(instances.AllAttributes()[1])
+			filter.Train()
 
-	freq := chiMerge(inst, inst.AllAttributes()[0], 0.90, 0, rows)
-	if len(freq) != 3 {
-		t.Error("Wrong length")
-	}
-	if freq[0].Value != 1.3 {
-		t.Error(freq[0])
-	}
-	if freq[1].Value != 56.2 {
-		t.Error(freq[1])
-	}
-	if freq[2].Value != 87.1 {
-		t.Error(freq[2])
-	}
-}
+			Convey("Filter the dataset", func() {
+				filteredInstances := base.NewLazilyFilteredInstances(instances, filter)
 
-func TestChiMerge2(t *testing.T) {
-	//
-	// See http://sci2s.ugr.es/keel/pdf/algorithm/congreso/1992-Kerber-ChimErge-AAAI92.pdf
-	//   Randy Kerber, ChiMerge: Discretisation of Numeric Attributes, 1992
-	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
+				classAttributes := filteredInstances.AllClassAttributes()
 
-	// Sort the instances
-	allAttrs := inst.AllAttributes()
-	sortAttrSpecs := base.ResolveAttributes(inst, allAttrs)[0:1]
-	instSorted, err := base.Sort(inst, base.Ascending, sortAttrSpecs)
-	if err != nil {
-		t.Fatalf("Sort failed: %s", err.Error())
-	}
+				Convey("There should only be one class attribute", func() {
+					So(len(classAttributes), ShouldEqual, 1)
+				})
 
-	// Perform Chi-Merge
-	_, rows := inst.Size()
-	freq := chiMerge(instSorted, allAttrs[0], 0.90, 0, rows)
-	if len(freq) != 5 {
-		t.Errorf("Wrong length (%d)", len(freq))
-		t.Error(freq)
-	}
-	if freq[0].Value != 4.3 {
-		t.Error(freq[0])
-	}
-	if freq[1].Value != 5.5 {
-		t.Error(freq[1])
-	}
-	if freq[2].Value != 5.8 {
-		t.Error(freq[2])
-	}
-	if freq[3].Value != 6.3 {
-		t.Error(freq[3])
-	}
-	if freq[4].Value != 7.1 {
-		t.Error(freq[4])
-	}
+				expectedClassAttribute := "Species"
+
+				Convey(fmt.Sprintf("The class attribute should be %s", expectedClassAttribute), func() {
+					So(classAttributes[0].GetName(), ShouldEqual, expectedClassAttribute)
+				})
+			})
+		})
+	})
 }
 
 /*
@@ -171,27 +158,3 @@ func TestChiMerge3(t *testing.T) {
 	}
 }
 */
-
-func TestChiMerge4(t *testing.T) {
-	// See http://sci2s.ugr.es/keel/pdf/algorithm/congreso/1992-Kerber-ChimErge-AAAI92.pdf
-	//   Randy Kerber, ChiMerge: Discretisation of Numeric Attributes, 1992
-	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
-	}
-
-	filt := NewChiMergeFilter(inst, 0.90)
-	filt.AddAttribute(inst.AllAttributes()[0])
-	filt.AddAttribute(inst.AllAttributes()[1])
-	filt.Train()
-	instf := base.NewLazilyFilteredInstances(inst, filt)
-	clsAttrs := instf.AllClassAttributes()
-	if len(clsAttrs) != 1 {
-		t.Fatalf("%d != %d", len(clsAttrs), 1)
-	}
-	firstClassAttributeName := clsAttrs[0].GetName()
-	expectedClassAttributeName := "Species"
-	if firstClassAttributeName != expectedClassAttributeName {
-		t.Fatalf("Expected class attribute '%s'; actual class attribute '%s'", expectedClassAttributeName, firstClassAttributeName)
-	}
-}

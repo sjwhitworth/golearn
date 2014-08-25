@@ -4,11 +4,11 @@ import (
 	"fmt"
 )
 
-// ContentEntry structs are stored in ContentEntry blocks
+// contentEntry structs are stored in contentEntry blocks
 // which always at block 2.
-type ContentEntry struct {
+type contentEntry struct {
 	// Which thread this entry is assigned to
-	Thread uint32
+	thread uint32
 	// Which page this block starts at
 	Start uint32
 	// The page up to and including which the block ends
@@ -35,13 +35,6 @@ func (e *EdfFile) getFreeMapSize() uint64 {
 	return uint64(EDF_SIZE) / e.pageSize
 }
 
-// FixedAlloc allocates a |bytesRequested| chunk of pages
-// on the FIXED thread.
-func (e *EdfFile) FixedAlloc(bytesRequested uint32) (EdfRange, error) {
-	pageSize := uint32(e.pageSize)
-	return e.AllocPages((pageSize*bytesRequested+pageSize/2)/pageSize, 2)
-}
-
 func (e *EdfFile) getContiguousOffset(pagesRequested uint32) (uint32, error) {
 	// Create the free bitmap
 	bitmap := make([]bool, e.getFreeMapSize())
@@ -52,7 +45,7 @@ func (e *EdfFile) getContiguousOffset(pagesRequested uint32) (uint32, error) {
 	block := uint64(2)
 	for {
 		// Get the range for this block
-		r := e.GetPageRange(block, block)
+		r := e.getPageRange(block, block)
 		if r.Start.Segment != r.End.Segment {
 			return 0, fmt.Errorf("Contents block split across segments")
 		}
@@ -102,7 +95,7 @@ func (e *EdfFile) getContiguousOffset(pagesRequested uint32) (uint32, error) {
 // addNewContentsBlock adds a new contents block in the next available space
 func (e *EdfFile) addNewContentsBlock() error {
 
-	var toc ContentEntry
+	var toc contentEntry
 
 	// Find the next available offset
 	startBlock, err := e.getContiguousOffset(1)
@@ -117,7 +110,7 @@ func (e *EdfFile) addNewContentsBlock() error {
 	block := uint64(2)
 	for {
 		// Get the range for this block
-		r := e.GetPageRange(block, block)
+		r := e.getPageRange(block, block)
 		if r.Start.Segment != r.End.Segment {
 			return fmt.Errorf("Contents block split across segments")
 		}
@@ -133,17 +126,17 @@ func (e *EdfFile) addNewContentsBlock() error {
 	// Add to the next available TOC space
 	toc.Start = startBlock
 	toc.End = startBlock + 1
-	toc.Thread = 1 // SYSTEM thread
+	toc.thread = 1 // SYSTEM thread
 	return e.addToTOC(&toc, false)
 }
 
 // addToTOC adds a ContentsEntry structure in the next available place
-func (e *EdfFile) addToTOC(c *ContentEntry, extend bool) error {
+func (e *EdfFile) addToTOC(c *contentEntry, extend bool) error {
 	// Traverse the contents table looking for a free spot
 	block := uint64(2)
 	for {
 		// Get the range for this block
-		r := e.GetPageRange(block, block)
+		r := e.getPageRange(block, block)
 		if r.Start.Segment != r.End.Segment {
 			return fmt.Errorf("Contents block split across segments")
 		}
@@ -175,7 +168,7 @@ func (e *EdfFile) addToTOC(c *ContentEntry, extend bool) error {
 			}
 		}
 		// Write the contents information into this block
-		uint32ToBytes(c.Thread, bytes)
+		uint32ToBytes(c.thread, bytes)
 		bytes = bytes[4:]
 		uint32ToBytes(c.Start, bytes)
 		bytes = bytes[4:]
@@ -185,12 +178,12 @@ func (e *EdfFile) addToTOC(c *ContentEntry, extend bool) error {
 	return nil
 }
 
-// AllocPages allocates a |pagesRequested| chunk of pages on the Thread
-// with the given identifier. Returns an EdfRange describing the result.
-func (e *EdfFile) AllocPages(pagesRequested uint32, thread uint32) (EdfRange, error) {
+// AllocPages allocates a |pagesRequested| chunk of pages on the thread
+// with the given identifier. Returns an edfRange describing the result.
+func (e *EdfFile) AllocPages(pagesRequested uint32, thread uint32) (edfRange, error) {
 
-	var ret EdfRange
-	var toc ContentEntry
+	var ret edfRange
+	var toc contentEntry
 
 	// Parameter check
 	if pagesRequested == 0 {
@@ -211,25 +204,25 @@ func (e *EdfFile) AllocPages(pagesRequested uint32, thread uint32) (EdfRange, er
 	}
 
 	// Add to the table of contents
-	toc.Thread = thread
+	toc.thread = thread
 	toc.Start = startBlock
 	toc.End = startBlock + pagesRequested
 	err = e.addToTOC(&toc, true)
 
 	// Compute the range
-	ret = e.GetPageRange(uint64(startBlock), uint64(startBlock+pagesRequested))
+	ret = e.getPageRange(uint64(startBlock), uint64(startBlock+pagesRequested))
 
 	return ret, err
 }
 
-// GetThreadBlocks returns EdfRanges containing blocks assigned to a given thread.
-func (e *EdfFile) GetThreadBlocks(thread uint32) ([]EdfRange, error) {
-	var ret []EdfRange
+// getThreadBlocks returns EdfRanges containing blocks assigned to a given thread.
+func (e *EdfFile) getThreadBlocks(thread uint32) ([]edfRange, error) {
+	var ret []edfRange
 	// Traverse the contents table
 	block := uint64(2)
 	for {
 		// Get the range for this block
-		r := e.GetPageRange(block, block)
+		r := e.getPageRange(block, block)
 		if r.Start.Segment != r.End.Segment {
 			return nil, fmt.Errorf("Contents block split across segments")
 		}
@@ -244,7 +237,7 @@ func (e *EdfFile) GetThreadBlocks(thread uint32) ([]EdfRange, error) {
 			if threadID == thread {
 				blockStart := uint32FromBytes(bytes[4:])
 				blockEnd := uint32FromBytes(bytes[8:])
-				r = e.GetPageRange(uint64(blockStart), uint64(blockEnd))
+				r = e.getPageRange(uint64(blockStart), uint64(blockEnd))
 				ret = append(ret, r)
 			}
 			bytes = bytes[12:]

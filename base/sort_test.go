@@ -1,6 +1,9 @@
 package base
 
-import "testing"
+import (
+	. "github.com/smartystreets/goconvey/convey"
+	"testing"
+)
 
 func isSortedAsc(inst FixedDataGrid, attr AttributeSpec) bool {
 	valPrev := 0.0
@@ -33,72 +36,67 @@ func isSortedDesc(inst FixedDataGrid, attr AttributeSpec) bool {
 }
 
 func TestSortDesc(t *testing.T) {
-	inst1, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	inst2, err := ParseCSVToInstances("../examples/datasets/iris_sorted_desc.csv", true)
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	Convey("Given data that's not already sorted descending", t, func() {
+		unsorted, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+		So(err, ShouldBeNil)
 
-	as1 := ResolveAllAttributes(inst1)
-	as2 := ResolveAllAttributes(inst2)
+		as1 := ResolveAllAttributes(unsorted)
+		So(isSortedDesc(unsorted, as1[0]), ShouldBeFalse)
 
-	if isSortedDesc(inst1, as1[0]) {
-		t.Error("Can't test descending sort order")
-	}
-	if !isSortedDesc(inst2, as2[0]) {
-		t.Error("Reference data not sorted in descending order!")
-	}
+		Convey("Given reference data that's alredy sorted descending", func() {
+			sortedDescending, err := ParseCSVToInstances("../examples/datasets/iris_sorted_desc.csv", true)
+			So(err, ShouldBeNil)
 
-	Sort(inst1, Descending, as1[0:len(as1)-1])
-	if err != nil {
-		t.Error(err)
-	}
-	if !isSortedDesc(inst1, as1[0]) {
-		t.Error("Instances are not sorted in descending order")
-		t.Error(inst1)
-	}
-	if !inst2.Equal(inst1) {
-		t.Error("Instances don't match")
-		t.Error(inst1)
-		t.Error(inst2)
-	}
+			as2 := ResolveAllAttributes(sortedDescending)
+			So(isSortedDesc(sortedDescending, as2[0]), ShouldBeTrue)
+
+			Convey("Sorting Descending", func() {
+				result, err := Sort(unsorted, Descending, as1[0:len(as1)-1])
+				So(err, ShouldBeNil)
+
+				Convey("Result should be sorted descending", func() {
+					So(isSortedDesc(result, as1[0]), ShouldBeTrue)
+				})
+
+				Convey("Result should match the reference", func() {
+					So(sortedDescending.Equal(result), ShouldBeTrue)
+				})
+			})
+		})
+	})
 }
 
 func TestSortAsc(t *testing.T) {
-	inst, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	as1 := ResolveAllAttributes(inst)
-	if isSortedAsc(inst, as1[0]) {
-		t.Error("Can't test ascending sort on something ascending already")
-	}
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	Sort(inst, Ascending, as1[0:1])
-	if !isSortedAsc(inst, as1[0]) {
-		t.Error("Instances are not sorted in ascending order")
-		t.Error(inst)
-	}
+	Convey("Given data that's not already sorted ascending", t, func() {
+		unsorted, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+		So(err, ShouldBeNil)
 
-	inst2, err := ParseCSVToInstances("../examples/datasets/iris_sorted_asc.csv", true)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	as2 := ResolveAllAttributes(inst2)
-	if !isSortedAsc(inst2, as2[0]) {
-		t.Error("This file should be sorted in ascending order")
-	}
+		as1 := ResolveAllAttributes(unsorted)
+		So(isSortedAsc(unsorted, as1[0]), ShouldBeFalse)
 
-	if !inst2.Equal(inst) {
-		t.Error("Instances don't match")
-		t.Error(inst)
-		t.Error(inst2)
-	}
+		Convey("Given reference data that's alredy sorted ascending", func() {
+			sortedAscending, err := ParseCSVToInstances("../examples/datasets/iris_sorted_asc.csv", true)
+			So(err, ShouldBeNil)
 
+			as2 := ResolveAllAttributes(sortedAscending)
+			So(isSortedAsc(sortedAscending, as2[0]), ShouldBeTrue)
+
+			Convey("Sorting Ascending", func() {
+				result, err := Sort(unsorted, Ascending, as1[0:len(as1)-1])
+				So(err, ShouldBeNil)
+
+				Convey("Result should be sorted descending", func() {
+					So(isSortedAsc(result, as1[0]), ShouldBeTrue)
+				})
+
+				Convey("Result should match the reference", func() {
+					So(sortedAscending.Equal(result), ShouldBeTrue)
+				})
+
+				Convey("First element of Result should equal known value", func() {
+					So(result.RowString(0), ShouldEqual, "4.30 3.00 1.10 0.10 Iris-setosa")
+				})
+			})
+		})
+	})
 }

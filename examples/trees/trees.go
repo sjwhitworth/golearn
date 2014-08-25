@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/ensemble"
-	eval "github.com/sjwhitworth/golearn/evaluation"
+	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/filters"
 	"github.com/sjwhitworth/golearn/trees"
 	"math/rand"
@@ -43,15 +43,24 @@ func main() {
 	// (Parameter controls train-prune split.)
 
 	// Train the ID3 tree
-	tree.Fit(trainData)
+	err = tree.Fit(trainData)
+	if err != nil {
+		panic(err)
+	}
 
 	// Generate predictions
-	predictions := tree.Predict(testData)
+	predictions, err := tree.Predict(testData)
+	if err != nil {
+		panic(err)
+	}
 
 	// Evaluate
 	fmt.Println("ID3 Performance")
-	cf := eval.GetConfusionMatrix(testData, predictions)
-	fmt.Println(eval.GetSummary(cf))
+	cf, err := evaluation.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
+	}
+	fmt.Println(evaluation.GetSummary(cf))
 
 	//
 	// Next up, Random Trees
@@ -59,19 +68,37 @@ func main() {
 
 	// Consider two randomly-chosen attributes
 	tree = trees.NewRandomTree(2)
-	tree.Fit(testData)
-	predictions = tree.Predict(testData)
+	err = tree.Fit(testData)
+	if err != nil {
+		panic(err)
+	}
+	predictions, err = tree.Predict(testData)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println("RandomTree Performance")
-	cf = eval.GetConfusionMatrix(testData, predictions)
-	fmt.Println(eval.GetSummary(cf))
+	cf, err = evaluation.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
+	}
+	fmt.Println(evaluation.GetSummary(cf))
 
 	//
 	// Finally, Random Forests
 	//
 	tree = ensemble.NewRandomForest(100, 3)
-	tree.Fit(trainData)
-	predictions = tree.Predict(testData)
+	err = tree.Fit(trainData)
+	if err != nil {
+		panic(err)
+	}
+	predictions, err = tree.Predict(testData)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println("RandomForest Performance")
-	cf = eval.GetConfusionMatrix(testData, predictions)
-	fmt.Println(eval.GetSummary(cf))
+	cf, err = evaluation.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
+	}
+	fmt.Println(evaluation.GetSummary(cf))
 }

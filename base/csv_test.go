@@ -2,129 +2,120 @@ package base
 
 import (
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestParseCSVGetRows(t *testing.T) {
-	lineCount, err := ParseCSVGetRows("../examples/datasets/iris.csv")
-	if err != nil {
-		t.Fatalf("Unable to parse CSV to get number of rows: %s", err.Error())
-	}
-	if lineCount != 150 {
-		t.Errorf("Should have %d lines, has %d", 150, lineCount)
-	}
+	Convey("Getting the number of rows for a CSV file", t, func() {
+		Convey("With a valid file path", func() {
+			numNonHeaderRows := 150
 
-	lineCount, err = ParseCSVGetRows("../examples/datasets/iris_headers.csv")
-	if err != nil {
-		t.Fatalf("Unable to parse CSV to get number of rows: %s", err.Error())
-	}
+			Convey("When the CSV file doesn't have a header row", func() {
+				lineCount, err := ParseCSVGetRows("../examples/datasets/iris.csv")
+				So(err, ShouldBeNil)
 
-	if lineCount != 151 {
-		t.Errorf("Should have %d lines, has %d", 151, lineCount)
-	}
+				Convey("It counts the correct number of rows", func() {
+					So(lineCount, ShouldEqual, numNonHeaderRows)
+				})
+			})
 
+			Convey("When the CSV file has a header row", func() {
+				lineCount, err := ParseCSVGetRows("../examples/datasets/iris_headers.csv")
+				So(err, ShouldBeNil)
+
+				Convey("It counts the correct number of rows, *including* the header row", func() {
+					So(lineCount, ShouldEqual, numNonHeaderRows+1)
+				})
+			})
+		})
+
+		Convey("With a path to a non-existent file", func() {
+			_, err := ParseCSVGetRows("../examples/datasets/non-existent.csv")
+
+			Convey("It returns an error", func() {
+				So(err, ShouldNotBeNil)
+			})
+		})
+	})
 }
 
-func TestParseCSVGetRowsWithMissingFile(t *testing.T) {
-	_, err := ParseCSVGetRows("../examples/datasets/non-existent.csv")
-	if err == nil {
-		t.Fatal("Expected ParseCSVGetRows to return error when given path to non-existent file")
-	}
+func TestParseCSVGetAttributes(t *testing.T) {
+	Convey("Getting the attributes in the headers of a CSV file", t, func() {
+		attributes := ParseCSVGetAttributes("../examples/datasets/iris_headers.csv", true)
+		sepalLengthAttribute := attributes[0]
+		speciesAttribute := attributes[4]
+
+		Convey("It gets the correct types for the headers based on the column values", func() {
+			So(sepalLengthAttribute.GetType(), ShouldEqual, Float64Type)
+			So(speciesAttribute.GetType(), ShouldEqual, CategoricalType)
+		})
+
+		Convey("It gets the correct attribute names", func() {
+			So(sepalLengthAttribute.GetName(), ShouldEqual, "Sepal length")
+			So(speciesAttribute.GetName(), ShouldEqual, "Species")
+		})
+	})
 }
 
-func TestParseCCSVGetAttributes(t *testing.T) {
-	attrs := ParseCSVGetAttributes("../examples/datasets/iris_headers.csv", true)
-	if attrs[0].GetType() != Float64Type {
-		t.Errorf("First attribute should be a float, %s", attrs[0])
-	}
-	if attrs[0].GetName() != "Sepal length" {
-		t.Errorf(attrs[0].GetName())
-	}
+func TestParseCSVSniffAttributeTypes(t *testing.T) {
+	Convey("Getting just the attribute types for the columns in the CSV", t, func() {
+		attributes := ParseCSVSniffAttributeTypes("../examples/datasets/iris_headers.csv", true)
 
-	if attrs[4].GetType() != CategoricalType {
-		t.Errorf("Final attribute should be categorical, %s", attrs[4])
-	}
-	if attrs[4].GetName() != "Species" {
-		t.Error(attrs[4])
-	}
+		Convey("It gets the correct types", func() {
+			So(attributes[0].GetType(), ShouldEqual, Float64Type)
+			So(attributes[1].GetType(), ShouldEqual, Float64Type)
+			So(attributes[2].GetType(), ShouldEqual, Float64Type)
+			So(attributes[3].GetType(), ShouldEqual, Float64Type)
+			So(attributes[4].GetType(), ShouldEqual, CategoricalType)
+		})
+	})
 }
 
-func TestParseCsvSniffAttributeTypes(t *testing.T) {
-	attrs := ParseCSVSniffAttributeTypes("../examples/datasets/iris_headers.csv", true)
-	if attrs[0].GetType() != Float64Type {
-		t.Errorf("First attribute should be a float, %s", attrs[0])
-	}
-	if attrs[1].GetType() != Float64Type {
-		t.Errorf("Second attribute should be a float, %s", attrs[1])
-	}
-	if attrs[2].GetType() != Float64Type {
-		t.Errorf("Third attribute should be a float, %s", attrs[2])
-	}
-	if attrs[3].GetType() != Float64Type {
-		t.Errorf("Fourth attribute should be a float, %s", attrs[3])
-	}
-	if attrs[4].GetType() != CategoricalType {
-		t.Errorf("Final attribute should be categorical, %s", attrs[4])
-	}
-}
+func TestParseCSVSniffAttributeNames(t *testing.T) {
+	Convey("Getting just the attribute name for the columns in the CSV", t, func() {
+		attributeNames := ParseCSVSniffAttributeNames("../examples/datasets/iris_headers.csv", true)
 
-func TestParseCSVSniffAttributeNamesWithHeaders(t *testing.T) {
-	attrs := ParseCSVSniffAttributeNames("../examples/datasets/iris_headers.csv", true)
-	if attrs[0] != "Sepal length" {
-		t.Error(attrs[0])
-	}
-	if attrs[1] != "Sepal width" {
-		t.Error(attrs[1])
-	}
-	if attrs[2] != "Petal length" {
-		t.Error(attrs[2])
-	}
-	if attrs[3] != "Petal width" {
-		t.Error(attrs[3])
-	}
-	if attrs[4] != "Species" {
-		t.Error(attrs[4])
-	}
+		Convey("It gets the correct names", func() {
+			So(attributeNames[0], ShouldEqual, "Sepal length")
+			So(attributeNames[1], ShouldEqual, "Sepal width")
+			So(attributeNames[2], ShouldEqual, "Petal length")
+			So(attributeNames[3], ShouldEqual, "Petal width")
+			So(attributeNames[4], ShouldEqual, "Species")
+		})
+	})
 }
 
 func TestParseCSVToInstances(t *testing.T) {
-	inst, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	row1 := inst.RowString(0)
-	row2 := inst.RowString(50)
-	row3 := inst.RowString(100)
+	Convey("Parsing a CSV file to Instances", t, func() {
+		Convey("Given a path to a reasonable CSV file", func() {
+			instances, err := ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+			So(err, ShouldBeNil)
 
-	if row1 != "5.10 3.50 1.40 0.20 Iris-setosa" {
-		t.Error(row1)
-	}
-	if row2 != "7.00 3.20 4.70 1.40 Iris-versicolor" {
-		t.Error(row2)
-	}
-	if row3 != "6.30 3.30 6.00 2.50 Iris-virginica" {
-		t.Error(row3)
-	}
-}
+			Convey("Should parse the rows correctly", func() {
+				So(instances.RowString(0), ShouldEqual, "5.10 3.50 1.40 0.20 Iris-setosa")
+				So(instances.RowString(50), ShouldEqual, "7.00 3.20 4.70 1.40 Iris-versicolor")
+				So(instances.RowString(100), ShouldEqual, "6.30 3.30 6.00 2.50 Iris-virginica")
+			})
+		})
 
-func TestParseCSVToInstancesWithMissingFile(t *testing.T) {
-	_, err := ParseCSVToInstances("../examples/datasets/non-existent.csv", true)
-	if err == nil {
-		t.Fatal("Expected ParseCSVToInstances to return error when given path to non-existent file")
-	}
-}
+		Convey("Given a path to a non-existent file", func() {
+			_, err := ParseCSVToInstances("../examples/datasets/non-existent.csv", true)
 
-func TestReadAwkwardInsatnces(t *testing.T) {
-	inst, err := ParseCSVToInstances("../examples/datasets/chim.csv", true)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	attrs := inst.AllAttributes()
-	if attrs[0].GetType() != Float64Type {
-		t.Error("Should be float!")
-	}
-	if attrs[1].GetType() != CategoricalType {
-		t.Error("Should be discrete!")
-	}
+			Convey("It should return an error", func() {
+				So(err, ShouldNotBeNil)
+			})
+		})
+
+		Convey("Given a path to a CSV file with awkward data", func() { // what's so awkward about it?
+			instances, err := ParseCSVToInstances("../examples/datasets/chim.csv", true)
+			So(err, ShouldBeNil)
+
+			Convey("It parses the data correctly, assigning the correct types to attributes", func() {
+				attributes := instances.AllAttributes()
+				So(attributes[0].GetType(), ShouldEqual, Float64Type)
+				So(attributes[1].GetType(), ShouldEqual, CategoricalType)
+			})
+		})
+	})
 }

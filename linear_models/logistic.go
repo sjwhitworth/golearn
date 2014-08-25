@@ -1,6 +1,7 @@
 package linear_models
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 )
@@ -10,21 +11,20 @@ type LogisticRegression struct {
 	model *Model
 }
 
-func NewLogisticRegression(penalty string, C float64, eps float64) *LogisticRegression {
+func NewLogisticRegression(penalty string, C float64, eps float64) (*LogisticRegression, error) {
 	solver_type := 0
 	if penalty == "l2" {
 		solver_type = L2R_LR
 	} else if penalty == "l1" {
 		solver_type = L1R_LR
 	} else {
-		fmt.Println("Invalid penalty")
-		return nil
+		return nil, errors.New(fmt.Sprintf("Invalid penalty '%s'", penalty))
 	}
 
 	lr := LogisticRegression{}
 	lr.param = NewParameter(solver_type, C, eps)
 	lr.model = nil
-	return &lr
+	return &lr, nil
 }
 
 func convertInstancesToProblemVec(X base.FixedDataGrid) [][]float64 {

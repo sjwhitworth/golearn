@@ -6,10 +6,8 @@ import (
 	"bytes"
 	"encoding/gob"
 	"io/ioutil"
-)
 
-import (
-	mat64 "github.com/gonum/matrix/mat64"
+	"github.com/gonum/matrix/mat64"
 )
 
 // An Estimator is object that can ingest some data and train on it.

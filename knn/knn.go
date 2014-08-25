@@ -6,8 +6,8 @@ package knn
 import (
 	"github.com/gonum/matrix/mat64"
 	"github.com/sjwhitworth/golearn/base"
-	pairwiseMetrics "github.com/sjwhitworth/golearn/metrics/pairwise"
-	util "github.com/sjwhitworth/golearn/utilities"
+	"github.com/sjwhitworth/golearn/metrics/pairwise"
+	"github.com/sjwhitworth/golearn/utilities"
 )
 
 // A KNNClassifier consists of a data matrix, associated labels in the same order as the matrix, and a distance function.
@@ -36,12 +36,12 @@ func (KNN *KNNClassifier) Fit(trainingData base.FixedDataGrid) {
 func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 
 	// Check what distance function we are using
-	var distanceFunc pairwiseMetrics.PairwiseDistanceFunc
+	var distanceFunc pairwise.PairwiseDistanceFunc
 	switch KNN.DistanceFunc {
 	case "euclidean":
-		distanceFunc = pairwiseMetrics.NewEuclidean()
+		distanceFunc = pairwise.NewEuclidean()
 	case "manhattan":
-		distanceFunc = pairwiseMetrics.NewManhattan()
+		distanceFunc = pairwise.NewManhattan()
 	default:
 		panic("unsupported distance function")
 
@@ -85,7 +85,7 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 			predRowBuf[i] = base.UnpackBytesToFloat(predRow[i])
 		}
 
-		predMat := util.FloatsToMatrix(predRowBuf)
+		predMat := utilities.FloatsToMatrix(predRowBuf)
 
 		// Find the closest match in the training data
 		KNN.TrainingData.MapOverRows(trainAttrSpecs, func(trainRow [][]byte, srcRowNo int) (bool, error) {
@@ -96,12 +96,12 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 			}
 
 			// Compute the distance
-			trainMat := util.FloatsToMatrix(trainRowBuf)
+			trainMat := utilities.FloatsToMatrix(trainRowBuf)
 			distances[srcRowNo] = distanceFunc.Distance(predMat, trainMat)
 			return true, nil
 		})
 
-		sorted := util.SortIntMap(distances)
+		sorted := utilities.SortIntMap(distances)
 		values := sorted[:KNN.NearestNeighbours]
 
 		// Reset maxMap
@@ -167,24 +167,24 @@ func (KNN *KNNRegressor) Predict(vector *mat64.Dense, K int) float64 {
 	labels := make([]float64, 0)
 
 	// Check what distance function we are using
-	var distanceFunc pairwiseMetrics.PairwiseDistanceFunc
+	var distanceFunc pairwise.PairwiseDistanceFunc
 	switch KNN.DistanceFunc {
 	case "euclidean":
-		distanceFunc = pairwiseMetrics.NewEuclidean()
+		distanceFunc = pairwise.NewEuclidean()
 	case "manhattan":
-		distanceFunc = pairwiseMetrics.NewManhattan()
+		distanceFunc = pairwise.NewManhattan()
 	default:
 		panic("unsupported distance function")
 	}
 
 	for i := 0; i < rows; i++ {
 		row := KNN.Data.RowView(i)
-		rowMat := util.FloatsToMatrix(row)
+		rowMat := utilities.FloatsToMatrix(row)
 		distance := distanceFunc.Distance(rowMat, vector)
 		rownumbers[i] = distance
 	}
 
-	sorted := util.SortIntMap(rownumbers)
+	sorted := utilities.SortIntMap(rownumbers)
 	values := sorted[:K]
 
 	var sum float64

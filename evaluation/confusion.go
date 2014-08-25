@@ -2,6 +2,7 @@ package evaluation
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"text/tabwriter"
 
@@ -13,13 +14,12 @@ type ConfusionMatrix map[string]map[string]int
 
 // GetConfusionMatrix builds a ConfusionMatrix from a set of reference (`ref')
 // and generate (`gen') Instances.
-func GetConfusionMatrix(ref base.FixedDataGrid, gen base.FixedDataGrid) map[string]map[string]int {
-
+func GetConfusionMatrix(ref base.FixedDataGrid, gen base.FixedDataGrid) (map[string]map[string]int, error) {
 	_, refRows := ref.Size()
 	_, genRows := gen.Size()
 
 	if refRows != genRows {
-		panic("Row counts should match")
+		return nil, errors.New(fmt.Sprintf("Row count mismatch: ref has %d rows, gen has %d rows", refRows, genRows))
 	}
 
 	ret := make(map[string]map[string]int)
@@ -34,7 +34,7 @@ func GetConfusionMatrix(ref base.FixedDataGrid, gen base.FixedDataGrid) map[stri
 			ret[referenceClass][predictedClass] = 1
 		}
 	}
-	return ret
+	return ret, nil
 }
 
 // GetTruePositives returns the number of times an entry is

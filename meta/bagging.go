@@ -140,7 +140,8 @@ func (b *BaggedModel) Predict(from base.FixedDataGrid) base.FixedDataGrid {
 				if i, ok := <-processpipe; ok {
 					c := b.Models[i]
 					l := b.generatePredictionInstances(i, from)
-					votes <- c.Predict(l)
+					v, _ := c.Predict(l)
+					votes <- v
 				} else {
 					processwait.Done()
 					break

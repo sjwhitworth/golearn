@@ -1,6 +1,7 @@
 package ensemble
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/meta"
@@ -30,10 +31,10 @@ func NewRandomForest(forestSize int, features int) *RandomForest {
 }
 
 // Fit builds the RandomForest on the specified instances
-func (f *RandomForest) Fit(on base.FixedDataGrid) {
+func (f *RandomForest) Fit(on base.FixedDataGrid) error {
 	numNonClassAttributes := len(base.NonClassAttributes(on))
 	if numNonClassAttributes < f.Features {
-		panic(fmt.Sprintf(
+		return errors.New(fmt.Sprintf(
 			"Random forest with %d features cannot fit data grid with %d non-class attributes",
 			f.Features,
 			numNonClassAttributes,
@@ -47,11 +48,12 @@ func (f *RandomForest) Fit(on base.FixedDataGrid) {
 		f.Model.AddModel(tree)
 	}
 	f.Model.Fit(on)
+	return nil
 }
 
 // Predict generates predictions from a trained RandomForest.
-func (f *RandomForest) Predict(with base.FixedDataGrid) base.FixedDataGrid {
-	return f.Model.Predict(with)
+func (f *RandomForest) Predict(with base.FixedDataGrid) (base.FixedDataGrid, error) {
+	return f.Model.Predict(with), nil
 }
 
 // String returns a human-readable representation of this tree.

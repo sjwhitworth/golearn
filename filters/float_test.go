@@ -52,9 +52,8 @@ func TestFloatFilter(t *testing.T) {
 			for _, a := range instF.AllAttributes() {
 				name := a.GetName()
 				_, ok := origMap[name]
-				if !ok {
-					t.Errorf("Weird: %s", name)
-				}
+				So(ok, ShouldBeTrue)
+
 				origMap[name] = true
 			}
 			for a := range origMap {
@@ -83,10 +82,19 @@ func TestFloatFilter(t *testing.T) {
 			}
 			// For each attribute
 			for name := range attrMap {
+				So(name, ShouldBeIn, []string{
+					"floatAttr",
+					"shouldBe1Binary",
+					"shouldBe3Binary_stoicism",
+					"shouldBe3Binary_heroism",
+					"shouldBe3Binary_romanticism",
+					"arbitraryClass",
+				})
+
 				attr := attrMap[name]
-				// Retrieve AttributeSpec
 				as, err := instF.GetAttribute(attr)
 				So(err, ShouldEqual, nil)
+
 				if name == "floatAttr" {
 					So(instF.Get(as, 0), ShouldResemble, base.PackFloatToBytes(1.0))
 					So(instF.Get(as, 1), ShouldResemble, base.PackFloatToBytes(1.0))
@@ -108,13 +116,8 @@ func TestFloatFilter(t *testing.T) {
 					So(instF.Get(as, 1), ShouldResemble, base.PackFloatToBytes(0.0))
 					So(instF.Get(as, 2), ShouldResemble, base.PackFloatToBytes(1.0))
 				} else if name == "arbitraryClass" {
-				} else {
-					t.Error("Shouldn't have %s", name)
 				}
-
 			}
 		})
-
 	})
-
 }
