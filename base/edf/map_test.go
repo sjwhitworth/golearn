@@ -32,6 +32,14 @@ func TestAnonMap(t *testing.T) {
 			pageSize := uint32FromBytes(blockBytes)
 			So(pageSize, ShouldEqual, os.Getpagesize())
 		})
+		Convey("Free space should be available in block 4", func() {
+			nextFreeBlock, err := mapping.getContiguousOffset(1)
+			So(err, ShouldEqual, nil)
+			So(nextFreeBlock, ShouldEqual, 4)
+			Convey("getFreeMapSizeFromFile should panic", func() {
+				So(func() { mapping.getFreeMapSizeFromFile() }, ShouldPanic)
+			})
+		})
 	})
 }
 

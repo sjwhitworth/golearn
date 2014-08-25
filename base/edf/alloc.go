@@ -43,9 +43,10 @@ func (e *EdfFile) getFreeMapSizeFromMem() uint64 {
 func (e *EdfFile) getFreeMapSize() uint64 {
 	if e.mode == edfAnonMode {
 		return e.getFreeMapSizeFromMem()
-	} else {
+	} else if e.mode == edfFileMode {
 		return e.getFreeMapSizeFromFile()
 	}
+	panic("Unsupported in this mode")
 }
 
 func (e *EdfFile) getContiguousOffset(pagesRequested uint32) (uint32, error) {
