@@ -293,8 +293,6 @@ func (inst *DenseInstances) AllClassAttributes() []Attribute {
 // IMPORTANT: panics if the allocation fails
 func (inst *DenseInstances) Extend(rows int) error {
 
-	var pagesNeeded uint32
-
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
@@ -306,21 +304,13 @@ func (inst *DenseInstances) Extend(rows int) error {
 		// Compute ag row storage requirements
 		rowSize := p.RowSize()
 
-		// How many rows can we store per page?
-		rowsPerPage := math.Floor(float64(pageSize) / float64(rowSize))
-
-		// If that's very low, change to pagesPerRow
-		if rowsPerPage < 0.001 {
-			pagesPerRow := math.Ceil(float64(rowSize) / float64(pageSize))
-			pagesNeeded = uint32(math.Ceil(float64(rows) * pagesPerRow))
-		} else {
-			pagesNeeded = uint32(math.Ceil(float64(rows) / rowsPerPage))
-		}
+		// How many rows can we store per page
+		pagesNeeded := uint32(math.Ceil(float64(rowSize*rows) / float64(pageSize)))
 
 		// Allocate those pages
 		r, err := inst.storage.AllocPages(pagesNeeded, p.getThreadNo())
 		if err != nil {
-			panic(fmt.Sprintf("Allocation error: %s (rowSize %d, pageSize %d, rowsPerPage %.2f, tried to allocate %d page(s) and extend by %d row(s))", err, rowSize, pageSize, rowsPerPage, pagesNeeded, rows))
+			panic(fmt.Sprintf("Allocation error: %s (rowSize %d, pageSize %d, tried to allocate %d page(s) and extend by %d row(s))", err, rowSize, pageSize, pagesNeeded, rows))
 		}
 		// Resolve and assign those pages
 		byteBlock := inst.storage.ResolveRange(r)
