@@ -293,6 +293,8 @@ func (inst *DenseInstances) AllClassAttributes() []Attribute {
 // IMPORTANT: panics if the allocation fails
 func (inst *DenseInstances) Extend(rows int) error {
 
+	var pagesNeeded uint32
+
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
@@ -305,10 +307,15 @@ func (inst *DenseInstances) Extend(rows int) error {
 		rowSize := p.RowSize()
 
 		// How many rows can we store per page?
-		rowsPerPage := float64(pageSize) / float64(rowSize)
+		rowsPerPage := math.Floor(float64(pageSize) / float64(rowSize))
 
-		// How many pages?
-		pagesNeeded := uint32(math.Ceil(float64(rows) / rowsPerPage))
+		// If that's very low, change to pagesPerRow
+		if rowsPerPage < 0.001 {
+			pagesPerRow := math.Ceil(float64(rowSize) / float64(pageSize))
+			pagesNeeded = uint32(math.Ceil(float64(rows) * pagesPerRow))
+		} else {
+			pagesNeeded = uint32(math.Ceil(float64(rows) / rowsPerPage))
+		}
 
 		// Allocate those pages
 		r, err := inst.storage.AllocPages(pagesNeeded, p.getThreadNo())
