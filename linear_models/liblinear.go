@@ -59,6 +59,7 @@ func NewProblem(X [][]float64, y []float64, bias float64) *Problem {
 }
 
 func Train(prob *Problem, param *Parameter) *Model {
+	libLinearHookPrintFunc() // Sets up logging
 	return &Model{C.train(&prob.c_prob, &param.c_param)}
 }
 
