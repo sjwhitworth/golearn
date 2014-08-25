@@ -2,6 +2,7 @@ package edf
 
 import (
 	"fmt"
+	"os"
 )
 
 // contentEntry structs are stored in contentEntry blocks
@@ -24,15 +25,28 @@ func (e *EdfFile) extend(additionalPages uint32) error {
 	return e.truncate(int64(newSize))
 }
 
-func (e *EdfFile) getFreeMapSize() uint64 {
-	if e.f != nil {
-		fileInfo, err := e.f.Stat()
-		if err != nil {
-			panic(err)
-		}
-		return uint64(fileInfo.Size()) / e.pageSize
+func (e *EdfFile) getFreeMapSizeFromFile() uint64 {
+	fileInfo, err := e.f.Stat()
+	if err != nil {
+		panic(err)
 	}
-	return uint64(EDF_SIZE) / e.pageSize
+	return uint64(fileInfo.Size()) / e.pageSize
+}
+
+func (e *EdfFile) getFreeMapSizeFromMem() uint64 {
+	segments := uint64(len(e.m))
+	totalMem := segments * e.segmentSize
+	pageSize := uint64(os.Getpagesize())
+	return uint64(totalMem) / pageSize
+}
+
+func (e *EdfFile) getFreeMapSize() uint64 {
+	if e.mode == edfAnonMode {
+		return e.getFreeMapSizeFromMem()
+	} else if e.mode == edfFileMode {
+		return e.getFreeMapSizeFromFile()
+	}
+	panic("Unsupported in this mode")
 }
 
 func (e *EdfFile) getContiguousOffset(pagesRequested uint32) (uint32, error) {

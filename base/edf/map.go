@@ -400,6 +400,9 @@ func (e *EdfFile) unmap(flags int) error {
 			ret = err
 		}
 	}
+
+	runtime.SetFinalizer(e, nil)
+
 	return ret
 }
 
