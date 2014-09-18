@@ -7,8 +7,6 @@ import (
 // AttributeGroups store related sequences of system values
 // in memory for the DenseInstances structure.
 type AttributeGroup interface {
-	// Returns an EDF thread number
-	getThreadNo() uint32
 	addStorage(a []byte)
 	// Used for printing
 	appendToRowBuf(row int, buffer *bytes.Buffer)

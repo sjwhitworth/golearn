@@ -8,7 +8,6 @@ import (
 // FixedAttributeGroups contain a particular number of rows of
 // a particular number of Attributes, all of a given type.
 type FixedAttributeGroup struct {
-	threadNo   uint32
 	parent     DataGrid
 	attributes []Attribute
 	size       int
@@ -16,11 +15,9 @@ type FixedAttributeGroup struct {
 	maxRow     int
 }
 
+// String gets a human-readable summary
 func (f *FixedAttributeGroup) String() string {
-	if len(f.alloc) > 1 {
-		return fmt.Sprintf("FixedAttributeGroup(%d attributes\n thread: %d\n size: %d\n)", len(f.attributes), f.threadNo, f.size)
-	}
-	return fmt.Sprintf("FixedAttributeGroup(%d attributes\n thread: %d\n size: %d\n %d \n)", len(f.attributes), f.threadNo, f.size, f.alloc[0][0:60])
+	return "FixedAttributeGroup"
 }
 
 // RowSize returns the size of each row in bytes
@@ -37,11 +34,6 @@ func (f *FixedAttributeGroup) Attributes() []Attribute {
 func (f *FixedAttributeGroup) AddAttribute(a Attribute) error {
 	f.attributes = append(f.attributes, a)
 	return nil
-}
-
-// getThreadNo returns the ThreadNo assigned to this FixedAttributeGroup
-func (f *FixedAttributeGroup) getThreadNo() uint32 {
-	return f.threadNo
 }
 
 // addStorage appends the given storage reference to this FixedAttributeGroup
