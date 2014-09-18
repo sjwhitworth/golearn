@@ -64,3 +64,48 @@ func TestPackAndUnpackFloat(t *testing.T) {
 		})
 	})
 }
+
+func TestStrictlyCompatable(t *testing.T) {
+	Convey("Given two datasets...", t, func() {
+		Convey("Given two identical datasets", func() {
+			// Violates the requirement that both CategoricalAttributes
+			// must have values in the same order
+			d1, err := ParseCSVToInstances("../examples/datasets/exam.csv", true)
+			So(err, ShouldEqual, nil)
+			d2, err := ParseCSVToInstances("../examples/datasets/exams.csv", true)
+			So(err, ShouldEqual, nil)
+			So(CheckStrictlyCompatible(d1, d2), ShouldEqual, true)
+		})
+		Convey("Given two identical datasets (apart from sorting)", func() {
+			// Violates the requirement that both CategoricalAttributes
+			// must have values in the same order
+			d1, err := ParseCSVToInstances("../examples/datasets/iris_sorted_asc.csv", true)
+			So(err, ShouldEqual, nil)
+			d2, err := ParseCSVToInstances("../examples/datasets/iris_sorted_desc.csv", true)
+			So(err, ShouldEqual, nil)
+			So(CheckStrictlyCompatible(d1, d2), ShouldEqual, false)
+		})
+		Convey("Given two different datasets...", func() {
+			// Violates verything
+			d1, err := ParseCSVToInstances("../examples/datasets/tennis.csv", true)
+			So(err, ShouldEqual, nil)
+			d2, err := ParseCSVToInstances("../examples/datasets/iris_sorted_desc.csv", true)
+			So(err, ShouldEqual, nil)
+			So(CheckStrictlyCompatible(d1, d2), ShouldEqual, false)
+		})
+	})
+}
+
+func TestCategoricalEquality(t *testing.T) {
+	Convey("Given two outwardly identical class Attributes...", t, func() {
+		d1, err := ParseCSVToInstances("../examples/datasets/iris_sorted_asc.csv", true)
+		So(err, ShouldEqual, nil)
+		d2, err := ParseCSVToInstances("../examples/datasets/iris_sorted_desc.csv", true)
+		So(err, ShouldEqual, nil)
+		c1 := d1.AllClassAttributes()[0]
+		c2 := d2.AllClassAttributes()[0]
+		So(c1.GetName(), ShouldEqual, c2.GetName())
+		So(c1.Equals(c2), ShouldBeFalse)
+		So(c2.Equals(c1), ShouldBeFalse) // Violates the fact that Attributes must appear in the same order
+	})
+}

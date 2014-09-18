@@ -7,7 +7,6 @@ import (
 // AttributeGroups store related sequences of system values
 // in memory for the DenseInstances structure.
 type AttributeGroup interface {
-	addStorage(a []byte)
 	// Used for printing
 	appendToRowBuf(row int, buffer *bytes.Buffer)
 	// Adds a new Attribute
@@ -18,17 +17,14 @@ type AttributeGroup interface {
 	get(int, int) []byte
 	// Stores the byte slice at a given column, row offset
 	set(int, int, []byte)
+	// Sets the reference to underlying memory
+	setStorage([]byte)
 	// Gets the size of each row in bytes (rounded up)
-	RowSize() int
-	// Gets references to underlying memory
-	Storage() []AttributeGroupStorageRef
+	RowSizeInBytes() int
+	// Adds some storage to this group
+	resize(int)
+	// Gets a reference to underlying memory
+	Storage() []byte
 	// Returns a human-readable summary
 	String() string
-}
-
-// AttributeGroupStorageRef is a reference to a particular set
-// of allocated rows within a FixedAttributeGroup
-type AttributeGroupStorageRef struct {
-	Storage []byte
-	Rows    int
 }
