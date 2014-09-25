@@ -1,25 +1,17 @@
 package base
 
-import (
-	"fmt"
-)
-
 // BinaryAttributeGroups contain only BinaryAttributes
 // Compact each Attribute to a bit for better storage
 type BinaryAttributeGroup struct {
 	FixedAttributeGroup
 }
 
-func (b *BinaryAttributeGroup) RowSize() int {
-	return (len(b.attributes) + 7) / 8
+func (b *BinaryAttributeGroup) String() string {
+	return "BinaryAttributeGroup"
 }
 
-// String gets a human-readable view of this group
-func (b *BinaryAttributeGroup) String() string {
-	if len(b.alloc) > 1 {
-		return fmt.Sprintf("BinaryAttributeGroup(%d attributes\n thread: %d\n size: %d\n)", len(b.attributes), b.threadNo, b.size)
-	}
-	return fmt.Sprintf("BinaryAttributeGroup(%d attributes\n thread: %d\n size: %d\n)", len(b.attributes), b.threadNo, b.size)
+func (b *BinaryAttributeGroup) RowSize() int {
+	return (len(b.attributes) + 7) / 8
 }
 
 func (b *BinaryAttributeGroup) getByteOffset(col, row int) int {

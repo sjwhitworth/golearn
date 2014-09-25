@@ -3,33 +3,31 @@ package base
 import (
 	"bytes"
 	"fmt"
-	"github.com/sjwhitworth/golearn/base/edf"
-	"math"
+	"os"
 	"sync"
 )
 
 // DenseInstances stores each Attribute value explicitly
 // in a large grid.
 type DenseInstances struct {
-	storage    *edf.EdfFile
-	agMap      map[string]int
-	ags        []AttributeGroup
-	lock       sync.Mutex
-	fixed      bool
-	classAttrs map[AttributeSpec]bool
-	maxRow     int
-	attributes []Attribute
+	agMap        map[string]int
+	ags          []AttributeGroup
+	lock         sync.Mutex
+	fixed        bool
+	classAttrs   map[AttributeSpec]bool
+	maxRow       int
+	attributes   []Attribute
+	tmpAttrAgMap map[Attribute]string
+	// Counters for each AttributeGroup type
+	floatRowSizeBytes int
+	catRowSizeBytes   int
+	binRowSizeBits    int
 }
 
 // NewDenseInstances generates a new DenseInstances set
 // with an anonymous EDF mapping and default settings.
 func NewDenseInstances() *DenseInstances {
-	storage, err := edf.EdfAnonMap()
-	if err != nil {
-		panic(err)
-	}
 	return &DenseInstances{
-		storage,
 		make(map[string]int),
 		make([]AttributeGroup, 0),
 		sync.Mutex{},
@@ -37,6 +35,10 @@ func NewDenseInstances() *DenseInstances {
 		make(map[AttributeSpec]bool),
 		0,
 		make([]Attribute, 0),
+		make(map[Attribute]string),
+		0,
+		0,
+		0,
 	}
 }
 
@@ -54,34 +56,9 @@ func (inst *DenseInstances) createAttributeGroup(name string, size int) {
 		panic("Can't add additional Attributes")
 	}
 
-	// Resolve or create thread
-	threads, err := inst.storage.GetThreads()
-	if err != nil {
-		panic(err)
-	}
-
-	ok := false
-	for i := range threads {
-		if threads[i] == name {
-			ok = true
-			break
-		}
-	}
-	if ok {
-		panic("Can't create AttributeGroup: thread already exists")
-	}
-
-	// Write the pool's thread into the file
-	thread := edf.NewThread(inst.storage, name)
-	err = inst.storage.WriteThread(thread)
-	if err != nil {
-		panic(fmt.Sprintf("Can't write thread: %s", err))
-	}
-
 	// Create the AttributeGroup information
 	if size != 0 {
 		ag := new(FixedAttributeGroup)
-		ag.threadNo = thread.GetId()
 		ag.parent = inst
 		ag.attributes = make([]Attribute, 0)
 		ag.size = size
@@ -89,7 +66,6 @@ func (inst *DenseInstances) createAttributeGroup(name string, size int) {
 		agAdd = ag
 	} else {
 		ag := new(BinaryAttributeGroup)
-		ag.threadNo = thread.GetId()
 		ag.parent = inst
 		ag.attributes = make([]Attribute, 0)
 		ag.size = size
@@ -145,6 +121,7 @@ func (inst *DenseInstances) GetAttributeGroup(name string) (AttributeGroup, erro
 //
 // IMPORTANT: will panic if storage has been allocated via Extend.
 func (inst *DenseInstances) AddAttribute(a Attribute) AttributeSpec {
+	var ok bool
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
@@ -152,21 +129,32 @@ func (inst *DenseInstances) AddAttribute(a Attribute) AttributeSpec {
 		panic("Can't add additional Attributes")
 	}
 
+	cur := 0
 	// Generate a default AttributeGroup name
 	ag := "FLOAT"
-	if _, ok := a.(*CategoricalAttribute); ok {
-		ag = "CAT"
+	generatingBinClass := false
+	if ag, ok = inst.tmpAttrAgMap[a]; ok {
+		// Retrieved the group id
+	} else if _, ok := a.(*CategoricalAttribute); ok {
+		inst.catRowSizeBytes += 8
+		cur = inst.catRowSizeBytes / os.Getpagesize()
+		ag = fmt.Sprintf("CAT%d", cur)
 	} else if _, ok := a.(*FloatAttribute); ok {
-		ag = "FLOAT"
+		inst.floatRowSizeBytes += 8
+		cur = inst.floatRowSizeBytes / os.Getpagesize()
+		ag = fmt.Sprintf("FLOAT%d", cur)
 	} else if _, ok := a.(*BinaryAttribute); ok {
-		ag = "BIN"
+		inst.binRowSizeBits++
+		cur = (inst.binRowSizeBits / 8) / os.Getpagesize()
+		ag = fmt.Sprintf("BIN%d", cur)
+		generatingBinClass = true
 	} else {
 		panic("Unrecognised Attribute type")
 	}
 
 	// Create the ag if it doesn't exist
 	if _, ok := inst.agMap[ag]; !ok {
-		if ag != "BIN" {
+		if !generatingBinClass {
 			inst.createAttributeGroup(ag, 8)
 		} else {
 			inst.createAttributeGroup(ag, 0)
@@ -179,8 +167,8 @@ func (inst *DenseInstances) AddAttribute(a Attribute) AttributeSpec {
 	return AttributeSpec{id, len(p.Attributes()) - 1, a}
 }
 
-// AddAttributeToAttributeGroup adds an Attribute to a given ag
-func (inst *DenseInstances) AddAttributeToAttributeGroup(newAttribute Attribute, ag string) (AttributeSpec, error) {
+// addAttributeToAttributeGroup adds an Attribute to a given ag
+func (inst *DenseInstances) addAttributeToAttributeGroup(newAttribute Attribute, ag string) (AttributeSpec, error) {
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
@@ -272,9 +260,15 @@ func (inst *DenseInstances) RemoveClassAttribute(a Attribute) error {
 // AllClassAttributes returns a slice of Attributes which have
 // been designated class Attributes.
 func (inst *DenseInstances) AllClassAttributes() []Attribute {
-	var ret []Attribute
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
+	return inst.allClassAttributes()
+}
+
+// allClassAttributes returns a slice of Attributes which have
+// been designated class Attributes (doesn't lock)
+func (inst *DenseInstances) allClassAttributes() []Attribute {
+	var ret []Attribute
 	for a := range inst.classAttrs {
 		if inst.classAttrs[a] {
 			ret = append(ret, a.attr)
@@ -287,6 +281,47 @@ func (inst *DenseInstances) AllClassAttributes() []Attribute {
 // Allocation functions
 //
 
+// realiseAttributeGroups decides which Attributes are going
+// to be stored in which groups
+func (inst *DenseInstances) realiseAttributeGroups() error {
+	for a := range inst.tmpAttrAgMap {
+		// Generate a default AttributeGroup name
+		ag := inst.tmpAttrAgMap[a]
+
+		// Augment with some additional information
+		// Find out whether this attribute is also a class
+		classAttribute := false
+		for _, c := range inst.allClassAttributes() {
+			if c.Equals(a) {
+				classAttribute = true
+			}
+		}
+
+		// This might result in multiple ClassAttribute groups
+		// but hopefully nothing too crazy
+		if classAttribute {
+			// ag = fmt.Sprintf("CLASS_%s", ag)
+		}
+
+		// Create the ag if it doesn't exist
+		if agId, ok := inst.agMap[ag]; !ok {
+			_, generatingBinClass := inst.ags[agId].(*BinaryAttributeGroup)
+			if !generatingBinClass {
+				inst.createAttributeGroup(ag, 8)
+			} else {
+				inst.createAttributeGroup(ag, 0)
+			}
+		}
+		id := inst.agMap[ag]
+		p := inst.ags[id]
+		err := p.AddAttribute(a)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Extend extends this set of Instances to store rows additional rows.
 // It's recommended to set rows to something quite large.
 //
@@ -296,30 +331,25 @@ func (inst *DenseInstances) Extend(rows int) error {
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
-	// Get the size of each page
-	pageSize := inst.storage.GetPageSize()
+	if !inst.fixed {
+		err := inst.realiseAttributeGroups()
+		if err != nil {
+			return err
+		}
+	}
 
 	for _, p := range inst.ags {
 
 		// Compute ag row storage requirements
 		rowSize := p.RowSize()
 
-		// How many rows can we store per page?
-		rowsPerPage := float64(pageSize) / float64(rowSize)
+		// How many bytes?
+		allocSize := rows * rowSize
 
-		// How many pages?
-		pagesNeeded := uint32(math.Ceil(float64(rows) / rowsPerPage))
+		bytes := make([]byte, allocSize)
 
-		// Allocate those pages
-		r, err := inst.storage.AllocPages(pagesNeeded, p.getThreadNo())
-		if err != nil {
-			panic(fmt.Sprintf("Allocation error: %s (rowSize %d, pageSize %d, rowsPerPage %.2f, tried to allocate %d page(s) and extend by %d row(s))", err, rowSize, pageSize, rowsPerPage, pagesNeeded, rows))
-		}
-		// Resolve and assign those pages
-		byteBlock := inst.storage.ResolveRange(r)
-		for _, block := range byteBlock {
-			p.addStorage(block)
-		}
+		p.addStorage(bytes)
+
 	}
 	inst.fixed = true
 	inst.maxRow += rows
