@@ -39,5 +39,5 @@ type Attribute interface {
 	// Tests whether two Attributes can be represented in the same pond
 	// i.e. they're the same size, and their byte order makes them meaningful
 	// when considered together
-	Compatable(Attribute) bool
+	Compatible(Attribute) bool
 }

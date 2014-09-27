@@ -180,8 +180,8 @@ func (inst *DenseInstances) addAttributeToAttributeGroup(newAttribute Attribute,
 	id := inst.agMap[ag]
 	p := inst.ags[id]
 	for i, a := range p.Attributes() {
-		if !a.Compatable(newAttribute) {
-			return AttributeSpec{-1, 0, nil}, fmt.Errorf("Attribute %s is not compatable with %s in pond '%s' (position %d)", newAttribute, a, ag, i)
+		if !a.Compatible(newAttribute) {
+			return AttributeSpec{-1, 0, nil}, fmt.Errorf("Attribute %s is not Compatible with %s in pond '%s' (position %d)", newAttribute, a, ag, i)
 		}
 	}
 

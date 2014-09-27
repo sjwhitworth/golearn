@@ -18,9 +18,9 @@ func NewFloatAttribute(name string) *FloatAttribute {
 	return &FloatAttribute{name, 2}
 }
 
-// Compatable checks whether this FloatAttribute can be ponded with another
+// Compatible checks whether this FloatAttribute can be ponded with another
 // Attribute (checks if they're both FloatAttributes)
-func (Attr *FloatAttribute) Compatable(other Attribute) bool {
+func (Attr *FloatAttribute) Compatible(other Attribute) bool {
 	_, ok := other.(*FloatAttribute)
 	return ok
 }
