@@ -62,9 +62,9 @@ func (b *BinaryAttribute) Equals(other Attribute) bool {
 	}
 }
 
-// Compatable checks whether this Attribute can be represented
+// Compatible checks whether this Attribute can be represented
 // in the same pond as another.
-func (b *BinaryAttribute) Compatable(other Attribute) bool {
+func (b *BinaryAttribute) Compatible(other Attribute) bool {
 	if _, ok := other.(*BinaryAttribute); !ok {
 		return false
 	} else {

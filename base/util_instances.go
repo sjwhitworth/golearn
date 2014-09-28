@@ -239,9 +239,9 @@ func SampleWithReplacement(from FixedDataGrid, size int) FixedDataGrid {
 	return NewInstancesViewFromRows(from, rowMap)
 }
 
-// CheckCompatable checks whether two DataGrids have the same Attributes
+// CheckCompatible checks whether two DataGrids have the same Attributes
 // and if they do, it returns them.
-func CheckCompatable(s1 FixedDataGrid, s2 FixedDataGrid) []Attribute {
+func CheckCompatible(s1 FixedDataGrid, s2 FixedDataGrid) []Attribute {
 	s1Attrs := s1.AllAttributes()
 	s2Attrs := s2.AllAttributes()
 	interAttrs := AttributeIntersect(s1Attrs, s2Attrs)

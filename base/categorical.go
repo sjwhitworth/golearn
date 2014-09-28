@@ -141,9 +141,9 @@ func (Attr *CategoricalAttribute) Equals(other Attribute) bool {
 	return true
 }
 
-// Compatable checks that this CategoricalAttribute has the same
+// Compatible checks that this CategoricalAttribute has the same
 // values as another, in the same order.
-func (Attr *CategoricalAttribute) Compatable(other Attribute) bool {
+func (Attr *CategoricalAttribute) Compatible(other Attribute) bool {
 	attribute, ok := other.(*CategoricalAttribute)
 	if !ok {
 		return false

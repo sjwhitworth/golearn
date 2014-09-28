@@ -46,8 +46,8 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 		panic("unsupported distance function")
 
 	}
-	// Check compatability
-	allAttrs := base.CheckCompatable(what, KNN.TrainingData)
+	// Check Compatibility
+	allAttrs := base.CheckCompatible(what, KNN.TrainingData)
 	if allAttrs == nil {
 		// Don't have the same Attributes
 		return nil
