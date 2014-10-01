@@ -3,9 +3,7 @@
 package linear_models
 
 /*
-#cgo LDFLAGS: -llinear
-#cgo CFLAGS:
-#include <linear.h>
+#include "linear.h"
 
 typedef void (*print_func)(char *);
 void golearn_liblinear_print_func_cgo(char *);

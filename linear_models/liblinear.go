@@ -1,9 +1,7 @@
 package linear_models
 
 /*
-#cgo LDFLAGS: -llinear
-#cgo CFLAGS:
-#include <linear.h>
+#include "linear.h"
 */
 import "C"
 
