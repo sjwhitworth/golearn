@@ -11,6 +11,7 @@ import (
 // in a large grid.
 type DenseInstances struct {
 	agMap        map[string]int
+	agRevMap     map[int]string
 	ags          []AttributeGroup
 	lock         sync.Mutex
 	fixed        bool
@@ -29,6 +30,7 @@ type DenseInstances struct {
 func NewDenseInstances() *DenseInstances {
 	return &DenseInstances{
 		make(map[string]int),
+		make(map[int]string),
 		make([]AttributeGroup, 0),
 		sync.Mutex{},
 		false,
@@ -62,17 +64,18 @@ func (inst *DenseInstances) createAttributeGroup(name string, size int) {
 		ag.parent = inst
 		ag.attributes = make([]Attribute, 0)
 		ag.size = size
-		ag.alloc = make([][]byte, 0)
+		ag.alloc = make([]byte, 0)
 		agAdd = ag
 	} else {
 		ag := new(BinaryAttributeGroup)
 		ag.parent = inst
 		ag.attributes = make([]Attribute, 0)
 		ag.size = size
-		ag.alloc = make([][]byte, 0)
+		ag.alloc = make([]byte, 0)
 		agAdd = ag
 	}
 	inst.agMap[name] = len(inst.ags)
+	inst.agRevMap[len(inst.ags)] = name
 	inst.ags = append(inst.ags, agAdd)
 }
 
@@ -95,6 +98,15 @@ func (inst *DenseInstances) CreateAttributeGroup(name string, size int) (err err
 
 	inst.createAttributeGroup(name, size)
 	return nil
+}
+
+// AllAttributeGroups returns a copy of the available AttributeGroups
+func (inst *DenseInstances) AllAttributeGroups() map[string]AttributeGroup {
+	ret := make(map[string]AttributeGroup)
+	for a := range inst.agMap {
+		ret[a] = inst.ags[inst.agMap[a]]
+	}
+	return ret
 }
 
 // GetAttributeGroup returns a reference to a AttributeGroup of a given name /
@@ -167,14 +179,14 @@ func (inst *DenseInstances) AddAttribute(a Attribute) AttributeSpec {
 	return AttributeSpec{id, len(p.Attributes()) - 1, a}
 }
 
-// addAttributeToAttributeGroup adds an Attribute to a given ag
-func (inst *DenseInstances) addAttributeToAttributeGroup(newAttribute Attribute, ag string) (AttributeSpec, error) {
+// AddAttributeToAttributeGroup adds an Attribute to a given ag
+func (inst *DenseInstances) AddAttributeToAttributeGroup(newAttribute Attribute, ag string) (AttributeSpec, error) {
 	inst.lock.Lock()
 	defer inst.lock.Unlock()
 
 	// Check if the ag exists
 	if _, ok := inst.agMap[ag]; !ok {
-		return AttributeSpec{-1, 0, nil}, fmt.Errorf("Pond '%s' doesn't exist. Call CreatePond() first", ag)
+		return AttributeSpec{-1, 0, nil}, fmt.Errorf("AttributeGroup '%s' doesn't exist. Call CreateAttributeGroup() first", ag)
 	}
 
 	id := inst.agMap[ag]
@@ -341,14 +353,12 @@ func (inst *DenseInstances) Extend(rows int) error {
 	for _, p := range inst.ags {
 
 		// Compute ag row storage requirements
-		rowSize := p.RowSize()
+		rowSize := p.RowSizeInBytes()
 
 		// How many bytes?
 		allocSize := rows * rowSize
 
-		bytes := make([]byte, allocSize)
-
-		p.addStorage(bytes)
+		p.resize(allocSize)
 
 	}
 	inst.fixed = true

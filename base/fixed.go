@@ -11,7 +11,7 @@ type FixedAttributeGroup struct {
 	parent     DataGrid
 	attributes []Attribute
 	size       int
-	alloc      [][]byte
+	alloc      []byte
 	maxRow     int
 }
 
@@ -20,14 +20,19 @@ func (f *FixedAttributeGroup) String() string {
 	return "FixedAttributeGroup"
 }
 
-// RowSize returns the size of each row in bytes
-func (f *FixedAttributeGroup) RowSize() int {
+// RowSizeInBytes returns the size of each row in bytes
+func (f *FixedAttributeGroup) RowSizeInBytes() int {
 	return len(f.attributes) * f.size
 }
 
 // Attributes returns a slice of Attributes in this FixedAttributeGroup
 func (f *FixedAttributeGroup) Attributes() []Attribute {
-	return f.attributes
+	ret := make([]Attribute, len(f.attributes))
+	// Add Attributes
+	for i, a := range f.attributes {
+		ret[i] = a
+	}
+	return ret
 }
 
 // AddAttribute adds an attribute to this FixedAttributeGroup
@@ -37,56 +42,18 @@ func (f *FixedAttributeGroup) AddAttribute(a Attribute) error {
 }
 
 // addStorage appends the given storage reference to this FixedAttributeGroup
-func (f *FixedAttributeGroup) addStorage(a []byte) {
-	f.alloc = append(f.alloc, a)
+func (f *FixedAttributeGroup) setStorage(a []byte) {
+	f.alloc = a
 }
 
 // Storage returns a slice of FixedAttributeGroupStorageRefs which can
 // be used to access the memory in this pond.
-func (f *FixedAttributeGroup) Storage() []AttributeGroupStorageRef {
-	ret := make([]AttributeGroupStorageRef, len(f.alloc))
-	rowSize := f.RowSize()
-	for i, b := range f.alloc {
-		ret[i] = AttributeGroupStorageRef{b, len(b) / rowSize}
-	}
-	return ret
+func (f *FixedAttributeGroup) Storage() []byte {
+	return f.alloc
 }
 
-func (f *FixedAttributeGroup) resolveBlock(col int, row int) (int, int) {
-
-	if len(f.alloc) == 0 {
-		panic("No blocks to resolve")
-	}
-
-	// Find where in the pond the byte is
-	byteOffset := row*f.RowSize() + col*f.size
-	return f.resolveBlockFromByteOffset(byteOffset, f.RowSize())
-}
-
-func (f *FixedAttributeGroup) resolveBlockFromByteOffset(byteOffset, rowSize int) (int, int) {
-	curOffset := 0
-	curBlock := 0
-	blockOffset := 0
-	for {
-		if curBlock >= len(f.alloc) {
-			panic("Don't have enough blocks to fulfill")
-		}
-
-		// Rows are not allowed to span blocks
-		blockAdd := len(f.alloc[curBlock])
-		blockAdd -= blockAdd % rowSize
-
-		// Case 1: we need to skip this allocation
-		if curOffset+blockAdd < byteOffset {
-			curOffset += blockAdd
-			curBlock++
-		} else {
-			blockOffset = byteOffset - curOffset
-			break
-		}
-	}
-
-	return curBlock, blockOffset
+func (f *FixedAttributeGroup) offset(col, row int) int {
+	return row*f.RowSizeInBytes() + col*f.size
 }
 
 func (f *FixedAttributeGroup) set(col int, row int, val []byte) {
@@ -97,12 +64,12 @@ func (f *FixedAttributeGroup) set(col int, row int, val []byte) {
 	}
 
 	// Find where in the pond the byte is
-	curBlock, blockOffset := f.resolveBlock(col, row)
+	offset := f.offset(col, row)
 
 	// Copy the value in
-	copied := copy(f.alloc[curBlock][blockOffset:], val)
+	copied := copy(f.alloc[offset:], val)
 	if copied != f.size {
-		panic(fmt.Sprintf("set() terminated by only copying %d bytes into the current block (should be %d). Check EDF allocation", copied, f.size))
+		panic(fmt.Sprintf("set() terminated by only copying %d bytes", copied, f.size))
 	}
 
 	row++
@@ -112,8 +79,8 @@ func (f *FixedAttributeGroup) set(col int, row int, val []byte) {
 }
 
 func (f *FixedAttributeGroup) get(col int, row int) []byte {
-	curBlock, blockOffset := f.resolveBlock(col, row)
-	return f.alloc[curBlock][blockOffset : blockOffset+f.size]
+	offset := f.offset(col, row)
+	return f.alloc[offset : offset+f.size]
 }
 
 func (f *FixedAttributeGroup) appendToRowBuf(row int, buffer *bytes.Buffer) {
@@ -124,4 +91,10 @@ func (f *FixedAttributeGroup) appendToRowBuf(row int, buffer *bytes.Buffer) {
 		}
 		buffer.WriteString(fmt.Sprintf("%s%s", a.GetStringFromSysVal(f.get(i, row)), postfix))
 	}
+}
+
+func (f *FixedAttributeGroup) resize(add int) {
+	newAlloc := make([]byte, len(f.alloc)+add)
+	copy(newAlloc, f.alloc)
+	f.alloc = newAlloc
 }

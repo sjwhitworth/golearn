@@ -252,3 +252,53 @@ func CheckCompatible(s1 FixedDataGrid, s2 FixedDataGrid) []Attribute {
 	}
 	return interAttrs
 }
+
+// CheckStrictlyCompatible checks whether two DenseInstances have
+// AttributeGroups with the same Attributes, in the same order,
+// enabling optimisations.
+func CheckStrictlyCompatible(s1 FixedDataGrid, s2 FixedDataGrid) bool {
+	// Cast
+	d1, ok1 := s1.(*DenseInstances)
+	d2, ok2 := s2.(*DenseInstances)
+	if !ok1 || !ok2 {
+		return false
+	}
+
+	// Retrieve AttributeGroups
+	d1ags := d1.AllAttributeGroups()
+	d2ags := d2.AllAttributeGroups()
+
+	// Check everything in d1 is in d2
+	for a := range d1ags {
+		_, ok := d2ags[a]
+		if !ok {
+			return false
+		}
+	}
+
+	// Check everything in d2 is in d1
+	for a := range d2ags {
+		_, ok := d1ags[a]
+		if !ok {
+			return false
+		}
+	}
+
+	// Check that everything has the same number
+	// of equivalent Attributes, in the same order
+	for a := range d1ags {
+		ag1 := d1ags[a]
+		ag2 := d2ags[a]
+		a1 := ag1.Attributes()
+		a2 := ag2.Attributes()
+		for i := range a1 {
+			at1 := a1[i]
+			at2 := a2[i]
+			if !at1.Equals(at2) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
