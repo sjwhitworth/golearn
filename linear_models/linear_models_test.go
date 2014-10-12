@@ -21,13 +21,15 @@ func TestLogisticRegression(t *testing.T) {
 		lr.Fit(X)
 
 		Convey("When predicting the label of first vector", func() {
-			Z := lr.Predict(Y)
+			Z, err := lr.Predict(Y)
+			So(err, ShouldEqual, nil)
 			Convey("The result should be 1", func() {
 				So(Z.RowString(0), ShouldEqual, "1.00")
 			})
 		})
 		Convey("When predicting the label of second vector", func() {
-			Z := lr.Predict(Y)
+			Z, err := lr.Predict(Y)
+			So(err, ShouldEqual, nil)
 			Convey("The result should be -1", func() {
 				So(Z.RowString(1), ShouldEqual, "-1.00")
 			})
