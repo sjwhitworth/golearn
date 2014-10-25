@@ -10,7 +10,7 @@ import (
 // by whichever is most confident. Only one CategoricalAttribute
 // class variable is supported.
 type OneVsAllModel struct {
-	NewClassifierFunction func() base.Classifier
+	NewClassifierFunction func(string) base.Classifier
 	filters               []*oneVsAllFilter
 	classifiers           []base.Classifier
 	maxClassVal           uint64
@@ -18,7 +18,7 @@ type OneVsAllModel struct {
 
 // NewOneVsAllModel creates a new OneVsAllModel. The argument
 // must be a function which returns a base.Classifier ready for training.
-func NewOneVsAllModel(f func() base.Classifier) *OneVsAllModel {
+func NewOneVsAllModel(f func(string) base.Classifier) *OneVsAllModel {
 	return &OneVsAllModel{
 		f,
 		nil,
@@ -64,7 +64,8 @@ func (m *OneVsAllModel) Fit(using base.FixedDataGrid) {
 
 	// Find the highest stored value
 	val := uint64(0)
-	for _, s := range classAttr.GetValues() {
+	classVals := classAttr.GetValues()
+	for _, s := range classVals {
 		cur := base.UnpackBytesToU64(classAttr.GetSysValFromString(s))
 		if cur > val {
 			val = cur
@@ -85,7 +86,7 @@ func (m *OneVsAllModel) Fit(using base.FixedDataGrid) {
 			i,
 		}
 		filters[i] = f
-		classifiers[i] = m.NewClassifierFunction()
+		classifiers[i] = m.NewClassifierFunction(classVals[int(i)])
 		classifiers[i].Fit(base.NewLazilyFilteredInstances(using, f))
 	}
 

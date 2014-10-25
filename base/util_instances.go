@@ -89,6 +89,69 @@ func GetAttributeByName(inst FixedDataGrid, name string) Attribute {
 	return nil
 }
 
+// GetClassDistributionByBinaryFloatValue returns the count of each row
+// which has a float value close to 0.0 or 1.0.
+func GetClassDistributionByBinaryFloatValue(inst FixedDataGrid) []int {
+
+	// Get the class variable
+	attrs := inst.AllClassAttributes()
+	if len(attrs) != 1 {
+		panic(fmt.Errorf("Wrong number of class variables (has %d, should be 1)", len(attrs)))
+	}
+	if _, ok := attrs[0].(*FloatAttribute); !ok {
+		panic(fmt.Errorf("Class Attribute must be FloatAttribute (is %s)", attrs[0]))
+	}
+
+	// Get the number of class values
+	ret := make([]int, 2)
+
+	// Map through everything
+	specs := ResolveAttributes(inst, attrs)
+	inst.MapOverRows(specs, func(vals [][]byte, row int) (bool, error) {
+		index := UnpackBytesToFloat(vals[0])
+		if index > 0.5 {
+			ret[1]++
+		} else {
+			ret[0]++
+		}
+
+		return false, nil
+	})
+
+	return ret
+}
+
+// GetClassDistributionByIntegerVal returns a vector containing
+// the count of each class vector (indexed by the class' system
+// integer representation)
+func GetClassDistributionByCategoricalValue(inst FixedDataGrid) []int {
+
+	var classAttr *CategoricalAttribute
+	var ok bool
+	// Get the class variable
+	attrs := inst.AllClassAttributes()
+	if len(attrs) != 1 {
+		panic(fmt.Errorf("Wrong number of class variables (has %d, should be 1)", len(attrs)))
+	}
+	if classAttr, ok = attrs[0].(*CategoricalAttribute); !ok {
+		panic(fmt.Errorf("Class Attribute must be a CategoricalAttribute (is %s)", attrs[0]))
+	}
+
+	// Get the number of class values
+	classLen := len(classAttr.GetValues())
+	ret := make([]int, classLen)
+
+	// Map through everything
+	specs := ResolveAttributes(inst, attrs)
+	inst.MapOverRows(specs, func(vals [][]byte, row int) (bool, error) {
+		index := UnpackBytesToU64(vals[0])
+		ret[int(index)]++
+		return false, nil
+	})
+
+	return ret
+}
+
 // GetClassDistribution returns a map containing the count of each
 // class type (indexed by the class' string representation).
 func GetClassDistribution(inst FixedDataGrid) map[string]int {
