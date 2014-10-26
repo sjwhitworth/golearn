@@ -8,7 +8,7 @@ import (
 	"sort"
 )
 
-// NodeType determines whether a DecisionTreeNode is a leaf or not
+// NodeType determines whether a DecisionTreeNode is a leaf or not.
 type NodeType int
 
 const (
@@ -19,19 +19,33 @@ const (
 )
 
 // RuleGenerator implementations analyse instances and determine
-// the best value to split on
+// the best value to split on.
 type RuleGenerator interface {
-	GenerateSplitAttribute(base.FixedDataGrid) base.Attribute
+	GenerateSplitRule(base.FixedDataGrid) *DecisionTreeRule
 }
 
-// DecisionTreeNode represents a given portion of a decision tree
+// DecisionTreeRule represents the "decision" in "decision tree".
+type DecisionTreeRule struct {
+	SplitAttr base.Attribute
+	SplitVal  float64
+}
+
+// String prints a human-readable summary of this thing.
+func (d *DecisionTreeRule) String() string {
+	if _, ok := d.SplitAttr.(*base.FloatAttribute); ok {
+		return fmt.Sprintf("DecisionTreeRule(%s <= %f)", d.SplitAttr.GetName(), d.SplitVal)
+	}
+	return fmt.Sprintf("DecisionTreeRule(%s)", d.SplitAttr.GetName())
+}
+
+// DecisionTreeNode represents a given portion of a decision tree.
 type DecisionTreeNode struct {
 	Type      NodeType
 	Children  map[string]*DecisionTreeNode
-	SplitAttr base.Attribute
 	ClassDist map[string]int
 	Class     string
 	ClassAttr base.Attribute
+	SplitRule *DecisionTreeRule
 }
 
 func getClassAttr(from base.FixedDataGrid) base.Attribute {
@@ -54,10 +68,10 @@ func InferID3Tree(from base.FixedDataGrid, with RuleGenerator) *DecisionTreeNode
 		ret := &DecisionTreeNode{
 			LeafNode,
 			nil,
-			nil,
 			classes,
 			maxClass,
 			getClassAttr(from),
+			&DecisionTreeRule{nil, 0.0},
 		}
 		return ret
 	}
@@ -79,10 +93,10 @@ func InferID3Tree(from base.FixedDataGrid, with RuleGenerator) *DecisionTreeNode
 		ret := &DecisionTreeNode{
 			LeafNode,
 			nil,
-			nil,
 			classes,
 			maxClass,
 			getClassAttr(from),
+			&DecisionTreeRule{nil, 0.0},
 		}
 		return ret
 	}
@@ -91,27 +105,34 @@ func InferID3Tree(from base.FixedDataGrid, with RuleGenerator) *DecisionTreeNode
 	ret := &DecisionTreeNode{
 		RuleNode,
 		nil,
-		nil,
 		classes,
 		maxClass,
 		getClassAttr(from),
+		nil,
 	}
 
-	// Generate the splitting attribute
-	splitOnAttribute := with.GenerateSplitAttribute(from)
-	if splitOnAttribute == nil {
+	// Generate the splitting rule
+	splitRule := with.GenerateSplitRule(from)
+	if splitRule == nil {
 		// Can't determine, just return what we have
 		return ret
 	}
+
 	// Split the attributes based on this attribute's value
-	splitInstances := base.DecomposeOnAttributeValues(from, splitOnAttribute)
+	var splitInstances map[string]base.FixedDataGrid
+	if _, ok := splitRule.SplitAttr.(*base.FloatAttribute); ok {
+		splitInstances = base.DecomposeOnNumericAttributeThreshold(from,
+			splitRule.SplitAttr, splitRule.SplitVal)
+	} else {
+		splitInstances = base.DecomposeOnAttributeValues(from, splitRule.SplitAttr)
+	}
 	// Create new children from these attributes
 	ret.Children = make(map[string]*DecisionTreeNode)
 	for k := range splitInstances {
 		newInstances := splitInstances[k]
 		ret.Children[k] = InferID3Tree(newInstances, with)
 	}
-	ret.SplitAttr = splitOnAttribute
+	ret.SplitRule = splitRule
 	return ret
 }
 
@@ -127,8 +148,8 @@ func (d *DecisionTreeNode) getNestedString(level int) string {
 	if d.Children == nil {
 		buf.WriteString(fmt.Sprintf("Leaf(%s)", d.Class))
 	} else {
-		buf.WriteString(fmt.Sprintf("Rule(%s)", d.SplitAttr.GetName()))
-		keys := make([]string, 0)
+		var keys []string
+		buf.WriteString(fmt.Sprintf("Rule(%s)", d.SplitRule))
 		for k := range d.Children {
 			keys = append(keys, k)
 		}
@@ -163,12 +184,12 @@ func (d *DecisionTreeNode) Prune(using base.FixedDataGrid) {
 	if d.Children == nil {
 		return
 	}
-	if d.SplitAttr == nil {
+	if d.SplitRule == nil {
 		return
 	}
 
 	// Recursively prune children of this node
-	sub := base.DecomposeOnAttributeValues(using, d.SplitAttr)
+	sub := base.DecomposeOnAttributeValues(using, d.SplitRule.SplitAttr)
 	for k := range d.Children {
 		if sub[k] == nil {
 			continue
@@ -214,17 +235,32 @@ func (d *DecisionTreeNode) Predict(what base.FixedDataGrid) (base.FixedDataGrid,
 				predictions.Set(classAttrSpec, rowNo, classAttr.GetSysValFromString(cur.Class))
 				break
 			} else {
-				at := cur.SplitAttr
+				splitVal := cur.SplitRule.SplitVal
+				at := cur.SplitRule.SplitAttr
 				ats, err := what.GetAttribute(at)
 				if err != nil {
-					predictions.Set(classAttrSpec, rowNo, classAttr.GetSysValFromString(cur.Class))
-					break
+					//predictions.Set(classAttrSpec, rowNo, classAttr.GetSysValFromString(cur.Class))
+					//break
+					panic(err)
 				}
 
-				classVar := ats.GetAttribute().GetStringFromSysVal(what.Get(ats, rowNo))
+				var classVar string
+				if _, ok := ats.GetAttribute().(*base.FloatAttribute); ok {
+					// If it's a numeric Attribute (e.g. FloatAttribute) check that
+					// the value of the current node is greater than the old one
+					classVal := base.UnpackBytesToFloat(what.Get(ats, rowNo))
+					if classVal > splitVal {
+						classVar = "1"
+					} else {
+						classVar = "0"
+					}
+				} else {
+					classVar = ats.GetAttribute().GetStringFromSysVal(what.Get(ats, rowNo))
+				}
 				if next, ok := cur.Children[classVar]; ok {
 					cur = next
 				} else {
+					// Suspicious of this
 					var bestChild string
 					for c := range cur.Children {
 						bestChild = c
@@ -252,27 +288,40 @@ type ID3DecisionTree struct {
 	base.BaseClassifier
 	Root       *DecisionTreeNode
 	PruneSplit float64
+	Rule       RuleGenerator
 }
 
 // NewID3DecisionTree returns a new ID3DecisionTree with the specified test-prune
-// ratio. Of the ratio is less than 0.001, the tree isn't pruned
+// ratio and InformationGain as the rule generator.
+// If the ratio is less than 0.001, the tree isn't pruned.
 func NewID3DecisionTree(prune float64) *ID3DecisionTree {
 	return &ID3DecisionTree{
 		base.BaseClassifier{},
 		nil,
 		prune,
+		new(InformationGainRuleGenerator),
+	}
+}
+
+// NewID3DecisionTreeFromRule returns a new ID3DecisionTree with the specified test-prun
+// ratio and the given rule gnereator.
+func NewID3DecisionTreeFromRule(prune float64, rule RuleGenerator) *ID3DecisionTree {
+	return &ID3DecisionTree{
+		base.BaseClassifier{},
+		nil,
+		prune,
+		rule,
 	}
 }
 
 // Fit builds the ID3 decision tree
 func (t *ID3DecisionTree) Fit(on base.FixedDataGrid) error {
-	rule := new(InformationGainRuleGenerator)
 	if t.PruneSplit > 0.001 {
 		trainData, testData := base.InstancesTrainTestSplit(on, t.PruneSplit)
-		t.Root = InferID3Tree(trainData, rule)
+		t.Root = InferID3Tree(trainData, t.Rule)
 		t.Root.Prune(testData)
 	} else {
-		t.Root = InferID3Tree(on, rule)
+		t.Root = InferID3Tree(on, t.Rule)
 	}
 	return nil
 }

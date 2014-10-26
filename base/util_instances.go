@@ -78,6 +78,17 @@ func SetClass(at UpdatableDataGrid, row int, class string) {
 	at.Set(classAttrSpec, row, classBytes)
 }
 
+// GetAttributeByName returns an Attribute matching a given name.
+// Returns nil if one doesn't exist.
+func GetAttributeByName(inst FixedDataGrid, name string) Attribute {
+	for _, a := range inst.AllAttributes() {
+		if a.GetName() == name {
+			return a
+		}
+	}
+	return nil
+}
+
 // GetClassDistribution returns a map containing the count of each
 // class type (indexed by the class' string representation).
 func GetClassDistribution(inst FixedDataGrid) map[string]int {
@@ -87,6 +98,42 @@ func GetClassDistribution(inst FixedDataGrid) map[string]int {
 		cls := GetClass(inst, i)
 		ret[cls]++
 	}
+	return ret
+}
+
+// GetClassDistributionAfterThreshold returns the class distribution
+// after a speculative split on a given Attribute using a threshold.
+func GetClassDistributionAfterThreshold(inst FixedDataGrid, at Attribute, val float64) map[string]map[string]int {
+	ret := make(map[string]map[string]int)
+
+	// Find the attribute we're decomposing on
+	attrSpec, err := inst.GetAttribute(at)
+	if err != nil {
+		panic(fmt.Sprintf("Invalid attribute %s (%s)", at, err))
+	}
+
+	// Validate
+	if _, ok := at.(*FloatAttribute); !ok {
+		panic(fmt.Sprintf("Must be numeric!"))
+	}
+
+	_, rows := inst.Size()
+
+	for i := 0; i < rows; i++ {
+		splitVal := UnpackBytesToFloat(inst.Get(attrSpec, i)) > val
+		splitVar := "0"
+		if splitVal {
+			splitVar = "1"
+		}
+		classVar := GetClass(inst, i)
+		if _, ok := ret[splitVar]; !ok {
+			ret[splitVar] = make(map[string]int)
+			i--
+			continue
+		}
+		ret[splitVar][classVar]++
+	}
+
 	return ret
 }
 
@@ -113,6 +160,64 @@ func GetClassDistributionAfterSplit(inst FixedDataGrid, at Attribute) map[string
 			continue
 		}
 		ret[splitVar][classVar]++
+	}
+
+	return ret
+}
+
+// DecomposeOnNumericAttributeThreshold divides the instance set depending on the
+// value of a given numeric Attribute, constructs child instances, and returns
+// them in a map keyed on whether that row had a higher value than the threshold
+// or not.
+//
+// IMPORTANT: calls panic() if the AttributeSpec of at cannot be determined, or if
+// the Attribute is not numeric.
+func DecomposeOnNumericAttributeThreshold(inst FixedDataGrid, at Attribute, val float64) map[string]FixedDataGrid {
+	// Verify
+	if _, ok := at.(*FloatAttribute); !ok {
+		panic("Invalid argument")
+	}
+	// Find the Attribute we're decomposing on
+	attrSpec, err := inst.GetAttribute(at)
+	if err != nil {
+		panic(fmt.Sprintf("Invalid Attribute index %s", at))
+	}
+	// Construct the new Attribute set
+	newAttrs := make([]Attribute, 0)
+	for _, a := range inst.AllAttributes() {
+		if a.Equals(at) {
+			continue
+		}
+		newAttrs = append(newAttrs, a)
+	}
+
+	// Create the return map
+	ret := make(map[string]FixedDataGrid)
+
+	// Create the return row mapping
+	rowMaps := make(map[string][]int)
+
+	// Build full Attribute set
+	fullAttrSpec := ResolveAttributes(inst, newAttrs)
+	fullAttrSpec = append(fullAttrSpec, attrSpec)
+
+	// Decompose
+	inst.MapOverRows(fullAttrSpec, func(row [][]byte, rowNo int) (bool, error) {
+		// Find the output instance set
+		targetBytes := row[len(row)-1]
+		targetVal := UnpackBytesToFloat(targetBytes)
+		val := targetVal > val
+		targetSet := "0"
+		if val {
+			targetSet = "1"
+		}
+		rowMap := rowMaps[targetSet]
+		rowMaps[targetSet] = append(rowMap, rowNo)
+		return true, nil
+	})
+
+	for a := range rowMaps {
+		ret[a] = NewInstancesViewFromVisible(inst, rowMaps[a], newAttrs)
 	}
 
 	return ret
