@@ -1,0 +1,4 @@
+c45-numeric.csv: www.mgt.ncu.edu.tw/~wabble/School/C45.ppt
+tennis.csv: "Machine Learning", Tom Mitchell, McGraw-Hill, 1997 (http://books.google.co.uk/books?id=xOGAngEACAAJ&dq=machine+learning,+mitchell&hl=en&sa=X&ei=zvpMVPz8IseN7Aa454DYBg&ved=0CFYQ6AEwBw)
+
+ 

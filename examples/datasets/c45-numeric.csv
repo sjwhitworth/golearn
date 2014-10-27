@@ -1,0 +1,15 @@
+Attribute1,Attribute2,Attribute3,Class
+A,70,T,A
+A,90,T,B
+A,85,F,B
+A,95,F,B
+A,70,F,A
+B,90,T,A
+B,78,F,A
+B,65,T,A
+B,75,F,A
+C,80,T,B
+C,70,T,B
+C,80,F,A
+C,80,F,A
+C,96,F,A

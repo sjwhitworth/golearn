@@ -12,14 +12,15 @@ type RandomTreeRuleGenerator struct {
 	internalRule InformationGainRuleGenerator
 }
 
-// GenerateSplitAttribute returns the best attribute out of those randomly chosen
+// GenerateSplitRule returns the best attribute out of those randomly chosen
 // which maximises Information Gain
-func (r *RandomTreeRuleGenerator) GenerateSplitAttribute(f base.FixedDataGrid) base.Attribute {
+func (r *RandomTreeRuleGenerator) GenerateSplitRule(f base.FixedDataGrid) *DecisionTreeRule {
+
+	var consideredAttributes []base.Attribute
 
 	// First step is to generate the random attributes that we'll consider
 	allAttributes := base.AttributeDifferenceReferences(f.AllAttributes(), f.AllClassAttributes())
 	maximumAttribute := len(allAttributes)
-	consideredAttributes := make([]base.Attribute, 0)
 
 	attrCounter := 0
 	for {
@@ -42,7 +43,7 @@ func (r *RandomTreeRuleGenerator) GenerateSplitAttribute(f base.FixedDataGrid) b
 		attrCounter++
 	}
 
-	return r.internalRule.GetSplitAttributeFromSelection(consideredAttributes, f)
+	return r.internalRule.GetSplitRuleFromSelection(consideredAttributes, f)
 }
 
 // RandomTree builds a decision tree by considering a fixed number

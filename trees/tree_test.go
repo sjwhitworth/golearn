@@ -4,12 +4,118 @@ import (
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/filters"
-	"testing"
-
 	. "github.com/smartystreets/goconvey/convey"
+	"math/rand"
+	"testing"
 )
 
-func TestRandomTreeClassification(t *testing.T) {
+func verifyTreeClassification(trainData, testData base.FixedDataGrid) {
+	rand.Seed(44414515)
+	Convey("Using InferID3Tree to create the tree and do the fitting", func() {
+		Convey("Using a RandomTreeRule", func() {
+			randomTreeRuleGenerator := new(RandomTreeRuleGenerator)
+			randomTreeRuleGenerator.Attributes = 2
+			root := InferID3Tree(trainData, randomTreeRuleGenerator)
+
+			Convey("Predicting with the tree", func() {
+				predictions, err := root.Predict(testData)
+				So(err, ShouldBeNil)
+
+				confusionMatrix, err := evaluation.GetConfusionMatrix(testData, predictions)
+				So(err, ShouldBeNil)
+
+				Convey("Predictions should be somewhat accurate", func() {
+					So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
+				})
+			})
+		})
+
+		Convey("Using a InformationGainRule", func() {
+			informationGainRuleGenerator := new(InformationGainRuleGenerator)
+			root := InferID3Tree(trainData, informationGainRuleGenerator)
+
+			Convey("Predicting with the tree", func() {
+				predictions, err := root.Predict(testData)
+				So(err, ShouldBeNil)
+
+				confusionMatrix, err := evaluation.GetConfusionMatrix(testData, predictions)
+				So(err, ShouldBeNil)
+
+				Convey("Predictions should be somewhat accurate", func() {
+					So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
+				})
+			})
+		})
+		Convey("Using a GiniCoefficientRuleGenerator", func() {
+			gRuleGen := new(GiniCoefficientRuleGenerator)
+			root := InferID3Tree(trainData, gRuleGen)
+			Convey("Predicting with the tree", func() {
+				predictions, err := root.Predict(testData)
+				So(err, ShouldBeNil)
+
+				confusionMatrix, err := evaluation.GetConfusionMatrix(testData, predictions)
+				So(err, ShouldBeNil)
+
+				Convey("Predictions should be somewhat accurate", func() {
+					So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
+				})
+			})
+		})
+		Convey("Using a InformationGainRatioRuleGenerator", func() {
+			gRuleGen := new(InformationGainRatioRuleGenerator)
+			root := InferID3Tree(trainData, gRuleGen)
+			Convey("Predicting with the tree", func() {
+				predictions, err := root.Predict(testData)
+				So(err, ShouldBeNil)
+
+				confusionMatrix, err := evaluation.GetConfusionMatrix(testData, predictions)
+				So(err, ShouldBeNil)
+
+				Convey("Predictions should be somewhat accurate", func() {
+					So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
+				})
+			})
+		})
+
+	})
+
+	Convey("Using NewRandomTree to create the tree", func() {
+		root := NewRandomTree(2)
+
+		Convey("Fitting with the tree", func() {
+			err := root.Fit(trainData)
+			So(err, ShouldBeNil)
+
+			Convey("Predicting with the tree, *without* pruning first", func() {
+				predictions, err := root.Predict(testData)
+				So(err, ShouldBeNil)
+
+				confusionMatrix, err := evaluation.GetConfusionMatrix(testData, predictions)
+				So(err, ShouldBeNil)
+
+				Convey("Predictions should be somewhat accurate", func() {
+					So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
+				})
+			})
+
+			Convey("Predicting with the tree, pruning first", func() {
+				root.Prune(testData)
+
+				predictions, err := root.Predict(testData)
+				So(err, ShouldBeNil)
+
+				confusionMatrix, err := evaluation.GetConfusionMatrix(testData, predictions)
+				So(err, ShouldBeNil)
+
+				Convey("Predictions should be somewhat accurate", func() {
+					So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.4)
+				})
+			})
+		})
+	})
+}
+
+func TestRandomTreeClassificationAfterDiscretisation(t *testing.T) {
 	Convey("Predictions on filtered data with a Random Tree", t, func() {
 		instances, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 		So(err, ShouldBeNil)
@@ -23,78 +129,18 @@ func TestRandomTreeClassification(t *testing.T) {
 		filter.Train()
 		filteredTrainData := base.NewLazilyFilteredInstances(trainData, filter)
 		filteredTestData := base.NewLazilyFilteredInstances(testData, filter)
+		verifyTreeClassification(filteredTrainData, filteredTestData)
+	})
+}
 
-		Convey("Using InferID3Tree to create the tree and do the fitting", func() {
-			Convey("Using a RandomTreeRule", func() {
-				randomTreeRuleGenerator := new(RandomTreeRuleGenerator)
-				randomTreeRuleGenerator.Attributes = 2
-				root := InferID3Tree(filteredTrainData, randomTreeRuleGenerator)
+func TestRandomTreeClassificationWithoutDiscretisation(t *testing.T) {
+	Convey("Predictions on filtered data with a Random Tree", t, func() {
+		instances, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+		So(err, ShouldBeNil)
 
-				Convey("Predicting with the tree", func() {
-					predictions, err := root.Predict(filteredTestData)
-					So(err, ShouldBeNil)
+		trainData, testData := base.InstancesTrainTestSplit(instances, 0.6)
 
-					confusionMatrix, err := evaluation.GetConfusionMatrix(filteredTestData, predictions)
-					So(err, ShouldBeNil)
-
-					Convey("Predictions should be somewhat accurate", func() {
-						So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
-					})
-				})
-			})
-
-			Convey("Using a InformationGainRule", func() {
-				informationGainRuleGenerator := new(InformationGainRuleGenerator)
-				root := InferID3Tree(filteredTrainData, informationGainRuleGenerator)
-
-				Convey("Predicting with the tree", func() {
-					predictions, err := root.Predict(filteredTestData)
-					So(err, ShouldBeNil)
-
-					confusionMatrix, err := evaluation.GetConfusionMatrix(filteredTestData, predictions)
-					So(err, ShouldBeNil)
-
-					Convey("Predictions should be somewhat accurate", func() {
-						So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
-					})
-				})
-			})
-		})
-
-		Convey("Using NewRandomTree to create the tree", func() {
-			root := NewRandomTree(2)
-
-			Convey("Fitting with the tree", func() {
-				err = root.Fit(filteredTrainData)
-				So(err, ShouldBeNil)
-
-				Convey("Predicting with the tree, *without* pruning first", func() {
-					predictions, err := root.Predict(filteredTestData)
-					So(err, ShouldBeNil)
-
-					confusionMatrix, err := evaluation.GetConfusionMatrix(filteredTestData, predictions)
-					So(err, ShouldBeNil)
-
-					Convey("Predictions should be somewhat accurate", func() {
-						So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
-					})
-				})
-
-				Convey("Predicting with the tree, pruning first", func() {
-					root.Prune(filteredTestData)
-
-					predictions, err := root.Predict(filteredTestData)
-					So(err, ShouldBeNil)
-
-					confusionMatrix, err := evaluation.GetConfusionMatrix(filteredTestData, predictions)
-					So(err, ShouldBeNil)
-
-					Convey("Predictions should be somewhat accurate", func() {
-						So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.4)
-					})
-				})
-			})
-		})
+		verifyTreeClassification(trainData, testData)
 	})
 }
 
@@ -136,9 +182,24 @@ func TestID3Inference(t *testing.T) {
 	})
 }
 
+func TestPRIVATEgetNumericAttributeEntropy(t *testing.T) {
+	Convey("Checking a particular split...", t, func() {
+		instances, err := base.ParseCSVToInstances("../examples/datasets/c45-numeric.csv", true)
+		So(err, ShouldBeNil)
+		Convey("Fetching the right Attribute", func() {
+			attr := base.GetAttributeByName(instances, "Attribute2")
+			So(attr, ShouldNotEqual, nil)
+			Convey("Finding the threshold...", func() {
+				_, threshold := getNumericAttributeEntropy(instances, attr.(*base.FloatAttribute))
+				So(threshold, ShouldAlmostEqual, 82.5)
+			})
+		})
+	})
+}
+
 func itBuildsTheCorrectDecisionTree(root *DecisionTreeNode) {
 	Convey("The root should be 'outlook'", func() {
-		So(root.SplitAttr.GetName(), ShouldEqual, "outlook")
+		So(root.SplitRule.SplitAttr.GetName(), ShouldEqual, "outlook")
 	})
 
 	sunny := root.Children["sunny"]
@@ -146,13 +207,13 @@ func itBuildsTheCorrectDecisionTree(root *DecisionTreeNode) {
 	rainy := root.Children["rainy"]
 
 	Convey("After the 'sunny' node, the decision should split on 'humidity'", func() {
-		So(sunny.SplitAttr.GetName(), ShouldEqual, "humidity")
+		So(sunny.SplitRule.SplitAttr.GetName(), ShouldEqual, "humidity")
 	})
 	Convey("After the 'rainy' node, the decision should split on 'windy'", func() {
-		So(rainy.SplitAttr.GetName(), ShouldEqual, "windy")
+		So(rainy.SplitRule.SplitAttr.GetName(), ShouldEqual, "windy")
 	})
 	Convey("There should be no splits after the 'overcast' node", func() {
-		So(overcast.SplitAttr, ShouldBeNil)
+		So(overcast.SplitRule.SplitAttr, ShouldBeNil)
 	})
 
 	highHumidity := sunny.Children["high"]

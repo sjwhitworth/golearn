@@ -10,14 +10,13 @@ import (
 	"github.com/sjwhitworth/golearn/filters"
 	"github.com/sjwhitworth/golearn/trees"
 	"math/rand"
-	"time"
 )
 
 func main() {
 
 	var tree base.Classifier
 
-	rand.Seed(time.Now().UTC().UnixNano())
+	rand.Seed(44111342)
 
 	// Load in the iris dataset
 	iris, err := base.ParseCSVToInstances("../datasets/iris_headers.csv", true)
@@ -26,7 +25,7 @@ func main() {
 	}
 
 	// Discretise the iris dataset with Chi-Merge
-	filt := filters.NewChiMergeFilter(iris, 0.99)
+	filt := filters.NewChiMergeFilter(iris, 0.999)
 	for _, a := range base.NonClassFloatAttributes(iris) {
 		filt.AddAttribute(a)
 	}
@@ -55,13 +54,58 @@ func main() {
 	}
 
 	// Evaluate
-	fmt.Println("ID3 Performance")
+	fmt.Println("ID3 Performance (information gain)")
 	cf, err := evaluation.GetConfusionMatrix(testData, predictions)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
 	}
 	fmt.Println(evaluation.GetSummary(cf))
 
+	tree = trees.NewID3DecisionTreeFromRule(0.6, new(trees.InformationGainRatioRuleGenerator))
+	// (Parameter controls train-prune split.)
+
+	// Train the ID3 tree
+	err = tree.Fit(trainData)
+	if err != nil {
+		panic(err)
+	}
+
+	// Generate predictions
+	predictions, err = tree.Predict(testData)
+	if err != nil {
+		panic(err)
+	}
+
+	// Evaluate
+	fmt.Println("ID3 Performance (information gain ratio)")
+	cf, err = evaluation.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
+	}
+	fmt.Println(evaluation.GetSummary(cf))
+
+	tree = trees.NewID3DecisionTreeFromRule(0.6, new(trees.GiniCoefficientRuleGenerator))
+	// (Parameter controls train-prune split.)
+
+	// Train the ID3 tree
+	err = tree.Fit(trainData)
+	if err != nil {
+		panic(err)
+	}
+
+	// Generate predictions
+	predictions, err = tree.Predict(testData)
+	if err != nil {
+		panic(err)
+	}
+
+	// Evaluate
+	fmt.Println("ID3 Performance (gini index generator)")
+	cf, err = evaluation.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to get confusion matrix: %s", err.Error()))
+	}
+	fmt.Println(evaluation.GetSummary(cf))
 	//
 	// Next up, Random Trees
 	//
@@ -86,7 +130,7 @@ func main() {
 	//
 	// Finally, Random Forests
 	//
-	tree = ensemble.NewRandomForest(100, 3)
+	tree = ensemble.NewRandomForest(70, 3)
 	err = tree.Fit(trainData)
 	if err != nil {
 		panic(err)
