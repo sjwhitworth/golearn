@@ -443,35 +443,6 @@ func (inst *DenseInstances) swapRows(i, j int) {
 	}
 }
 
-// Equal checks whether a given Instance set is exactly the same
-// as another: same size and same values (as determined by the Attributes)
-//
-// IMPORTANT: does not explicitly check if the Attributes are considered equal.
-func (inst *DenseInstances) Equal(other DataGrid) bool {
-
-	_, rows := inst.Size()
-
-	for _, a := range inst.AllAttributes() {
-		as1, err := inst.GetAttribute(a)
-		if err != nil {
-			panic(err) // That indicates some kind of error
-		}
-		as2, err := inst.GetAttribute(a)
-		if err != nil {
-			return false // Obviously has different Attributes
-		}
-		for i := 0; i < rows; i++ {
-			b1 := inst.Get(as1, i)
-			b2 := inst.Get(as2, i)
-			if !byteSeqEqual(b1, b2) {
-				return false
-			}
-		}
-	}
-
-	return true
-}
-
 // String returns a human-readable summary of this dataset.
 func (inst *DenseInstances) String() string {
 	var buffer bytes.Buffer
