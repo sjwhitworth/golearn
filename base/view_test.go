@@ -114,6 +114,15 @@ func TestInstancesViewAttrs(t *testing.T) {
 				So(ok3, ShouldEqual, true)
 				So(ok4, ShouldEqual, true)
 			})
+			Convey("The InstancesView should match one prepared earlier...", func() {
+				instRef, err := ParseCSVToInstances("../examples/datasets/iris_headers_subset.csv", true)
+				So(err, ShouldBeNil)
+				So(InstancesAreEqual(instRef, instView), ShouldBeTrue)
+				Convey("And a DenseInstances conversion should too...", func() {
+					instView2 := NewDenseCopy(instRef)
+					So(InstancesAreEqual(instRef, instView2), ShouldBeTrue)
+				})
+			})
 		})
 	})
 }
