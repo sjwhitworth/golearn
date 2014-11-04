@@ -1,5 +1,9 @@
 package base
 
+import (
+	"encoding/json"
+)
+
 const (
 	// CategoricalType is for Attributes which represent values distinctly.
 	CategoricalType = iota
@@ -10,6 +14,8 @@ const (
 
 // Attributes disambiguate columns of the feature matrix and declare their types.
 type Attribute interface {
+	json.Unmarshaler
+	json.Marshaler
 	// Returns the general characterstics of this Attribute .
 	// to avoid the overhead of casting
 	GetType() int

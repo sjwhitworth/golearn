@@ -1,6 +1,7 @@
 package base
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 )
@@ -8,6 +9,20 @@ import (
 // BinaryAttributes can only represent 1 or 0.
 type BinaryAttribute struct {
 	Name string
+}
+
+// MarshalJSON returns a JSON version of this BinaryAttribute for serialisation.
+func (b *BinaryAttribute) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"type": "binary",
+		"name": b.Name,
+	})
+}
+
+// UnmarshalJSON unpacks a BinaryAttribute from serialisation.
+// Usually, there's nothing to deserialize.
+func (b *BinaryAttribute) UnmarshalJSON(data []byte) error {
+	return nil
 }
 
 // NewBinaryAttribute creates a BinaryAttribute with the given name
