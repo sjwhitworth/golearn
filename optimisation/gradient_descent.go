@@ -6,9 +6,12 @@ import "github.com/gonum/matrix/mat64"
 // See http://en.wikipedia.org/wiki/Gradient_descent for more details.
 func BatchGradientDescent(x, y, theta *mat64.Dense, alpha float64, epoch int) *mat64.Dense {
 	m, _ := y.Dims()
+	// Helper function for scalar multiplication
+	mult := func(r, c int, v float64) float64 { return v * 1.0 / float64(m) * alpha }
+
 	for i := 0; i < epoch; i++ {
-		xFlat := mat64.DenseCopyOf(x)
-		xFlat.TCopy(xFlat)
+		grad := mat64.DenseCopyOf(x)
+		grad.TCopy(grad)
 		temp := mat64.DenseCopyOf(x)
 
 		// Calculate our best prediction, given theta
@@ -16,22 +19,15 @@ func BatchGradientDescent(x, y, theta *mat64.Dense, alpha float64, epoch int) *m
 
 		// Calculate our error from the real values
 		temp.Sub(temp, y)
-		xFlat.Mul(xFlat, temp)
+		grad.Mul(grad, temp)
 
-		// Temporary hack to get around the fact there is no scalar division in mat64
-		xFlatRow, _ := xFlat.Dims()
-		gradient := make([]float64, 0)
-		for k := 0; k < xFlatRow; k++ {
-			row := xFlat.RowView(k)
-			for v := range row {
-				divd := row[v] / float64(m) * alpha
-				gradient = append(gradient, divd)
-			}
-		}
-		grows := len(gradient)
-		grad := mat64.NewDense(grows, 1, gradient)
+		// Multiply by scalar factor
+		grad.Apply(mult, grad)
+
+		// Take a step in gradient direction
 		theta.Sub(theta, grad)
 	}
+
 	return theta
 }
 
@@ -44,6 +40,8 @@ func StochasticGradientDescent(x, y, theta *mat64.Dense, alpha float64, epoch, p
 	m, _ := y.Dims()
 	resultPipe := make(chan *mat64.Dense)
 	results := make([]*mat64.Dense, 0)
+	// Helper function for scalar multiplication
+	mult := func(r, c int, v float64) float64 { return v * 1.0 / float64(m) * alpha }
 
 	for p := 0; p < procs; p++ {
 		go func() {
@@ -55,24 +53,16 @@ func StochasticGradientDescent(x, y, theta *mat64.Dense, alpha float64, epoch, p
 					datYtemp := y.RowView(k)
 					datX := mat64.NewDense(1, len(datXtemp), datXtemp)
 					datY := mat64.NewDense(1, 1, datYtemp)
-					datXFlat := mat64.DenseCopyOf(datX)
-					datXFlat.TCopy(datXFlat)
+					grad := mat64.DenseCopyOf(datX)
+					grad.TCopy(grad)
 					datX.Mul(datX, thetaCopy)
 					datX.Sub(datX, datY)
-					datXFlat.Mul(datXFlat, datX)
+					grad.Mul(grad, datX)
 
-					// Horrible hack to get around the fact there is no elementwise division in mat64
-					xFlatRow, _ := datXFlat.Dims()
-					gradient := make([]float64, 0)
-					for i := 0; i < xFlatRow; i++ {
-						row := datXFlat.RowView(i)
-						for i := range row {
-							divd := row[i] / float64(m) * alpha
-							gradient = append(gradient, divd)
-						}
-					}
-					grows := len(gradient)
-					grad := mat64.NewDense(grows, 1, gradient)
+					// Multiply by scalar factor
+					grad.Apply(mult, grad)
+
+					// Take a step in gradient direction
 					thetaCopy.Sub(thetaCopy, grad)
 				}
 
@@ -96,22 +86,16 @@ func averageTheta(matrices []*mat64.Dense) *mat64.Dense {
 	if len(matrices) < 2 {
 		panic("Must provide at least two matrices to average")
 	}
-	base := matrices[0]
-	rows, _ := base.Dims()
-
+	invLen :=  1.0 / float64(len(matrices))
+	// Helper function for scalar multiplication
+	mult := func(r, c int, v float64) float64 { return v * invLen}
+	// Sum matrices
+	average := matrices[0]
 	for i := 1; i < len(matrices); i++ {
-		base.Add(base, matrices[i])
+		average.Add(average, matrices[i])
 	}
 
-	averaged := make([]float64, 0)
-	for i := 0; i < rows; i++ {
-		row := base.RowView(i)
-		for i := range row {
-			divd := row[i] / float64(len(matrices))
-			averaged = append(averaged, divd)
-		}
-	}
-
-	baseDense := mat64.NewDense(rows, 1, averaged)
-	return baseDense
+	// Calculate the average
+	average.Apply(mult, average)
+	return average
 }
