@@ -44,6 +44,40 @@ func NewDenseInstances() *DenseInstances {
 	}
 }
 
+// NewDenseCopy generates a new DenseInstances set
+// from an existing FixedDataGrid.
+func NewDenseCopy(of FixedDataGrid) *DenseInstances {
+
+	ret := NewDenseInstances() // Create the skeleton
+	// Attribute creation
+	attrs := of.AllAttributes()
+	specs1 := make([]AttributeSpec, len(attrs))
+	specs2 := make([]AttributeSpec, len(attrs))
+	for i, a := range attrs {
+		// Retrieve old AttributeSpec
+		s, err := of.GetAttribute(a)
+		if err != nil {
+			panic(err)
+		}
+		specs1[i] = s
+		// Add and store new AttributeSpec
+		specs2[i] = ret.AddAttribute(a)
+	}
+	// Allocate memory
+	_, rows := of.Size()
+	ret.Extend(rows)
+
+	// Copy each row from the old one to the new
+	of.MapOverRows(specs1, func(v [][]byte, r int) (bool, error) {
+		for i, c := range v {
+			ret.Set(specs2[i], r, c)
+		}
+		return true, nil
+	})
+
+	return ret
+}
+
 //
 // AttributeGroup functions
 //
