@@ -29,7 +29,7 @@ func TestLazySortDesc(t *testing.T) {
 				})
 
 				Convey("Result should match the reference", func() {
-					So(sortedDescending.Equal(result), ShouldBeTrue)
+					So(InstancesAreEqual(sortedDescending, result), ShouldBeTrue)
 				})
 			})
 		})
@@ -60,11 +60,11 @@ func TestLazySortAsc(t *testing.T) {
 				})
 
 				Convey("Result should match the reference", func() {
-					So(sortedAscending.Equal(result), ShouldBeTrue)
+					So(InstancesAreEqual(sortedAscending, result), ShouldBeTrue)
 				})
 
 				Convey("First element of Result should equal known value", func() {
-					So(result.RowString(0), ShouldEqual, "4.30 3.00 1.10 0.10 Iris-setosa")
+					So(result.RowString(0), ShouldEqual, "4.3 3.0 1.1 0.1 Iris-setosa")
 				})
 			})
 		})

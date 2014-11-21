@@ -22,6 +22,37 @@ func GeneratePredictionVector(from FixedDataGrid) UpdatableDataGrid {
 	return ret
 }
 
+// CopyDenseInstancesStructure returns a new DenseInstances
+// with identical structure (layout, Attributes) to the original
+func CopyDenseInstances(template *DenseInstances, templateAttrs []Attribute) *DenseInstances {
+	instances := NewDenseInstances()
+	templateAgs := template.AllAttributeGroups()
+	for ag := range templateAgs {
+		agTemplate := templateAgs[ag]
+		if _, ok := agTemplate.(*BinaryAttributeGroup); ok {
+			instances.CreateAttributeGroup(ag, 0)
+		} else {
+			instances.CreateAttributeGroup(ag, 8)
+		}
+	}
+
+	for _, a := range templateAttrs {
+		s, err := template.GetAttribute(a)
+		if err != nil {
+			panic(err)
+		}
+		if ag, ok := template.agRevMap[s.pond]; !ok {
+			panic(ag)
+		} else {
+			_, err := instances.AddAttributeToAttributeGroup(a, ag)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+	return instances
+}
+
 // GetClass is a shortcut for returning the string value of the current
 // class on a given row.
 //
@@ -463,6 +494,37 @@ func CheckStrictlyCompatible(s1 FixedDataGrid, s2 FixedDataGrid) bool {
 			at1 := a1[i]
 			at2 := a2[i]
 			if !at1.Equals(at2) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+// InstancesAreEqual checks whether a given Instance set is exactly
+// the same as another (i.e. has the same size and values).
+func InstancesAreEqual(inst, other FixedDataGrid) bool {
+	_, rows := inst.Size()
+
+	for _, a := range inst.AllAttributes() {
+		as1, err := inst.GetAttribute(a)
+		if err != nil {
+			panic(err) // That indicates some kind of error
+		}
+		as2, err := inst.GetAttribute(a)
+		if err != nil {
+			return false // Obviously has different Attributes
+		}
+
+		if !as1.GetAttribute().Equals(as2.GetAttribute()) {
+			return false
+		}
+
+		for i := 0; i < rows; i++ {
+			b1 := inst.Get(as1, i)
+			b2 := inst.Get(as2, i)
+			if !byteSeqEqual(b1, b2) {
 				return false
 			}
 		}

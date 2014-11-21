@@ -93,10 +93,15 @@ func TestParseCSVToInstances(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			Convey("Should parse the rows correctly", func() {
-				So(instances.RowString(0), ShouldEqual, "5.10 3.50 1.40 0.20 Iris-setosa")
-				So(instances.RowString(50), ShouldEqual, "7.00 3.20 4.70 1.40 Iris-versicolor")
-				So(instances.RowString(100), ShouldEqual, "6.30 3.30 6.00 2.50 Iris-virginica")
+				So(instances.RowString(0), ShouldEqual, "5.1 3.5 1.4 0.2 Iris-setosa")
+				So(instances.RowString(50), ShouldEqual, "7.0 3.2 4.7 1.4 Iris-versicolor")
+				So(instances.RowString(100), ShouldEqual, "6.3 3.3 6.0 2.5 Iris-virginica")
 			})
+		})
+
+		Convey("Given a path to another reasonable CSV file", func() {
+			_, err := ParseCSVToInstances("../examples/datasets/c45-numeric.csv", true)
+			So(err, ShouldBeNil)
 		})
 
 		Convey("Given a path to a non-existent file", func() {

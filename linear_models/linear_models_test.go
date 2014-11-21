@@ -24,14 +24,14 @@ func TestLogisticRegression(t *testing.T) {
 			Z, err := lr.Predict(Y)
 			So(err, ShouldEqual, nil)
 			Convey("The result should be 1", func() {
-				So(Z.RowString(0), ShouldEqual, "1.00")
+				So(Z.RowString(0), ShouldEqual, "1.0")
 			})
 		})
 		Convey("When predicting the label of second vector", func() {
 			Z, err := lr.Predict(Y)
 			So(err, ShouldEqual, nil)
 			Convey("The result should be -1", func() {
-				So(Z.RowString(1), ShouldEqual, "-1.00")
+				So(Z.RowString(1), ShouldEqual, "-1.0")
 			})
 		})
 	})

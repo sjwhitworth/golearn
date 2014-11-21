@@ -17,7 +17,7 @@ func TestInstancesViewRows(t *testing.T) {
 				So(instView.rows[0], ShouldEqual, 5)
 			})
 			Convey("The reconstructed values should be correct...", func() {
-				str := "5.40 3.90 1.70 0.40 Iris-setosa"
+				str := "5.4 3.9 1.7 0.4 Iris-setosa"
 				row := instView.RowString(0)
 				So(row, ShouldEqual, str)
 			})
@@ -99,7 +99,7 @@ func TestInstancesViewAttrs(t *testing.T) {
 				So(err, ShouldNotEqual, nil)
 			})
 			Convey("The filtered Attribute should not appear in the RowString", func() {
-				str := "3.90 1.70 0.40 Iris-setosa"
+				str := "3.9 1.7 0.4 Iris-setosa"
 				row := instView.RowString(5)
 				So(row, ShouldEqual, str)
 			})

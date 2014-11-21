@@ -1,6 +1,7 @@
 package base
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -9,7 +10,31 @@ import (
 // - useful for representing classes.
 type CategoricalAttribute struct {
 	Name   string
-	values []string
+	values []string `json:"values"`
+}
+
+// MarshalJSON returns a JSON version of this Attribute.
+func (Attr *CategoricalAttribute) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"type": "categorical",
+		"name": Attr.Name,
+		"attr": map[string]interface{}{
+			"values": Attr.values,
+		},
+	})
+}
+
+// UnmarshalJSON returns a JSON version of this Attribute.
+func (Attr *CategoricalAttribute) UnmarshalJSON(data []byte) error {
+	var d map[string]interface{}
+	err := json.Unmarshal(data, &d)
+	if err != nil {
+		return err
+	}
+	for _, v := range d["values"].([]interface{}) {
+		Attr.values = append(Attr.values, v.(string))
+	}
+	return nil
 }
 
 // NewCategoricalAttribute creates a blank CategoricalAttribute.
