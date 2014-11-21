@@ -11,7 +11,7 @@ import (
 
 func TestOneVsAllModel(t *testing.T) {
 
-	classifierFunc := func() base.Classifier {
+	classifierFunc := func(c string) base.Classifier {
 		m, err := linear_models.NewLinearSVC("l1", "l2", true, 1.0, 1e-4)
 		if err != nil {
 			panic(err)
