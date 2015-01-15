@@ -76,7 +76,11 @@ func TestPredict(t *testing.T) {
 	}
 
 	predictions := a.Predict(testData)
-	cf := evaluation.GetConfusionMatrix(testData, predictions)
+	cf, err := evaluation.GetConfusionMatrix(testData, predictions)
+	if err != nil {
+		t.Errorf("Couldn't get confusion matrix: %s", err)
+		t.Fail()
+	}
 	fmt.Println(evaluation.GetSummary(cf))
 	fmt.Println(trainData)
 	fmt.Println(testData)

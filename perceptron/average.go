@@ -106,7 +106,7 @@ func (p *AveragePerceptron) Predict(what base.FixedDataGrid) base.FixedDataGrid 
 
 	data := processData(what)
 
-	allAttrs := base.CheckCompatable(what, p.TrainingData)
+	allAttrs := base.CheckCompatible(what, p.TrainingData)
 	if allAttrs == nil {
 		// Don't have the same Attributes
 		return nil

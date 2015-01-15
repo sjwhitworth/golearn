@@ -29,6 +29,6 @@ func main() {
 	predictions := cls.Predict(testData)
 
 	// Prints precision/recall metrics
-	confusionMat := evaluation.GetConfusionMatrix(testData, predictions)
+	confusionMat, _ := evaluation.GetConfusionMatrix(testData, predictions)
 	fmt.Println(evaluation.GetSummary(confusionMat))
 }
