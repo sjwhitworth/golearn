@@ -16,7 +16,7 @@ func TestSerializeToCSV(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		Convey("Saving the instances to CSV...", func() {
-			f, err := ioutil.TempFile("", "instTmp")
+			f, err := ioutil.TempFile("", "instTmpCSV")
 			So(err, ShouldBeNil)
 			err = SerializeInstancesToCSV(inst, f.Name())
 			So(err, ShouldBeNil)
@@ -35,7 +35,7 @@ func TestSerializeToFile(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		Convey("Dumping to file...", func() {
-			f, err := ioutil.TempFile("", "instTmp")
+			f, err := ioutil.TempFile("", "instTmpF")
 			So(err, ShouldBeNil)
 			err = SerializeInstances(inst, f)
 			So(err, ShouldBeNil)
