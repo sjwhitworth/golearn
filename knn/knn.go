@@ -255,8 +255,7 @@ func (KNN *KNNRegressor) Predict(vector *mat64.Dense, K int) float64 {
 
 	for i := 0; i < rows; i++ {
 		row := KNN.Data.RowView(i)
-		rowMat := utilities.FloatsToMatrix(row)
-		distance := distanceFunc.Distance(rowMat, vector)
+		distance := distanceFunc.Distance(utilities.VectorToMatrix(row), vector)
 		rownumbers[i] = distance
 	}
 
