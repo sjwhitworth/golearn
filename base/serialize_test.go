@@ -1,11 +1,11 @@
 package base
 
 // import (
-// 	// "archive/tar"
-// 	// "compress/gzip"
-// 	// "fmt"
+// 	"archive/tar"
+// 	"compress/gzip"
+// 	"fmt"
 // 	. "github.com/smartystreets/goconvey/convey"
-// 	// "io"
+// 	"io"
 // 	"io/ioutil"
 // 	"testing"
 // )
@@ -16,7 +16,7 @@ package base
 // 		So(err, ShouldBeNil)
 
 // 		Convey("Saving the instances to CSV...", func() {
-// 			f, err := ioutil.TempFile("", "instTmp")
+// 			f, err := ioutil.TempFile("", "instTmpCSV")
 // 			So(err, ShouldBeNil)
 // 			err = SerializeInstancesToCSV(inst, f.Name())
 // 			So(err, ShouldBeNil)
@@ -35,7 +35,7 @@ package base
 // 		So(err, ShouldBeNil)
 
 // 		Convey("Dumping to file...", func() {
-// 			f, err := ioutil.TempFile("", "instTmp")
+// 			f, err := ioutil.TempFile("", "instTmpF")
 // 			So(err, ShouldBeNil)
 // 			err = SerializeInstances(inst, f)
 // 			So(err, ShouldBeNil)
@@ -45,7 +45,7 @@ package base
 // 				So(err, ShouldBeNil)
 // 				tr := tar.NewReader(gzr)
 // 				classAttrsPresent := false
-// 				manifestPresent := false
+// 				// manifestPresent := false
 // 				regularAttrsPresent := false
 // 				dataPresent := false
 // 				dimsPresent := false
@@ -78,10 +78,10 @@ package base
 // 					}
 // 				}
 // 				Convey("MANIFEST should be present", func() {
-// 					So(manifestPresent, ShouldBeTrue)
-// 					Convey("MANIFEST should be right...", func() {
-// 						So(readBytes, ShouldResemble, []byte(SerializationFormatVersion))
-// 					})
+// 					// So(manifestPresent, ShouldBeTrue)
+// 					// Convey("MANIFEST should be right...", func() {
+// 					// So(readBytes, ShouldResemble, []byte(SerializationFormatVersion))
+// 					// })
 // 				})
 // 				Convey("DATA should be present", func() {
 // 					So(dataPresent, ShouldBeTrue)
