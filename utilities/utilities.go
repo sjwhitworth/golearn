@@ -40,3 +40,8 @@ func SortIntMap(m map[int]float64) []int {
 func FloatsToMatrix(floats []float64) *mat64.Dense {
 	return mat64.NewDense(1, len(floats), floats)
 }
+
+func VectorToMatrix(vector *mat64.Vector) *mat64.Dense {
+	vec := vector.RawVector()
+	return mat64.NewDense(1, len(vec.Data), vec.Data)
+}

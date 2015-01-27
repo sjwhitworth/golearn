@@ -17,7 +17,7 @@ func main() {
 	}
 
 	for _, a := range iris.AllAttributes() {
-		var ac base.CategoricalAttribute
+		// var ac base.CategoricalAttribute
 		var af base.FloatAttribute
 		s, err := json.Marshal(a)
 		if err != nil {
@@ -26,7 +26,7 @@ func main() {
 		fmt.Println(string(s))
 		err = json.Unmarshal(s, &af)
 		fmt.Println(af.String())
-		err = json.Unmarshal(s, &ac)
-		fmt.Println(ac.String())
+		// err = json.Unmarshal(s, &ac)
+		// fmt.Println(ac.String())
 	}
 }

@@ -3,7 +3,6 @@ package neural
 import (
 	"bytes"
 	"fmt"
-	"github.com/gonum/blas/cblas"
 	"github.com/gonum/matrix/mat64"
 	"math"
 )
@@ -117,8 +116,6 @@ func (n *Network) Activate(with *mat64.Dense, maxIterations int) {
 
 	tmp := new(mat64.Dense)
 	tmp.Clone(with)
-
-	mat64.Register(cblas.Blas{})
 
 	// Main loop
 	for i := 0; i < maxIterations; i++ {
