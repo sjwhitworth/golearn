@@ -95,4 +95,4 @@ go run trees.go
 Join the team
 =============
 
-Please send me a mail at stephen dot whitworth at hailocab dot com.
+Please send me a mail at stephenjameswhitworth@gmail.com
