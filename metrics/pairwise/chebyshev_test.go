@@ -33,9 +33,9 @@ func TestChebyshev(t *testing.T) {
 			})
 		})
 
-		Convey("When calculating distance with different dimention matrices", func() {
+		Convey("When calculating distance with different dimension matrices", func() {
 			vectorX.TCopy(vectorX)
-			So(func() { chebyshev.Distance(vectorX, vectorY) }, ShouldPanicWith, mat64.ErrShape)
+			So(func() { chebyshev.Distance(vectorX, vectorY) }, ShouldPanic)
 		})
 
 	})

@@ -44,7 +44,7 @@ func TestCranberrra(t *testing.T) {
 
 		Convey("When calculating distance with different dimention matrices", func() {
 			vectorX.TCopy(vectorX)
-			So(func() { cranberra.Distance(vectorX, vectorY) }, ShouldPanicWith, mat64.ErrShape)
+			So(func() { cranberra.Distance(vectorX, vectorY) }, ShouldPanic)
 		})
 
 	})
