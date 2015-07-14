@@ -49,7 +49,7 @@ func NewMultiLayerNet(layers []int) *MultiLayerNet {
 
 // String returns a human-readable summary of this network.
 func (m *MultiLayerNet) String() string {
-	return fmt.Sprintf("MultiLayerNet(%v, %v, %.2f, %.2f, %d", m.layers, m.network, m.Convergence, m.LearningRate, m.MaxIterations)
+	return fmt.Sprintf("MultiLayerNet(%v, %v, %f, %f, %d", m.layers, m.network, m.Convergence, m.LearningRate, m.MaxIterations)
 }
 
 func (m *MultiLayerNet) convertToFloatInsts(X base.FixedDataGrid) base.FixedDataGrid {
