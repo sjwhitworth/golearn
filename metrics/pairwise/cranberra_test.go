@@ -33,8 +33,8 @@ func TestCranberrra(t *testing.T) {
 		})
 
 		Convey("When calculating distance with row vectors", func() {
-			vectorX.TCopy(vectorX)
-			vectorY.TCopy(vectorY)
+			vectorX.Copy(vectorX.T())
+			vectorY.Copy(vectorY.T())
 			result := cranberra.Distance(vectorX, vectorY)
 
 			Convey("The result should be 2.9", func() {
@@ -42,8 +42,8 @@ func TestCranberrra(t *testing.T) {
 			})
 		})
 
-		Convey("When calculating distance with different dimention matrices", func() {
-			vectorX.TCopy(vectorX)
+		Convey("When calculating distance with different dimension matrices", func() {
+			vectorX.Clone(vectorX.T())
 			So(func() { cranberra.Distance(vectorX, vectorY) }, ShouldPanic)
 		})
 

@@ -197,7 +197,7 @@ func (n *Network) Error(outArg, errArg *mat64.Dense, maxIterations int) *mat64.D
 
 	// Transpose weights matrix
 	reverseWeights := mat64.DenseCopyOf(n.weights)
-	reverseWeights.TCopy(n.weights)
+	reverseWeights.Clone(n.weights.T())
 
 	// We only need a certain number of passes
 	for i := 0; i < maxIterations; i++ {

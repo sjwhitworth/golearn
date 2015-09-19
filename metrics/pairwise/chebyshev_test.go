@@ -24,8 +24,8 @@ func TestChebyshev(t *testing.T) {
 		})
 
 		Convey("When calculating distance with row vectors", func() {
-			vectorX.TCopy(vectorX)
-			vectorY.TCopy(vectorY)
+			vectorX.Copy(vectorX.T())
+			vectorY.Copy(vectorY.T())
 			result := chebyshev.Distance(vectorX, vectorY)
 
 			Convey("The result should be 8", func() {
@@ -34,7 +34,7 @@ func TestChebyshev(t *testing.T) {
 		})
 
 		Convey("When calculating distance with different dimension matrices", func() {
-			vectorX.TCopy(vectorX)
+			vectorX.Clone(vectorX.T())
 			So(func() { chebyshev.Distance(vectorX, vectorY) }, ShouldPanic)
 		})
 
