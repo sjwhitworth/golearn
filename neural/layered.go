@@ -322,7 +322,7 @@ func (m *MultiLayerNet) Fit(X base.FixedDataGrid) {
 			}
 
 			// Update total error
-			totalError += math.Abs(errVec.Sum())
+			totalError += math.Abs(mat64.Sum(errVec))
 
 			// Back-propagate the error
 			b := m.network.Error(trainVec, errVec, totalLayers)
