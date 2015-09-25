@@ -14,7 +14,7 @@ func NewEuclidean() *Euclidean {
 
 // InnerProduct computes a Eucledian inner product.
 func (e *Euclidean) InnerProduct(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
-	result := vectorX.Dot(vectorY)
+	result := mat64.Dot(vectorX, vectorY)
 
 	return result
 }
