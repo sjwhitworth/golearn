@@ -21,6 +21,7 @@ func InstancesFromMat64(rows, cols int, data *mat64.Dense) *Mat64Instances {
 			i)))
 	}
 
+	ret.classAttrs = make(map[int]bool)
 	ret.Data = data
 	ret.rows = rows
 	return &ret
