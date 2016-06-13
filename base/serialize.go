@@ -132,9 +132,9 @@ func deserializeAttributes(data []byte) []Attribute {
 
 	// Define a JSON shim Attribute
 	type JSONAttribute struct {
-		Type string          `json:type`
-		Name string          `json:name`
-		Attr json.RawMessage `json:attr`
+		Type string          `json:"type"`
+		Name string          `json:"name"`
+		Attr json.RawMessage `json:"attr"`
 	}
 
 	var ret []Attribute

@@ -3,6 +3,7 @@ package clustering
 
 import (
 	"fmt"
+
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/metrics/pairwise"
 )
@@ -66,7 +67,7 @@ func (ref ClusterMap) Equals(other ClusterMap) (bool, error) {
 			if c3, ok := clusterIdMap[c2]; ok { // what's our correspondance with c2?
 				if c1 != c3 {
 					// if c1 is not what we've currently got, error out
-					return false, fmt.Errorf("ref point %d (cluster %d) is assigned to a different cluster (%d) in ref %s", p, c2, c1, clusterIdMap)
+					return false, fmt.Errorf("ref point %d (cluster %d) is assigned to a different cluster (%d) in ref %+v", p, c2, c1, clusterIdMap)
 				}
 			} else {
 				clusterIdMap[c2] = c1
@@ -97,7 +98,7 @@ func (ref ClusterMap) Equals(other ClusterMap) (bool, error) {
 	for cOld := range other {
 		cNew := clusterIdMap[cOld]
 		if !arraysEqual(ref[cNew], other[cOld]) {
-			return false, fmt.Errorf("Re-labelled cluster %d => %d doesn't contain the same points (%s, %s)", cOld, cNew, ref[cNew], other[cOld])
+			return false, fmt.Errorf("Re-labelled cluster %d => %d doesn't contain the same points (%d, %d)", cOld, cNew, ref[cNew], other[cOld])
 		}
 		newMap[cNew] = other[cOld]
 	}
