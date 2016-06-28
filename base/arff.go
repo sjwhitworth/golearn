@@ -37,8 +37,14 @@ func SerializeInstancesToDenseARFFWithAttributes(inst FixedDataGrid, rawAttrs []
 	}
 	defer f.Close()
 
+	return SerializeInstancesToWriterDenseARFFWithAttributes(f, inst, rawAttrs, relation)
+
+
+}
+
+func SerializeInstancesToWriterDenseARFFWithAttributes(w io.Writer, inst FixedDataGrid, rawAttrs []Attribute, relation string) error {
 	// Write @relation header
-	f.WriteString(fmt.Sprintf("@relation %s\n\n", relation))
+	fmt.Fprintf(w, "@relation %s\n\n", relation)
 
 	// Get all Attribute specifications
 	attrs := ResolveAttributes(inst, rawAttrs)
@@ -51,17 +57,17 @@ func SerializeInstancesToDenseARFFWithAttributes(inst FixedDataGrid, rawAttrs []
 			vals := a.GetValues()
 			t = fmt.Sprintf("{%s}", strings.Join(vals, ", "))
 		}
-		f.WriteString(fmt.Sprintf("@attribute %s %s\n", attr.GetName(), t))
+		fmt.Fprintf(w, "@attribute %s %s\n", attr.GetName(), t)
 	}
-	f.WriteString("\n@data\n")
+	fmt.Fprint(w, "\n@data\n")
 
 	buf := make([]string, len(attrs))
 	inst.MapOverRows(attrs, func(val [][]byte, row int) (bool, error) {
 		for i, v := range val {
 			buf[i] = attrs[i].attr.GetStringFromSysVal(v)
 		}
-		f.WriteString(strings.Join(buf, ","))
-		f.WriteString("\n")
+		fmt.Fprint(w, strings.Join(buf, ","))
+		fmt.Fprint(w, "\n")
 		return true, nil
 	})
 
