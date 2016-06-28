@@ -1,0 +1,43 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/gonum/blas",
+			"repository": "https://github.com/gonum/blas",
+			"revision": "d61799c5b7ab9887e1301d6433040d54b6d38fa5",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/gonum/floats",
+			"repository": "https://github.com/gonum/floats",
+			"revision": "50d9894483e545bcbe75c58b35efb70d75da07e4",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/gonum/internal/asm",
+			"repository": "https://github.com/gonum/internal",
+			"revision": "4e496e1db44c5a089f08f50a32a1471670a1a63d",
+			"branch": "master",
+			"path": "/asm"
+		},
+		{
+			"importpath": "github.com/gonum/lapack",
+			"repository": "https://github.com/gonum/lapack",
+			"revision": "e1d97752a975d2790f8ffebd08eafcc838d7d425",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/gonum/matrix",
+			"repository": "https://github.com/gonum/matrix",
+			"revision": "c4249e0e7918c482f59e8416b5020243645a582b",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/gonum/matrix/mat64",
+			"repository": "https://github.com/gonum/matrix",
+			"revision": "c4249e0e7918c482f59e8416b5020243645a582b",
+			"branch": "master",
+			"path": "/mat64"
+		}
+	]
+}
