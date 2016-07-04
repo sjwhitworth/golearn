@@ -69,7 +69,7 @@ func (f *FixedAttributeGroup) set(col int, row int, val []byte) {
 	// Copy the value in
 	copied := copy(f.alloc[offset:], val)
 	if copied != f.size {
-		panic(fmt.Sprintf("set() terminated by only copying %d bytes", copied, f.size))
+		panic(fmt.Sprintf("set() terminated by only copying %d bytes, should be %d", copied, f.size))
 	}
 
 	row++

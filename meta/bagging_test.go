@@ -1,20 +1,21 @@
 package meta
 
 import (
+	"math/rand"
+	"testing"
+	"time"
+
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/filters"
 	"github.com/sjwhitworth/golearn/trees"
 	. "github.com/smartystreets/goconvey/convey"
-	"math/rand"
-	"testing"
-	"time"
 )
 
 func BenchmarkBaggingRandomForestFit(t *testing.B) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatalf("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -39,7 +40,7 @@ func BenchmarkBaggingRandomForestFit(t *testing.B) {
 func BenchmarkBaggingRandomForestPredict(t *testing.B) {
 	inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 	if err != nil {
-		t.Fatal("Unable to parse CSV to instances: %s", err.Error())
+		t.Fatalf("Unable to parse CSV to instances: %s", err.Error())
 	}
 
 	rand.Seed(time.Now().UnixNano())

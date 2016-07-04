@@ -157,7 +157,7 @@ func (l *LazilyFilteredInstances) transformNewToOldAttribute(as AttributeSpec) (
 func (l *LazilyFilteredInstances) Get(as AttributeSpec, row int) []byte {
 	asOld, err := l.transformNewToOldAttribute(as)
 	if err != nil {
-		panic(fmt.Sprintf("Attribute %s could not be resolved. (Error: %s)", as, err))
+		panic(fmt.Sprintf("Attribute %s could not be resolved. (Error: %s)", as.String(), err.Error()))
 	}
 	byteSeq := l.src.Get(asOld, row)
 	if l.unfilteredMap[as.attr] {
@@ -177,7 +177,7 @@ func (l *LazilyFilteredInstances) MapOverRows(asv []AttributeSpec, mapFunc func(
 	for i, a := range asv {
 		old, err := l.transformNewToOldAttribute(a)
 		if err != nil {
-			return fmt.Errorf("Couldn't fetch old Attribute: '%s'", a)
+			return fmt.Errorf("Couldn't fetch old Attribute: '%s'", a.String())
 		}
 		oldAsv[i] = old
 	}

@@ -10,7 +10,7 @@ import (
 // - useful for representing classes.
 type CategoricalAttribute struct {
 	Name   string
-	values []string `json:"values"`
+	values []string
 }
 
 // MarshalJSON returns a JSON version of this Attribute.

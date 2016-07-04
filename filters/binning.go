@@ -2,8 +2,9 @@ package filters
 
 import (
 	"fmt"
-	"github.com/sjwhitworth/golearn/base"
 	"math"
+
+	"github.com/sjwhitworth/golearn/base"
 )
 
 // BinningFilter does equal-width binning for numeric
@@ -31,7 +32,7 @@ func NewBinningFilter(d base.FixedDataGrid, bins int) *BinningFilter {
 }
 
 func (b *BinningFilter) String() string {
-	return fmt.Sprintf("BinningFilter(%d Attribute(s), %d bin(s)", b.attrs, b.bins)
+	return fmt.Sprintf("BinningFilter(%d Attribute(s), %d bin(s)", len(b.attrs), b.bins)
 }
 
 // Train computes and stores the bin values
