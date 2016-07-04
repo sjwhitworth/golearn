@@ -113,7 +113,7 @@ func InferID3Tree(from base.FixedDataGrid, with RuleGenerator) *DecisionTreeNode
 
 	// Generate the splitting rule
 	splitRule := with.GenerateSplitRule(from)
-	if splitRule == nil {
+	if splitRule == nil || splitRule.SplitAttr == nil {
 		// Can't determine, just return what we have
 		return ret
 	}
