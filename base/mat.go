@@ -3,6 +3,7 @@ package base
 import (
 	"fmt"
 	"github.com/gonum/matrix/mat64"
+	"bytes"
 )
 
 type Mat64Instances struct {
@@ -17,13 +18,15 @@ func InstancesFromMat64(rows, cols int, data *mat64.Dense) *Mat64Instances {
 
 	var ret Mat64Instances
 	for i := 0; i < cols; i++ {
-		ret.attributes = append(ret.attributes, NewFloatAttribute(fmt.Sprintf("%d",
-			i)))
+		ret.attributes = append(ret.attributes, NewFloatAttribute(fmt.Sprintf("%d", i)))
 	}
 
 	ret.classAttrs = make(map[int]bool)
 	ret.Data = data
 	ret.rows = rows
+
+	ret.AddClassAttribute(ret.attributes[len(ret.attributes)-1])
+
 	return &ret
 }
 
@@ -103,7 +106,6 @@ func (m *Mat64Instances) MapOverRows(as []AttributeSpec, f func([][]byte, int) (
 		}
 	}
 	return nil
-
 }
 
 // RowString: should print the values of a row
@@ -116,3 +118,53 @@ func (m *Mat64Instances) RowString(row int) string {
 func (m *Mat64Instances) Size() (int, int) {
 	return len(m.attributes), m.rows
 }
+
+// String returns a human-readable summary of this dataset.
+func (m *Mat64Instances) String() string {
+	var buffer bytes.Buffer
+
+	// Get all Attribute information
+	as := ResolveAllAttributes(m)
+
+	// Print header
+	cols, rows := m.Size()
+	buffer.WriteString("Instances with ")
+	buffer.WriteString(fmt.Sprintf("%d row(s) ", rows))
+	buffer.WriteString(fmt.Sprintf("%d attribute(s)\n", cols))
+	buffer.WriteString(fmt.Sprintf("Attributes: \n"))
+
+	cnt := 0
+	for _, a := range as {
+		prefix := "\t"
+		if m.classAttrs[cnt] {
+			prefix = "*\t"
+		}
+		cnt++
+		buffer.WriteString(fmt.Sprintf("%s%s\n", prefix, a.attr))
+	}
+
+	buffer.WriteString("\nData:\n")
+	maxRows := 30
+	if rows < maxRows {
+		maxRows = rows
+	}
+
+	for i := 0; i < maxRows; i++ {
+		buffer.WriteString("\t")
+		for _, a := range as {
+			val := m.Get(a, i)
+			buffer.WriteString(fmt.Sprintf("%s ", a.attr.GetStringFromSysVal(val)))
+		}
+		buffer.WriteString("\n")
+	}
+
+	missingRows := rows - maxRows
+	if missingRows != 0 {
+		buffer.WriteString(fmt.Sprintf("\t...\n%d row(s) undisplayed", missingRows))
+	} else {
+		buffer.WriteString("All rows displayed")
+	}
+
+	return buffer.String()
+}
+
