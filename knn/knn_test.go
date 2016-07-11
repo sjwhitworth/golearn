@@ -8,10 +8,10 @@ import (
 
 func TestKnnClassifierWithoutOptimisations(t *testing.T) {
 	Convey("Given labels, a classifier and data", t, func() {
-		trainingData, err := base.ParseCSVToInstances("knn_train.csv", false)
+		trainingData, err := base.ParseCSVToInstances("knn_train_1.csv", false)
 		So(err, ShouldBeNil)
 
-		testingData, err := base.ParseCSVToInstances("knn_test.csv", false)
+		testingData, err := base.ParseCSVToInstances("knn_test_1.csv", false)
 		So(err, ShouldBeNil)
 
 		cls := NewKnnClassifier("euclidean", 2)
@@ -38,10 +38,10 @@ func TestKnnClassifierWithoutOptimisations(t *testing.T) {
 
 func TestKnnClassifierWithOptimisations(t *testing.T) {
 	Convey("Given labels, a classifier and data", t, func() {
-		trainingData, err := base.ParseCSVToInstances("knn_train.csv", false)
+		trainingData, err := base.ParseCSVToInstances("knn_train_1.csv", false)
 		So(err, ShouldBeNil)
 
-		testingData, err := base.ParseCSVToInstances("knn_test.csv", false)
+		testingData, err := base.ParseCSVToInstances("knn_test_1.csv", false)
 		So(err, ShouldBeNil)
 
 		cls := NewKnnClassifier("euclidean", 2)
@@ -63,5 +63,33 @@ func TestKnnClassifierWithOptimisations(t *testing.T) {
 				So(result2, ShouldEqual, "red")
 			})
 		})
+	})
+}
+
+func TestKnnClassifierWithTemplatedInstances1(t *testing.T) {
+	Convey("Given two basically identical files...", t, func() {
+		trainingData, err := base.ParseCSVToInstances("knn_train_2.csv", true)
+		So(err, ShouldBeNil)
+		testingData, err := base.ParseCSVToTemplatedInstances("knn_test_2.csv", true, trainingData)
+		So(err, ShouldBeNil)
+
+		cls := NewKnnClassifier("euclidean", 2)
+		cls.Fit(trainingData)
+		predictions := cls.Predict(testingData)
+		So(predictions, ShouldNotBeNil)
+	})
+}
+
+func TestKnnClassifierWithTemplatedInstances1Subset(t *testing.T) {
+	Convey("Given two basically identical files...", t, func() {
+		trainingData, err := base.ParseCSVToInstances("knn_train_2.csv", true)
+		So(err, ShouldBeNil)
+		testingData, err := base.ParseCSVToTemplatedInstances("knn_test_2_subset.csv", true, trainingData)
+		So(err, ShouldBeNil)
+
+		cls := NewKnnClassifier("euclidean", 2)
+		cls.Fit(trainingData)
+		predictions := cls.Predict(testingData)
+		So(predictions, ShouldNotBeNil)
 	})
 }

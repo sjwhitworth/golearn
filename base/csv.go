@@ -303,6 +303,13 @@ func ParseCSVToTemplatedInstances(filepath string, hasHeaders bool, template *De
 		return nil, err
 	}
 
+	for _, a := range template.AllClassAttributes() {
+		err = instances.AddClassAttribute(a)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return instances, nil
 }
 
