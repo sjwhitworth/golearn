@@ -8,10 +8,10 @@ import (
 
 func TestKnnClassifierWithoutOptimisations(t *testing.T) {
 	Convey("Given labels, a classifier and data", t, func() {
-		trainingData, err := base.ParseCSVToInstances("knn_train.csv", false)
+		trainingData, err := base.ParseCSVToInstances("knn_train_1.csv", false)
 		So(err, ShouldBeNil)
 
-		testingData, err := base.ParseCSVToInstances("knn_test.csv", false)
+		testingData, err := base.ParseCSVToInstances("knn_test_1.csv", false)
 		So(err, ShouldBeNil)
 
 		cls := NewKnnClassifier("euclidean", 2)
@@ -38,10 +38,10 @@ func TestKnnClassifierWithoutOptimisations(t *testing.T) {
 
 func TestKnnClassifierWithOptimisations(t *testing.T) {
 	Convey("Given labels, a classifier and data", t, func() {
-		trainingData, err := base.ParseCSVToInstances("knn_train.csv", false)
+		trainingData, err := base.ParseCSVToInstances("knn_train_1.csv", false)
 		So(err, ShouldBeNil)
 
-		testingData, err := base.ParseCSVToInstances("knn_test.csv", false)
+		testingData, err := base.ParseCSVToInstances("knn_test_1.csv", false)
 		So(err, ShouldBeNil)
 
 		cls := NewKnnClassifier("euclidean", 2)
