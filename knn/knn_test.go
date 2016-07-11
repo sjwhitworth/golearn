@@ -70,7 +70,7 @@ func TestKnnClassifierWithOptimisationsPartiallyComplete(t *testing.T) {
 	Convey("Given two basically identical files...", t, func() {
 		trainingData, err := base.ParseCSVToInstances("knn_train_2.csv", true)
 		So(err, ShouldBeNil)
-		testingData, err := base.ParseCSVToInstances("knn_test_2.csv", true)
+		testingData, err := base.ParseCSVToTemplatedInstances("knn_test_2.csv", true, trainingData)
 		So(err, ShouldBeNil)
 
 		cls := NewKnnClassifier("euclidean", 2)
