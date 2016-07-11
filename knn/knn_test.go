@@ -66,11 +66,25 @@ func TestKnnClassifierWithOptimisations(t *testing.T) {
 	})
 }
 
-func TestKnnClassifierWithOptimisationsPartiallyComplete(t *testing.T) {
+func TestKnnClassifierWithTemplatedInstances1(t *testing.T) {
 	Convey("Given two basically identical files...", t, func() {
 		trainingData, err := base.ParseCSVToInstances("knn_train_2.csv", true)
 		So(err, ShouldBeNil)
 		testingData, err := base.ParseCSVToTemplatedInstances("knn_test_2.csv", true, trainingData)
+		So(err, ShouldBeNil)
+
+		cls := NewKnnClassifier("euclidean", 2)
+		cls.Fit(trainingData)
+		predictions := cls.Predict(testingData)
+		So(predictions, ShouldNotBeNil)
+	})
+}
+
+func TestKnnClassifierWithTemplatedInstances1Subset(t *testing.T) {
+	Convey("Given two basically identical files...", t, func() {
+		trainingData, err := base.ParseCSVToInstances("knn_train_2.csv", true)
+		So(err, ShouldBeNil)
+		testingData, err := base.ParseCSVToTemplatedInstances("knn_test_2_subset.csv", true, trainingData)
 		So(err, ShouldBeNil)
 
 		cls := NewKnnClassifier("euclidean", 2)
