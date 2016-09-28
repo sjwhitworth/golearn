@@ -3,7 +3,6 @@ go:
  - 1.4
  - 1.5
  - 1.6
- - release
  - tip
 env:
  # Temporary workaround for go 1.6
