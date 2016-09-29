@@ -25,8 +25,6 @@ func InstancesFromMat64(rows, cols int, data *mat64.Dense) *Mat64Instances {
 	ret.Data = data
 	ret.rows = rows
 
-	ret.AddClassAttribute(ret.attributes[len(ret.attributes)-1])
-
 	return &ret
 }
 
