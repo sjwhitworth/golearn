@@ -1,9 +1,10 @@
 package knn
 
 import (
+	"testing"
+
 	"github.com/sjwhitworth/golearn/base"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestKnnClassifierWithoutOptimisations(t *testing.T) {
@@ -17,7 +18,8 @@ func TestKnnClassifierWithoutOptimisations(t *testing.T) {
 		cls := NewKnnClassifier("euclidean", 2)
 		cls.AllowOptimisations = false
 		cls.Fit(trainingData)
-		predictions := cls.Predict(testingData)
+		predictions, err := cls.Predict(testingData)
+		So(err, ShouldBeNil)
 		So(predictions, ShouldNotEqual, nil)
 
 		Convey("When predicting the label for our first vector", func() {
@@ -47,7 +49,8 @@ func TestKnnClassifierWithOptimisations(t *testing.T) {
 		cls := NewKnnClassifier("euclidean", 2)
 		cls.AllowOptimisations = true
 		cls.Fit(trainingData)
-		predictions := cls.Predict(testingData)
+		predictions, err := cls.Predict(testingData)
+		So(err, ShouldBeNil)
 		So(predictions, ShouldNotEqual, nil)
 
 		Convey("When predicting the label for our first vector", func() {
@@ -75,7 +78,8 @@ func TestKnnClassifierWithTemplatedInstances1(t *testing.T) {
 
 		cls := NewKnnClassifier("euclidean", 2)
 		cls.Fit(trainingData)
-		predictions := cls.Predict(testingData)
+		predictions, err := cls.Predict(testingData)
+		So(err, ShouldBeNil)
 		So(predictions, ShouldNotBeNil)
 	})
 }
@@ -89,7 +93,16 @@ func TestKnnClassifierWithTemplatedInstances1Subset(t *testing.T) {
 
 		cls := NewKnnClassifier("euclidean", 2)
 		cls.Fit(trainingData)
-		predictions := cls.Predict(testingData)
+		predictions, err := cls.Predict(testingData)
+		So(err, ShouldBeNil)
 		So(predictions, ShouldNotBeNil)
 	})
+}
+
+func TestKnnClassifierImplementsClassifier(t *testing.T) {
+	cls := NewKnnClassifier("euclidean", 2)
+	var c base.Classifier = cls
+	if len(c.String()) < 1 {
+		t.Fail()
+	}
 }

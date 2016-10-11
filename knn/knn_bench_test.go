@@ -2,9 +2,10 @@ package knn
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
-	"testing"
 )
 
 func readMnist() (*base.DenseInstances, *base.DenseInstances) {
@@ -45,7 +46,10 @@ func BenchmarkKNNWithOpts(b *testing.B) {
 	cls := NewKnnClassifier("euclidean", 1)
 	cls.AllowOptimisations = true
 	cls.Fit(train)
-	predictions := cls.Predict(test)
+	predictions, err := cls.Predict(test)
+	if err != nil {
+		b.Error(err)
+	}
 	c, err := evaluation.GetConfusionMatrix(test, predictions)
 	if err != nil {
 		panic(err)
@@ -60,7 +64,10 @@ func BenchmarkKNNWithNoOpts(b *testing.B) {
 	cls := NewKnnClassifier("euclidean", 1)
 	cls.AllowOptimisations = false
 	cls.Fit(train)
-	predictions := cls.Predict(test)
+	predictions, err := cls.Predict(test)
+	if err != nil {
+		b.Error(err)
+	}
 	c, err := evaluation.GetConfusionMatrix(test, predictions)
 	if err != nil {
 		panic(err)

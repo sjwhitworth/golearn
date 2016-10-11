@@ -55,8 +55,10 @@ func main() {
 	cls.Fit(trainData)
 
 	//Calculates the Euclidean distance and returns the most popular label
-	predictions := cls.Predict(testData)
-	fmt.Println(predictions)
+	predictions, err := cls.Predict(testData)
+	if err != nil {
+		panic(err)
+	}
 
 	// Prints precision/recall metrics
 	confusionMat, err := evaluation.GetConfusionMatrix(testData, predictions)
