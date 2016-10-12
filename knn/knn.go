@@ -4,7 +4,9 @@
 package knn
 
 import (
+	"errors"
 	"fmt"
+
 	"github.com/gonum/matrix"
 	"github.com/gonum/matrix/mat64"
 	"github.com/sjwhitworth/golearn/base"
@@ -34,8 +36,9 @@ func NewKnnClassifier(distfunc string, neighbours int) *KNNClassifier {
 }
 
 // Fit stores the training data for later
-func (KNN *KNNClassifier) Fit(trainingData base.FixedDataGrid) {
+func (KNN *KNNClassifier) Fit(trainingData base.FixedDataGrid) error {
 	KNN.TrainingData = trainingData
+	return nil
 }
 
 func (KNN *KNNClassifier) canUseOptimisations(what base.FixedDataGrid) bool {
@@ -89,7 +92,7 @@ func (KNN *KNNClassifier) canUseOptimisations(what base.FixedDataGrid) bool {
 }
 
 // Predict returns a classification for the vector, based on a vector input, using the KNN algorithm.
-func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
+func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, error) {
 	// Check what distance function we are using
 	var distanceFunc pairwise.PairwiseDistanceFunc
 	switch KNN.DistanceFunc {
@@ -98,20 +101,20 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 	case "manhattan":
 		distanceFunc = pairwise.NewManhattan()
 	default:
-		panic("unsupported distance function")
+		return nil, errors.New("unsupported distance function")
 	}
 	// Check Compatibility
 	allAttrs := base.CheckCompatible(what, KNN.TrainingData)
 	if allAttrs == nil {
 		// Don't have the same Attributes
-		return nil
+		return nil, errors.New("attributes not compatible")
 	}
 
 	// Use optimised version if permitted
 	if KNN.AllowOptimisations {
 		if KNN.DistanceFunc == "euclidean" {
 			if KNN.canUseOptimisations(what) {
-				return KNN.optimisedEuclideanPredict(what.(*base.DenseInstances))
+				return KNN.optimisedEuclideanPredict(what.(*base.DenseInstances)), nil
 			}
 		}
 	}
@@ -189,7 +192,11 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
 
 	})
 
-	return ret
+	return ret, nil
+}
+
+func (KNN *KNNClassifier) String() string {
+	return fmt.Sprintf("KNNClassifier(%s, %d)", KNN.DistanceFunc, KNN.NearestNeighbours)
 }
 
 func (KNN *KNNClassifier) vote(maxmap map[string]int, values []int) string {
