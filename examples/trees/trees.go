@@ -112,7 +112,7 @@ func main() {
 
 	// Consider two randomly-chosen attributes
 	tree = trees.NewRandomTree(2)
-	err = tree.Fit(testData)
+	err = tree.Fit(trainData)
 	if err != nil {
 		panic(err)
 	}
