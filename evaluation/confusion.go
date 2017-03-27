@@ -198,3 +198,39 @@ func GetSummary(c ConfusionMatrix) string {
 
 	return buffer.String()
 }
+
+// ShowConfusionMatrix return a human-readable version of a given
+// ConfusionMatrix.
+func ShowConfusionMatrix(c ConfusionMatrix) string {
+	var buffer bytes.Buffer
+	w := new(tabwriter.Writer)
+	w.Init(&buffer, 0, 8, 0, '\t', 0)
+
+        ref := make([]string, 0)
+        fmt.Fprintf(w, "Reference Class\t")
+        for k := range c {
+                fmt.Fprintf(w, "%s\t", k)
+                ref = append(ref, k)
+        }
+        fmt.Fprintf(w, "\n")
+
+        fmt.Fprintf(w, "---------------\t")
+        for _, v := range ref {
+          for t := 0 ; t < len(v) ; t++ {
+            fmt.Fprintf(w, "-")
+          }
+          fmt.Fprintf(w, "\t")
+        }
+        fmt.Fprintf(w, "\n")
+
+	for _, v := range ref {
+	        fmt.Fprintf(w, "%s\t", v)
+                for _, v2 := range ref {
+                  fmt.Fprintf(w, "%d\t", c[v][v2])
+                }
+                fmt.Fprintf(w, "\n")
+	}
+	w.Flush()
+
+	return buffer.String()
+}
