@@ -100,6 +100,8 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, 
 		distanceFunc = pairwise.NewEuclidean()
 	case "manhattan":
 		distanceFunc = pairwise.NewManhattan()
+	case "cosine":
+		distanceFunc = pairwise.NewCosine()
 	default:
 		return nil, errors.New("unsupported distance function")
 	}
