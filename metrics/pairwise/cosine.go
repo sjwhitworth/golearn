@@ -24,11 +24,11 @@ func (c *Cosine) Dot(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
 // Distance computes Cosine distance.
 // It will return distance which represented as 1-cos() (ranged from 0 to 2).
 func (c *Cosine) Distance(vectorX *mat64.Dense, vectorY *mat64.Dense) float64 {
-        dotXY := c.Dot(vectorX, vectorY)
-        lengthX := math.Sqrt(c.Dot(vectorX, vectorX))
-        lengthY := math.Sqrt(c.Dot(vectorY, vectorY))
+	dotXY := c.Dot(vectorX, vectorY)
+	lengthX := math.Sqrt(c.Dot(vectorX, vectorX))
+	lengthY := math.Sqrt(c.Dot(vectorY, vectorY))
 
-        cos := dotXY / (lengthX*lengthY)
+	cos := dotXY / (lengthX * lengthY)
 
-	return 1-cos
+	return 1 - cos
 }
