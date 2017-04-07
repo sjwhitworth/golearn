@@ -94,6 +94,12 @@ cd $GOPATH/src/github.com/sjwhitworth/golearn/examples/trees
 go run trees.go
 ```
 
+Docs
+====
+
+ * [English](https://github.com/sjwhitworth/golearn/wiki)
+ * [中文文档](doc/zh/Home.md)
+
 Join the team
 =============
 
