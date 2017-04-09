@@ -4,7 +4,6 @@ package linear_models
 #include "integration.h"
 #cgo CFLAGS: -O3
 #cgo CXXFLAGS: -std=c++11 -O3
-#cgo LDFLAGS: -lc++
 */
 import "C"
 import (
