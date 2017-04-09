@@ -5,8 +5,6 @@ go:
  - "1.11"
  - "1.12"
 env:
- # Temporary workaround for go 1.6
- - GODEBUG=cgocheck=0
 before_install:
  - sudo apt-get update -qq
  - sudo apt-get install -qq libatlas-base-dev
