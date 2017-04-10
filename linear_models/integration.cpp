@@ -63,7 +63,12 @@ void FreeCModel(struct model *m) {
 
 /* free's a parameter via libsvm */
 void FreeCParameter(struct parameter *p) {
-    destroy_param(p);
+    if (p->weight_label != nullptr) {
+        free(p->weight_label);
+    }
+    if (p->weight != nullptr) {
+        free(p->weight);
+    }
     delete p;
 }
 
