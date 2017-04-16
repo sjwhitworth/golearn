@@ -1,12 +1,9 @@
 package kdtree
 
-import (
-	"errors"
-)
-
 type heapNode struct {
-	value  []float64
-	length float64
+	value    []float64
+	length   float64
+	srcRowNo int
 }
 
 type heap struct {
@@ -21,12 +18,12 @@ func newHeap() *heap {
 }
 
 // maximum return the max heapNode in the heap.
-func (h *heap) maximum() (heapNode, error) {
+func (h *heap) maximum() heapNode {
 	if len(h.tree) == 0 {
-		return heapNode{}, h.errEmpty()
+		return heapNode{}
 	}
 
-	return h.tree[0], nil
+	return h.tree[0]
 }
 
 // extractMax remove the Max heapNode in the heap.
@@ -44,15 +41,14 @@ func (h *heap) extractMax() {
 		if target*2-1 >= len(h.tree) {
 			break
 		}
-		if h.tree[target*2-1].length > h.tree[target].length {
+		if h.tree[target*2-1].length > h.tree[target-1].length {
 			largest = target * 2
 		}
 
-		if target*2 >= len(h.tree) {
-			break
-		}
-		if h.tree[target*2].length > h.tree[largest-1].length {
-			largest = target*2 + 1
+		if target*2 < len(h.tree) {
+			if h.tree[target*2].length > h.tree[largest-1].length {
+				largest = target*2 + 1
+			}
 		}
 
 		if largest == target {
@@ -64,9 +60,10 @@ func (h *heap) extractMax() {
 }
 
 // insert put a new heapNode into heap.
-func (h *heap) insert(value []float64, length float64) {
+func (h *heap) insert(value []float64, length float64, srcRowNo int) {
 	node := heapNode{}
 	node.length = length
+	node.srcRowNo = srcRowNo
 	node.value = make([]float64, len(value))
 	copy(node.value, value)
 	h.tree = append(h.tree, node)
@@ -81,8 +78,6 @@ func (h *heap) insert(value []float64, length float64) {
 	}
 }
 
-// errEmpty is return an error which is returned
-// when heap is empty.
-func (h *heap) errEmpty() error {
-	return errors.New("empty heap")
+func (h *heap) size() int {
+	return len(h.tree)
 }

@@ -12,28 +12,29 @@ func TestHeap(t *testing.T) {
 	Convey("Given a heap", t, func() {
 
 		Convey("When heap is empty", func() {
-			_, err := h.maximum()
+			size := h.size()
 
-			Convey("The err should be errEmpty", func() {
-				So(err, ShouldEqual, h.errEmpty())
+			Convey("The size should be 0", func() {
+				So(size, ShouldEqual, 0)
 			})
 		})
 
-		Convey("When insert 5 nodes", func() {
-			for i := 0; i < 5; i++ {
-				h.insert([]float64{}, float64(i))
+		Convey("When insert 10 nodes", func() {
+			for i := 0; i < 10; i++ {
+				h.insert([]float64{}, float64(i), i)
 			}
-			max1, _ := h.maximum()
+			max1 := h.maximum()
 			h.extractMax()
-			max2, _ := h.maximum()
+			h.extractMax()
+			h.extractMax()
+			max2 := h.maximum()
 
-			Convey("The max1.value should be 4", func() {
-				So(max1.value, ShouldEqual, 4)
+			Convey("The max1.length should be 9", func() {
+				So(max1.length, ShouldEqual, 9)
 			})
-			Convey("The max2.value should be 3", func() {
-				So(max2.value, ShouldEqual, 3)
+			Convey("The max2.length should be 6", func() {
+				So(max2.length, ShouldEqual, 6)
 			})
-
 		})
 
 	})
