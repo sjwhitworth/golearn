@@ -105,6 +105,8 @@ func (t *Tree) buildHandle(data []int, featureIndex int) *node {
 		n.left.srcRowNo = data[divPoint+1]
 	} else if divPoint != (len(data) - 1) {
 		n.right = t.buildHandle(data[divPoint+1:], (featureIndex+1)%len(t.data[data[0]]))
+	} else {
+		n.right = &node{feature: -2}
 	}
 
 	return n
@@ -141,6 +143,8 @@ func (t *Tree) searchHandle(k int, disType pairwise.PairwiseDistanceFunc, target
 		vectorY := mat64.NewDense(len(target), 1, n.value)
 		length := disType.Distance(vectorX, vectorY)
 		h.insert(n.value, length, n.srcRowNo)
+		return
+	} else if n.feature == -2 {
 		return
 	}
 
