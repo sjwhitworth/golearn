@@ -10,26 +10,30 @@ import (
 	"github.com/gonum/matrix"
 	"github.com/gonum/matrix/mat64"
 	"github.com/sjwhitworth/golearn/base"
+	"github.com/sjwhitworth/golearn/kdtree"
 	"github.com/sjwhitworth/golearn/metrics/pairwise"
 	"github.com/sjwhitworth/golearn/utilities"
 )
 
-// A KNNClassifier consists of a data matrix, associated labels in the same order as the matrix, and a distance function.
-// The accepted distance functions at this time are 'euclidean' and 'manhattan'.
+// A KNNClassifier consists of a data matrix, associated labels in the same order as the matrix, searching algorithm, and a distance function.
+// The accepted distance functions at this time are 'euclidean', 'manhattan', and 'cosine'.
+// The accepted searching algorithm here are 'linear', and 'kdtree'.
 // Optimisations only occur when things are identically group into identical
 // AttributeGroups, which don't include the class variable, in the same order.
 type KNNClassifier struct {
 	base.BaseEstimator
 	TrainingData       base.FixedDataGrid
 	DistanceFunc       string
+	Algorithm          string
 	NearestNeighbours  int
 	AllowOptimisations bool
 }
 
 // NewKnnClassifier returns a new classifier
-func NewKnnClassifier(distfunc string, neighbours int) *KNNClassifier {
+func NewKnnClassifier(distfunc, algorithm string, neighbours int) *KNNClassifier {
 	KNN := KNNClassifier{}
 	KNN.DistanceFunc = distfunc
+	KNN.Algorithm = algorithm
 	KNN.NearestNeighbours = neighbours
 	KNN.AllowOptimisations = true
 	return &KNN
@@ -105,6 +109,12 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, 
 	default:
 		return nil, errors.New("unsupported distance function")
 	}
+
+	// Check what searching algorith, we are using
+	if KNN.Algorithm != "linear" && KNN.Algorithm != "kdtree" {
+		return nil, errors.New("unsupported searching algorithm")
+	}
+
 	// Check Compatibility
 	allAttrs := base.CheckCompatible(what, KNN.TrainingData)
 	if allAttrs == nil {
@@ -113,7 +123,7 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, 
 	}
 
 	// Use optimised version if permitted
-	if KNN.AllowOptimisations {
+	if KNN.Algorithm == "linear" && KNN.AllowOptimisations {
 		if KNN.DistanceFunc == "euclidean" {
 			if KNN.canUseOptimisations(what) {
 				return KNN.optimisedEuclideanPredict(what.(*base.DenseInstances)), nil
@@ -156,6 +166,25 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, 
 	_, maxRow := what.Size()
 	curRow := 0
 
+	// build kdtree if algorithm is 'kdtree'
+	kd := kdtree.New()
+	if KNN.Algorithm == "kdtree" {
+		buildData := make([][]float64, 0)
+		KNN.TrainingData.MapOverRows(trainAttrSpecs, func(trainRow [][]byte, srcRowNo int) (bool, error) {
+			oneData := make([]float64, len(allNumericAttrs))
+			// Read the float values out
+			for i, _ := range allNumericAttrs {
+				oneData[i] = base.UnpackBytesToFloat(trainRow[i])
+			}
+			buildData = append(buildData, oneData)
+			return true, nil
+		})
+
+		err := kd.Build(buildData)
+		if err != nil {
+			return nil, err
+		}
+	}
 	// Iterate over all outer rows
 	what.MapOverRows(whatAttrSpecs, func(predRow [][]byte, predRowNo int) (bool, error) {
 
@@ -171,25 +200,35 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, 
 
 		predMat := utilities.FloatsToMatrix(predRowBuf)
 
-		// Find the closest match in the training data
-		KNN.TrainingData.MapOverRows(trainAttrSpecs, func(trainRow [][]byte, srcRowNo int) (bool, error) {
-			// Read the float values out
-			for i, _ := range allNumericAttrs {
-				trainRowBuf[i] = base.UnpackBytesToFloat(trainRow[i])
+		switch KNN.Algorithm {
+		case "linear":
+			// Find the closest match in the training data
+			KNN.TrainingData.MapOverRows(trainAttrSpecs, func(trainRow [][]byte, srcRowNo int) (bool, error) {
+				// Read the float values out
+				for i, _ := range allNumericAttrs {
+					trainRowBuf[i] = base.UnpackBytesToFloat(trainRow[i])
+				}
+
+				// Compute the distance
+				trainMat := utilities.FloatsToMatrix(trainRowBuf)
+				distances[srcRowNo] = distanceFunc.Distance(predMat, trainMat)
+				return true, nil
+			})
+
+			sorted := utilities.SortIntMap(distances)
+			values := sorted[:KNN.NearestNeighbours]
+			maxClass := KNN.vote(maxmap, values)
+			base.SetClass(ret, predRowNo, maxClass)
+
+		case "kdtree":
+			values, err := kd.Search(KNN.NearestNeighbours, distanceFunc, predRowBuf)
+			if err != nil {
+				return false, err
 			}
+			maxClass := KNN.vote(maxmap, values)
+			base.SetClass(ret, predRowNo, maxClass)
+		}
 
-			// Compute the distance
-			trainMat := utilities.FloatsToMatrix(trainRowBuf)
-			distances[srcRowNo] = distanceFunc.Distance(predMat, trainMat)
-			return true, nil
-		})
-
-		sorted := utilities.SortIntMap(distances)
-		values := sorted[:KNN.NearestNeighbours]
-
-		maxClass := KNN.vote(maxmap, values)
-
-		base.SetClass(ret, predRowNo, maxClass)
 		return true, nil
 
 	})

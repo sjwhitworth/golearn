@@ -43,7 +43,7 @@ func readMnist() (*base.DenseInstances, *base.DenseInstances) {
 func BenchmarkKNNWithOpts(b *testing.B) {
 	// Load
 	train, test := readMnist()
-	cls := NewKnnClassifier("euclidean", 1)
+	cls := NewKnnClassifier("euclidean", "linear", 1)
 	cls.AllowOptimisations = true
 	cls.Fit(train)
 	predictions, err := cls.Predict(test)
@@ -61,7 +61,7 @@ func BenchmarkKNNWithOpts(b *testing.B) {
 func BenchmarkKNNWithNoOpts(b *testing.B) {
 	// Load
 	train, test := readMnist()
-	cls := NewKnnClassifier("euclidean", 1)
+	cls := NewKnnClassifier("euclidean", "linear", 1)
 	cls.AllowOptimisations = false
 	cls.Fit(train)
 	predictions, err := cls.Predict(test)
