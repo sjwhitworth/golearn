@@ -159,22 +159,22 @@ func (t *Tree) searchHandle(k int, disType pairwise.PairwiseDistanceFunc, target
 	if k > h.size() {
 		h.insert(n.value, length, n.srcRowNo)
 		if dir {
-			t.searchAllNode(k, disType, target, h, n.right)
+			t.searchAllNodes(k, disType, target, h, n.right)
 		} else {
-			t.searchAllNode(k, disType, target, h, n.left)
+			t.searchAllNodes(k, disType, target, h, n.left)
 		}
 	} else if h.maximum().length > length {
 		h.extractMax()
 		h.insert(n.value, length, n.srcRowNo)
 		if dir {
-			t.searchAllNode(k, disType, target, h, n.right)
+			t.searchAllNodes(k, disType, target, h, n.right)
 		} else {
-			t.searchAllNode(k, disType, target, h, n.left)
+			t.searchAllNodes(k, disType, target, h, n.left)
 		}
 	}
 }
 
-func (t *Tree) searchAllNode(k int, disType pairwise.PairwiseDistanceFunc, target []float64, h *heap, n *node) {
+func (t *Tree) searchAllNodes(k int, disType pairwise.PairwiseDistanceFunc, target []float64, h *heap, n *node) {
 	vectorX := mat64.NewDense(len(target), 1, target)
 	vectorY := mat64.NewDense(len(target), 1, n.value)
 	length := disType.Distance(vectorX, vectorY)
@@ -187,9 +187,9 @@ func (t *Tree) searchAllNode(k int, disType pairwise.PairwiseDistanceFunc, targe
 	}
 
 	if n.left != nil {
-		t.searchAllNode(k, disType, target, h, n.left)
+		t.searchAllNodes(k, disType, target, h, n.left)
 	}
 	if n.right != nil {
-		t.searchAllNode(k, disType, target, h, n.right)
+		t.searchAllNodes(k, disType, target, h, n.right)
 	}
 }
