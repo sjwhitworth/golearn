@@ -16,7 +16,7 @@ func TestKdtree(t *testing.T) {
 		euclidean := pairwise.NewEuclidean()
 
 		Convey("When k is 3 with euclidean", func() {
-			result, _ := kd.Search(3, euclidean, []float64{7, 3})
+			result, _, _ := kd.Search(3, euclidean, []float64{7, 3})
 
 			Convey("The result[0] should be 4", func() {
 				So(result[0], ShouldEqual, 4)
@@ -30,7 +30,7 @@ func TestKdtree(t *testing.T) {
 		})
 
 		Convey("When k is 2 with euclidean", func() {
-			result, _ := kd.Search(2, euclidean, []float64{7, 3})
+			result, _, _ := kd.Search(2, euclidean, []float64{7, 3})
 
 			Convey("The result[0] should be 4", func() {
 				So(result[0], ShouldEqual, 4)
