@@ -7,7 +7,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestKnnClassifierWithoutOptimisations(t *testing.T) {
+func TestWeightedKnnClassifierWithoutOptimisationsWithKdtree(t *testing.T) {
 	Convey("Given labels, a classifier and data", t, func() {
 		trainingData, err := base.ParseCSVToInstances("knn_train_1.csv", false)
 		So(err, ShouldBeNil)
@@ -15,7 +15,8 @@ func TestKnnClassifierWithoutOptimisations(t *testing.T) {
 		testingData, err := base.ParseCSVToInstances("knn_test_1.csv", false)
 		So(err, ShouldBeNil)
 
-		cls := NewKnnClassifier("euclidean", "linear", 2)
+		cls := NewKnnClassifier("euclidean", "kdtree", 2)
+		cls.Weighted = true
 		cls.AllowOptimisations = false
 		cls.Fit(trainingData)
 		predictions, err := cls.Predict(testingData)
@@ -38,7 +39,48 @@ func TestKnnClassifierWithoutOptimisations(t *testing.T) {
 	})
 }
 
-func TestKnnClassifierWithOptimisations(t *testing.T) {
+func TestWeightedKnnClassifierWithTemplatedInstances1WithKdtree(t *testing.T) {
+	Convey("Given two basically identical files...", t, func() {
+		trainingData, err := base.ParseCSVToInstances("knn_train_2.csv", true)
+		So(err, ShouldBeNil)
+		testingData, err := base.ParseCSVToTemplatedInstances("knn_test_2.csv", true, trainingData)
+		So(err, ShouldBeNil)
+
+		cls := NewKnnClassifier("euclidean", "kdtree", 2)
+		cls.Weighted = true
+		cls.Fit(trainingData)
+		predictions, err := cls.Predict(testingData)
+		So(err, ShouldBeNil)
+		So(predictions, ShouldNotBeNil)
+	})
+}
+
+func TestWeightedKnnClassifierWithTemplatedInstances1SubsetWithKdtree(t *testing.T) {
+	Convey("Given two basically identical files...", t, func() {
+		trainingData, err := base.ParseCSVToInstances("knn_train_2.csv", true)
+		So(err, ShouldBeNil)
+		testingData, err := base.ParseCSVToTemplatedInstances("knn_test_2_subset.csv", true, trainingData)
+		So(err, ShouldBeNil)
+
+		cls := NewKnnClassifier("euclidean", "kdtree", 2)
+		cls.Weighted = true
+		cls.Fit(trainingData)
+		predictions, err := cls.Predict(testingData)
+		So(err, ShouldBeNil)
+		So(predictions, ShouldNotBeNil)
+	})
+}
+
+func TestWeightedKnnClassifierImplementsClassifierWithKdtree(t *testing.T) {
+	cls := NewKnnClassifier("euclidean", "kdtree", 2)
+	cls.Weighted = true
+	var c base.Classifier = cls
+	if len(c.String()) < 1 {
+		t.Fail()
+	}
+}
+
+func TestWeightedKnnClassifierWithoutOptimisations(t *testing.T) {
 	Convey("Given labels, a classifier and data", t, func() {
 		trainingData, err := base.ParseCSVToInstances("knn_train_1.csv", false)
 		So(err, ShouldBeNil)
@@ -47,7 +89,8 @@ func TestKnnClassifierWithOptimisations(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		cls := NewKnnClassifier("euclidean", "linear", 2)
-		cls.AllowOptimisations = true
+		cls.Weighted = true
+		cls.AllowOptimisations = false
 		cls.Fit(trainingData)
 		predictions, err := cls.Predict(testingData)
 		So(err, ShouldBeNil)
@@ -69,7 +112,7 @@ func TestKnnClassifierWithOptimisations(t *testing.T) {
 	})
 }
 
-func TestKnnClassifierWithTemplatedInstances1(t *testing.T) {
+func TestWeightedKnnClassifierWithTemplatedInstances1(t *testing.T) {
 	Convey("Given two basically identical files...", t, func() {
 		trainingData, err := base.ParseCSVToInstances("knn_train_2.csv", true)
 		So(err, ShouldBeNil)
@@ -77,6 +120,7 @@ func TestKnnClassifierWithTemplatedInstances1(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		cls := NewKnnClassifier("euclidean", "linear", 2)
+		cls.Weighted = true
 		cls.Fit(trainingData)
 		predictions, err := cls.Predict(testingData)
 		So(err, ShouldBeNil)
@@ -84,7 +128,7 @@ func TestKnnClassifierWithTemplatedInstances1(t *testing.T) {
 	})
 }
 
-func TestKnnClassifierWithTemplatedInstances1Subset(t *testing.T) {
+func TestWeightedKnnClassifierWithTemplatedInstances1Subset(t *testing.T) {
 	Convey("Given two basically identical files...", t, func() {
 		trainingData, err := base.ParseCSVToInstances("knn_train_2.csv", true)
 		So(err, ShouldBeNil)
@@ -92,6 +136,7 @@ func TestKnnClassifierWithTemplatedInstances1Subset(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		cls := NewKnnClassifier("euclidean", "linear", 2)
+		cls.Weighted = true
 		cls.Fit(trainingData)
 		predictions, err := cls.Predict(testingData)
 		So(err, ShouldBeNil)
@@ -99,8 +144,9 @@ func TestKnnClassifierWithTemplatedInstances1Subset(t *testing.T) {
 	})
 }
 
-func TestKnnClassifierImplementsClassifier(t *testing.T) {
+func TestWeightedKnnClassifierImplementsClassifier(t *testing.T) {
 	cls := NewKnnClassifier("euclidean", "linear", 2)
+	cls.Weighted = true
 	var c base.Classifier = cls
 	if len(c.String()) < 1 {
 		t.Fail()

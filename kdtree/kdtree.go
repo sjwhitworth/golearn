@@ -176,6 +176,18 @@ func (t *Tree) searchHandle(k int, disType pairwise.PairwiseDistanceFunc, target
 		} else {
 			t.searchAllNodes(k, disType, target, h, n.left)
 		}
+	} else {
+		vectorX = mat64.NewDense(1, 1, []float64{target[n.feature]})
+		vectorY = mat64.NewDense(1, 1, []float64{n.value[n.feature]})
+		length = disType.Distance(vectorX, vectorY)
+
+		if h.maximum().length > length {
+			if dir {
+				t.searchAllNodes(k, disType, target, h, n.right)
+			} else {
+				t.searchAllNodes(k, disType, target, h, n.left)
+			}
+		}
 	}
 }
 
