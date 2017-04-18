@@ -172,6 +172,7 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, 
 
 	// build kdtree if algorithm is 'kdtree'
 	kd := kdtree.New()
+	srcRowNoMap := make([]int, 0)
 	if KNN.Algorithm == "kdtree" {
 		buildData := make([][]float64, 0)
 		KNN.TrainingData.MapOverRows(trainAttrSpecs, func(trainRow [][]byte, srcRowNo int) (bool, error) {
@@ -180,6 +181,7 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, 
 			for i, _ := range allNumericAttrs {
 				oneData[i] = base.UnpackBytesToFloat(trainRow[i])
 			}
+			srcRowNoMap = append(srcRowNoMap, srcRowNo)
 			buildData = append(buildData, oneData)
 			return true, nil
 		})
@@ -237,9 +239,15 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, 
 			base.SetClass(ret, predRowNo, maxClass)
 
 		case "kdtree":
+			// search kdtree
 			values, length, err := kd.Search(KNN.NearestNeighbours, distanceFunc, predRowBuf)
 			if err != nil {
 				return false, err
+			}
+
+			// map values to srcRowNo
+			for k, v := range values {
+				values[k] = srcRowNoMap[v]
 			}
 
 			var maxClass string
