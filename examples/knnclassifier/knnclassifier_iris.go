@@ -15,7 +15,7 @@ func main() {
 	}
 
 	//Initialises a new KNN classifier
-	cls := knn.NewKnnClassifier("euclidean", "linear", 2)
+	cls := knn.NewKnnClassifier("euclidean", 2)
 
 	//Do a training-test split
 	trainData, testData := base.InstancesTrainTestSplit(rawData, 0.50)
