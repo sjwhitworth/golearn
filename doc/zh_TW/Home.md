@@ -5,7 +5,7 @@ GoLearn
 [![GoDoc](https://godoc.org/github.com/sjwhitworth/golearn?status.png)](https://godoc.org/github.com/sjwhitworth/golearn)
 [![Build Status](https://travis-ci.org/sjwhitworth/golearn.png?branch=master)](https://travis-ci.org/sjwhitworth/golearn)<br>
 
-歡迎閱讀 GoLearn 中文文檔。 GoLearn 是一個 "開箱及用" 的 Go 語言機器學習函式庫。
+歡迎閱讀 GoLearn 中文文檔。 GoLearn 是一個 "開箱即用" 的 Go 語言機器學習函式庫。
 
 [安装](Installation.md) |
 [讀入數據](Instances.md) [注意: 非最新版] | 
