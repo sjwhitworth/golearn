@@ -7,6 +7,7 @@ import (
 
 	"fmt"
 	_ "github.com/gonum/blas"
+	"github.com/gonum/blas/cblas"
 	"github.com/gonum/matrix/mat64"
 )
 
@@ -21,6 +22,10 @@ type LinearRegression struct {
 	regressionCoefficients []float64
 	attrs                  []base.Attribute
 	cls                    base.Attribute
+}
+
+func init() {
+	mat64.Register(cblas.Blas{})
 }
 
 func NewLinearRegression() *LinearRegression {
