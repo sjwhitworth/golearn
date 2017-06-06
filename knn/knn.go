@@ -196,7 +196,7 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, 
 	what.MapOverRows(whatAttrSpecs, func(predRow [][]byte, predRowNo int) (bool, error) {
 
 		if (curRow%1) == 0 && curRow > 0 {
-			fmt.Printf("KNN: %.2f %% done\n", float64(curRow)*100.0/float64(maxRow))
+			fmt.Printf("KNN: %.2f %% done\r", float64(curRow)*100.0/float64(maxRow))
 		}
 		curRow++
 
