@@ -98,7 +98,8 @@ Docs
 ====
 
  * [English](https://github.com/sjwhitworth/golearn/wiki)
- * [中文文档](doc/zh/Home.md)
+ * [中文文档(简体)](doc/zh_CN/Home.md)
+ * [中文文档(繁体)](doc/zh_TW/Home.md)
 
 Join the team
 =============
