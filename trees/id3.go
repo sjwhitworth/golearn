@@ -311,7 +311,7 @@ func (t *ID3DecisionTree) PredictProba(what base.FixedDataGrid) (ClassesProba, e
 					totalDist += dist
 				}
 				for class,dist:= range cur.ClassDist {
-					classProba := ClassProba{classValue:class, probability: float64(dist/totalDist)}
+					classProba := ClassProba{classValue:class, probability: float64(float64(dist)/float64(totalDist))}
 					results = append(results,classProba)
 				}
 				sort.Sort(results)
