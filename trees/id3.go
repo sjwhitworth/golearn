@@ -278,8 +278,8 @@ func (d *DecisionTreeNode) Predict(what base.FixedDataGrid) (base.FixedDataGrid,
 }
 
 type ClassProba struct {
-	probability float64
-	classValue string
+	Probability float64
+	ClassValue  string
 }
 
 type ClassesProba []ClassProba
@@ -291,7 +291,7 @@ func (o ClassesProba) Swap(i, j int) {
 	o[i], o[j] = o[j], o[i]
 }
 func (o ClassesProba) Less(i, j int) bool {
-	return o[i].probability < o[j].probability
+	return o[i].Probability < o[j].Probability
 }
 
 // Predict class probabilities of the input samples what, returns a sorted array (by probability) of classes, and another array representing it's probabilities
@@ -301,6 +301,10 @@ func (t *ID3DecisionTree) PredictProba(what base.FixedDataGrid) (ClassesProba, e
 	predAttrs := base.AttributeDifferenceReferences(what.AllAttributes(), predictions.AllClassAttributes())
 	predAttrSpecs := base.ResolveAttributes(what, predAttrs)
 
+	_, rowCount := what.Size()
+	if rowCount > 1 {
+		panic("PredictProba supports only 1 row predictions")
+	}
 	var results ClassesProba
 	what.MapOverRows(predAttrSpecs, func(row [][]byte, rowNo int) (bool, error) {
 		cur := d
@@ -311,7 +315,7 @@ func (t *ID3DecisionTree) PredictProba(what base.FixedDataGrid) (ClassesProba, e
 					totalDist += dist
 				}
 				for class,dist:= range cur.ClassDist {
-					classProba := ClassProba{classValue:class, probability: float64(float64(dist)/float64(totalDist))}
+					classProba := ClassProba{ClassValue:class, Probability: float64(float64(dist)/float64(totalDist))}
 					results = append(results,classProba)
 				}
 				sort.Sort(results)
