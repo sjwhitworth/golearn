@@ -291,7 +291,7 @@ func (o ClassesProba) Swap(i, j int) {
 	o[i], o[j] = o[j], o[i]
 }
 func (o ClassesProba) Less(i, j int) bool {
-	return o[i].Probability < o[j].Probability
+	return o[i].Probability > o[j].Probability
 }
 
 // Predict class probabilities of the input samples what, returns a sorted array (by probability) of classes, and another array representing it's probabilities
