@@ -268,6 +268,205 @@ func DeserializeInstances(f io.Reader) (ret *DenseInstances, err error) {
 	return ret, nil
 }
 
+// ClassifierMetadataV1 is what gets written into METADATA
+// in a classification file format.
+type ClassifierMetadataV1 struct {
+	// FormatVersion should always be 1 for this structure
+	FormatVersion int `json:"format_version"`
+	// Uses the classifier name (provided by the classifier)
+	ClassifierName string `json:"classifier"`
+	// ClassifierVersion is also provided by the classifier
+	// and checks whether this version of GoLearn can read what's
+	// be written.
+	ClassifierVersion string `json"classifier_version"`
+	// This is a custom metadata field, provided by the classifier
+	ClassifierMetadata map[string]interface{} `json:"classifier_metadata"`
+}
+
+type ClassifierDeserializer struct {
+	gzipReader io.Reader
+	fileReader io.Reader
+	tarReader  *tar.Reader
+	Metadata   *ClassifierMetadataV1
+}
+
+// ReadSerializedClassifierStub is the counterpart of CreateSerializedClassifierStub
+func ReadSerializedClassifierStub(filePath string) (*ClassifierDeserializer, error) {
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("Can't open file: %s", err)
+	}
+
+	gzr, err := gzip.NewReader(f)
+	if err != nil {
+		return nil, fmt.Errorf("Can't decompress file: %s", err)
+	}
+
+	tz := tar.NewReader(gzr)
+
+	// Check that the serialization format is right
+	// Retrieve the MANIFEST and verify
+	manifestBytes := getTarContent(tz, "MANIFEST")
+	if !reflect.DeepEqual(manifestBytes, []byte(SerializationFormatVersion)) {
+		return nil, fmt.Errorf("Unsupported MANIFEST: %s", string(manifestBytes))
+	}
+
+	//
+	// Parse METADATA
+	//
+	metadataBytes := getTarContent(tz, "METADATA")
+	var metadata ClassifierMetadataV1
+	err = json.Unmarshal(metadataBytes, &metadata)
+	if err != nil {
+		return nil, fmt.Errorf("Error whilst reading METADATA: %s", err)
+	}
+
+	// Check that we can understand this archive
+	if metadata.FormatVersion != 1 {
+		return nil, fmt.Errorf("METADATA: wrong format_version for this version of golearn")
+	}
+
+	ret := &ClassifierDeserializer{
+		f,
+		gzr,
+		tz,
+		&metadata,
+	}
+
+	return ret, nil
+}
+
+func (c *ClassifierDeserializer) GetBytesForKey(key string) ([]byte, error) {
+	return getTarContent(c.tarReader, key), nil
+}
+
+type ClassifierSerializer struct {
+	gzipWriter *gzip.Writer
+	fileWriter io.Writer
+	tarWriter  *tar.Writer
+}
+
+// Close finalizes the Classifier serialization session
+func (c *ClassifierSerializer) Close() error {
+
+	// Finally, close and flush the various levels
+	if err := c.tarWriter.Flush(); err != nil {
+		return fmt.Errorf("Could not flush tar: %s", err)
+	}
+
+	if err := c.tarWriter.Close(); err != nil {
+		return fmt.Errorf("Could not close tar: %s", err)
+	}
+
+	if err := c.gzipWriter.Flush(); err != nil {
+		return fmt.Errorf("Could not flush gz: %s", err)
+	}
+
+	if err := c.gzipWriter.Close(); err != nil {
+		return fmt.Errorf("Could not close gz: %s", err)
+	}
+
+	//if err := c.fileWriter.Flush(); err != nil {
+	//	return fmt.Errorf("Could not flush file: %s", err)
+	//}
+
+	//if err := c.fileWriter.Flush(); err != nil {
+	//	return fmt.Errorf("Could not close file: %s", err)
+	//}
+
+	return nil
+}
+
+// WriteBytesForKey creates a new entry in the serializer file
+func (c *ClassifierSerializer) WriteBytesForKey(key string, b []byte) error {
+
+	//
+	// Write header for key
+	//
+	hdr := &tar.Header{
+		Name: key,
+		Size: int64(len(b)),
+	}
+
+	if err := c.tarWriter.WriteHeader(hdr); err != nil {
+		return fmt.Errorf("Could not write header for '%s': %s", err)
+	}
+	//
+	// Write data
+	//
+	if _, err := c.tarWriter.Write(b); err != nil {
+		return fmt.Errorf("Could not write data for '%s': %s", err)
+	}
+
+	return nil
+}
+
+// CreateSerializedClassifierStub generates a file to serialize into
+// and writes the METADATA header.
+func CreateSerializedClassifierStub(filePath string, metadata ClassifierMetadataV1) (*ClassifierSerializer, error) {
+
+	// Open the filePath
+	f, err := os.OpenFile(filePath, os.O_RDWR | os.O_TRUNC, 0600)
+	if err != nil {
+		return nil, nil
+	}
+
+	var hdr *tar.Header
+	gzWriter := gzip.NewWriter(f)
+	tw := tar.NewWriter(gzWriter)
+
+	ret := &ClassifierSerializer{
+		gzipWriter: gzWriter,
+		fileWriter: f,
+		tarWriter: tw,
+	}
+
+	//
+	// Write the MANIFEST entry
+	//
+	hdr = &tar.Header{
+		Name: "MANIFEST",
+		Size: int64(len(SerializationFormatVersion)),
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		return nil, fmt.Errorf("Could not write MANIFEST header: %s", err)
+	}
+
+	if _, err := tw.Write([]byte(SerializationFormatVersion)); err != nil {
+		return nil, fmt.Errorf("Could not write MANIFEST contents: %s", err)
+	}
+
+	//
+	// Write the METADATA entry
+	//
+
+	// Marshal the classifier information
+	cB, err := json.Marshal(metadata)
+	if err != nil {
+		return nil, err
+	}
+	if len(cB) == 0 {
+		return nil, fmt.Errorf("JSON marshal error: %s", err)
+	}
+
+	// Write the information into the file
+	hdr = &tar.Header{
+		Name: "METADATA",
+		Size: int64(len(cB)),
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		return nil, fmt.Errorf("Could not write METADATA object %s", err)
+	}
+
+	if _, err := tw.Write(cB); err != nil {
+		return nil, fmt.Errorf("Could not write METDATA contents: %s", err)
+	}
+
+	return ret, nil
+
+}
+
 func SerializeInstances(inst FixedDataGrid, f io.Writer) error {
 	var hdr *tar.Header
 
