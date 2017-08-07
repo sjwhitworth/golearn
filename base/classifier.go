@@ -18,6 +18,14 @@ type Classifier interface {
 	String() string
 }
 
+type SaveableClassifier interface {
+
+	// Save the classifier to a file
+	Save(string) error
+	// Read recreates the classifier from a file
+	Load(string) error
+}
+
 // BaseClassifier stores options common to every classifier.
 type BaseClassifier struct {
 	TrainingData *DataGrid
