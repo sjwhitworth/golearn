@@ -7,7 +7,49 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"math/rand"
 	"testing"
+	"io/ioutil"
+	"fmt"
 )
+
+func TestCanSaveLoadPredictions(t *testing.T) {
+	rand.Seed(44414515)
+	Convey("Using InferID3Tree to create the tree and do the fitting", t, func() {
+		instances, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+		So(err, ShouldBeNil)
+
+		trainData, testData := base.InstancesTrainTestSplit(instances, 0.6)
+
+		Convey("Using a RandomTreeRule", func() {
+			randomTreeRuleGenerator := new(RandomTreeRuleGenerator)
+			randomTreeRuleGenerator.Attributes = 2
+			root := InferID3Tree(trainData, randomTreeRuleGenerator)
+
+			Convey("Predicting with the tree...", func() {
+				predictions, err := root.Predict(testData)
+				So(err, ShouldBeNil)
+
+				Convey("Saving the tree...", func() {
+					f, err := ioutil.TempFile("","tree")
+					So(err, ShouldBeNil)
+					err = root.Save(f.Name())
+					So(err, ShouldBeNil)
+
+					Convey("Loading the tree...", func(){
+						d := &DecisionTreeNode{}
+						err := d.Load(f.Name())
+						So(err, ShouldBeNil)
+						So(d.String(), ShouldEqual, root.String())
+						Convey("Generating predictions from the loaded tree...", func() {
+							predictions2, err := d.Predict(testData)
+							So(err, ShouldBeNil)
+							So(fmt.Sprintf("%v", predictions2), ShouldEqual, fmt.Sprintf("%v", predictions))
+						})
+					})
+				})
+			})
+		})
+	})
+}
 
 func verifyTreeClassification(trainData, testData base.FixedDataGrid) {
 	rand.Seed(44414515)

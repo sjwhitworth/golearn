@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
+	"encoding/json"
 	"sort"
+	"log"
 )
 
 // NodeType determines whether a DecisionTreeNode is a leaf or not.
@@ -26,12 +28,67 @@ type RuleGenerator interface {
 
 // DecisionTreeRule represents the "decision" in "decision tree".
 type DecisionTreeRule struct {
-	SplitAttr base.Attribute
-	SplitVal  float64
+	SplitAttr base.Attribute    `json:"split_attribute"`
+	SplitVal  float64           `json:"split_val"`
+}
+
+func (d *DecisionTreeRule) MarshalJSON() ([]byte, error) {
+	ret := make(map[string]interface{})
+	marshaledSplitAttrRaw, err := d.SplitAttr.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	marshaledSplitAttr := make(map[string]interface{})
+	err = json.Unmarshal(marshaledSplitAttrRaw, &marshaledSplitAttr)
+	if err != nil {
+		panic(err)
+	}
+	ret["split_attribute"] = marshaledSplitAttr
+	ret["split_val"] = d.SplitVal
+	return json.Marshal(ret)
+}
+
+func (d *DecisionTreeRule) unmarshalJSON(data []byte) error {
+
+	var jsonMap map[string]interface{}
+	err := json.Unmarshal(data, &jsonMap)
+	if err != nil {
+		return err
+	}
+	if splitVal, ok := jsonMap["split_val"]; ok {
+		d.SplitVal = splitVal.(float64)
+	}
+	split := jsonMap["split_attribute"]
+	log.Printf("DecisionTreeRule/UnmarshalJSON: %v", split)
+	splitBytes, err := json.Marshal(split)
+	if err != nil {
+		panic(err)
+	}
+	d.SplitAttr, err = base.DeserializeAttribute(splitBytes)
+	if err != nil {
+		return err
+	}
+	if d.SplitAttr == nil {
+		panic("Should not be nil")
+		return fmt.Errorf("base.DeserializeAttribute returned nil")
+	}
+	return nil
+}
+
+func (d *DecisionTreeRule) UnmarshalJSON(data []byte) error {
+	log.Printf("DecisionTreeRule/UnmarshalJSON: input is %s", data)
+	ret := d.unmarshalJSON(data)
+	log.Printf("DecisionTreeRule/UnmarshalJSON: output is %s, self = %s", ret, d.String())
+	return ret
 }
 
 // String prints a human-readable summary of this thing.
 func (d *DecisionTreeRule) String() string {
+
+	if (d.SplitAttr == nil) {
+		return fmt.Sprintf("INVALID:DecisionTreeRule(SplitAttr is nil)")
+	}
+
 	if _, ok := d.SplitAttr.(*base.FloatAttribute); ok {
 		return fmt.Sprintf("DecisionTreeRule(%s <= %f)", d.SplitAttr.GetName(), d.SplitVal)
 	}
@@ -40,17 +97,194 @@ func (d *DecisionTreeRule) String() string {
 
 // DecisionTreeNode represents a given portion of a decision tree.
 type DecisionTreeNode struct {
-	Type      NodeType
-	Children  map[string]*DecisionTreeNode
-	ClassDist map[string]int
-	Class     string
-	ClassAttr base.Attribute
-	SplitRule *DecisionTreeRule
+	Type      NodeType						`json:"node_type"`
+	Children  map[string]*DecisionTreeNode  `json:"children"`
+	ClassDist map[string]int                `json:"class_dist"`
+	Class     string                        `json:"class_string"`
+	ClassAttr base.Attribute                `json:"class_attribute"`
+	SplitRule *DecisionTreeRule             `json:"decision_tree_rule"`
 }
 
 func getClassAttr(from base.FixedDataGrid) base.Attribute {
 	allClassAttrs := from.AllClassAttributes()
 	return allClassAttrs[0]
+}
+
+// MarshalJSON returns a JSON representation of this Attribute
+// for serialisation.
+func (d *DecisionTreeNode) MarshalJSON() ([]byte, error) {
+	ret := map[string]interface{}{
+		"type": d.Type,
+		"class_dist": d.ClassDist,
+		"class": d.Class,
+	}
+
+	if d.SplitRule != nil && d.SplitRule.SplitAttr != nil {
+		rawDRule, err := d.SplitRule.MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		var dRule map[string]interface{}
+		err = json.Unmarshal(rawDRule, &dRule)
+		if err != nil {
+			panic(err)
+		}
+		ret["split_rule"] = dRule
+	}
+
+	rawClassAttr, err := d.ClassAttr.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	var classAttr map[string]interface{}
+	err = json.Unmarshal(rawClassAttr, &classAttr)
+	ret["class_attr"] = classAttr
+
+	if len(d.Children) > 0 {
+
+		children := make(map[string]interface{})
+		for k := range d.Children {
+			cur, err := d.Children[k].MarshalJSON()
+			if err != nil {
+				return nil, err
+			}
+			var child map[string]interface{}
+			err = json.Unmarshal(cur, &child)
+			if err != nil {
+				panic(err)
+			}
+			children[k] = child
+		}
+		ret["children"] = children
+	}
+	return json.Marshal(ret)
+}
+
+// UnmarshalJSON reads a JSON representation of this Attribute.
+func (d *DecisionTreeNode) UnmarshalJSON(data []byte) error {
+	log.Printf("Input JSON: %s", string(data))
+	jsonMap := make(map[string]interface{})
+	err := json.Unmarshal(data, &jsonMap)
+	if err != nil {
+		return err
+	}
+	rawType := int(jsonMap["type"].(float64))
+	if rawType == 1 {
+		d.Type = LeafNode
+	} else if rawType == 2 {
+		d.Type = RuleNode
+	} else {
+		return fmt.Errorf("Unknown nodeType: %d", rawType)
+	}
+	//d.Type = NodeType(int(jsonMap["type"].(float64)))
+	// Convert the class distribution back
+	classDist := jsonMap["class_dist"].(map[string]interface{})
+	d.ClassDist = make(map[string]int)
+	for k := range classDist {
+		d.ClassDist[k] = int(classDist[k].(float64))
+	}
+
+	d.Class = jsonMap["class"].(string)
+
+	//
+	// Decode the class attribute
+	//
+	// Temporarily re-marshal this field back to bytes
+	rawClassAttr := jsonMap["class_attr"]
+	rawClassAttrBytes, err := json.Marshal(rawClassAttr)
+	if err != nil {
+		return err
+	}
+
+	classAttr, err := base.DeserializeAttribute(rawClassAttrBytes)
+	if err != nil {
+		return err
+	}
+	d.ClassAttr = classAttr
+	d.SplitRule = nil
+
+	log.Printf("Before adding children: %s", d.String())
+
+
+	if splitRule, ok := jsonMap["split_rule"]; ok {
+		d.SplitRule = &DecisionTreeRule{}
+		splitRuleBytes, err := json.Marshal(splitRule)
+		if err != nil {
+			panic(err)
+		}
+		err = d.SplitRule.UnmarshalJSON(splitRuleBytes)
+		if err != nil {
+			return err
+		}
+
+		d.Children = make(map[string]*DecisionTreeNode)
+		childMap := jsonMap["children"].(map[string]interface{})
+		for i := range childMap {
+			cur := &DecisionTreeNode{}
+			childBytes, err := json.Marshal(childMap[i])
+			if err != nil {
+				panic(err)
+			}
+			err = cur.UnmarshalJSON(childBytes)
+			if err != nil {
+				return err
+			}
+			d.Children[i] = cur
+		}
+
+	}
+
+	log.Printf("After adding children: %s", d.String())
+	return nil
+}
+
+// Save sends the classification tree to an output file
+func (d *DecisionTreeNode) Save(filePath string) error {
+	metadata := base.ClassifierMetadataV1 {
+		FormatVersion: 1,
+		ClassifierName: "test",
+		ClassifierVersion: "1",
+		ClassifierMetadata: nil,
+	}
+	serializer, err := base.CreateSerializedClassifierStub(filePath, metadata)
+	if err != nil {
+		return err
+	}
+	b, err := json.Marshal(d)
+	if err != nil {
+		return err
+	}
+	err = serializer.WriteBytesForKey("tree", b)
+	if err != nil {
+		return err
+	}
+	serializer.Close()
+	return nil
+}
+
+// Load reads from the classifier from an output file
+func (d *DecisionTreeNode) Load(filePath string) error {
+
+	reader, err := base.ReadSerializedClassifierStub(filePath)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		reader.Close()
+	}()
+
+	b, err := reader.GetBytesForKey("tree")
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(b, d)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // InferID3Tree builds a decision tree using a RuleGenerator

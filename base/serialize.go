@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"runtime"
+	"log"
 )
 
 const (
@@ -128,47 +129,61 @@ func getTarContent(tr *tar.Reader, name string) []byte {
 	panic("File not found!")
 }
 
-func deserializeAttributes(data []byte) []Attribute {
 
-	// Define a JSON shim Attribute
+func DeserializeAttribute(data []byte) (Attribute, error) {
 	type JSONAttribute struct {
 		Type string          `json:"type"`
 		Name string          `json:"name"`
 		Attr json.RawMessage `json:"attr"`
 	}
 
-	var ret []Attribute
-	var attrs []JSONAttribute
-
-	err := json.Unmarshal(data, &attrs)
+	log.Printf("DeserializeAttribute = %s", data)
+	var rawAttr JSONAttribute
+	err := json.Unmarshal(data, &rawAttr)
 	if err != nil {
-		panic(fmt.Errorf("Attribute decode error: %s", err))
+		return nil, err
+	}
+	var attr Attribute
+
+	switch rawAttr.Type {
+	case "binary":
+		attr = new(BinaryAttribute)
+		break
+	case "float":
+		attr = new(FloatAttribute)
+		break
+	case "categorical":
+		attr = new(CategoricalAttribute)
+		break
+	default:
+		return nil, fmt.Errorf("Unrecognised Attribute format: %s", rawAttr.Type)
 	}
 
-	for _, a := range attrs {
-		var attr Attribute
-		var err error
-		switch a.Type {
-		case "binary":
-			attr = new(BinaryAttribute)
-			break
-		case "float":
-			attr = new(FloatAttribute)
-			break
-		case "categorical":
-			attr = new(CategoricalAttribute)
-			break
-		default:
-			panic(fmt.Errorf("Unrecognised Attribute format: %s", a.Type))
-		}
-		err = attr.UnmarshalJSON(a.Attr)
-		if err != nil {
-			panic(fmt.Errorf("Can't deserialize: %s (error: %s)", a, err))
-		}
-		attr.SetName(a.Name)
-		ret = append(ret, attr)
+	err = attr.UnmarshalJSON(rawAttr.Attr)
+	if err != nil {
+		return nil, fmt.Errorf("Can't deserialize: %s (error: %s)", rawAttr, err)
 	}
-	return ret
+	attr.SetName(rawAttr.Name)
+	log.Printf("DeserializeAttribute = %s", attr)
+	return attr, nil
+}
+
+// DeserializeAttributes constructs a ve
+func DeserializeAttributes(data []byte) ([]Attribute, error) {
+
+	// Define a JSON shim Attribute
+	var attrs []json.RawMessage
+	err := json.Unmarshal(data, attrs)
+
+	ret := make([]Attribute, len(attrs))
+	for i, v := range attrs {
+		ret[i], err = DeserializeAttribute(v)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return ret, nil
 }
 
 func DeserializeInstances(f io.Reader) (ret *DenseInstances, err error) {
@@ -203,9 +218,15 @@ func DeserializeInstances(f io.Reader) (ret *DenseInstances, err error) {
 
 	// Unmarshal the Attributes
 	attrBytes := getTarContent(tr, "CATTRS")
-	cAttrs := deserializeAttributes(attrBytes)
+	cAttrs, err := DeserializeAttributes(attrBytes)
+	if err != nil {
+		return nil, err
+	}
 	attrBytes = getTarContent(tr, "ATTRS")
-	normalAttrs := deserializeAttributes(attrBytes)
+	normalAttrs, err := DeserializeAttributes(attrBytes)
+	if err != nil {
+		return nil, err
+	}
 
 	// Create the return instances
 	ret = NewDenseInstances()
@@ -339,6 +360,10 @@ func ReadSerializedClassifierStub(filePath string) (*ClassifierDeserializer, err
 
 func (c *ClassifierDeserializer) GetBytesForKey(key string) ([]byte, error) {
 	return getTarContent(c.tarReader, key), nil
+}
+
+func (c *ClassifierDeserializer) Close() {
+
 }
 
 type ClassifierSerializer struct {
