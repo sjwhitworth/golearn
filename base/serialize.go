@@ -10,7 +10,6 @@ import (
 	"os"
 	"reflect"
 	"runtime"
-	"log"
 )
 
 const (
@@ -137,7 +136,6 @@ func DeserializeAttribute(data []byte) (Attribute, error) {
 		Attr json.RawMessage `json:"attr"`
 	}
 
-	log.Printf("DeserializeAttribute = %s", data)
 	var rawAttr JSONAttribute
 	err := json.Unmarshal(data, &rawAttr)
 	if err != nil {
@@ -164,7 +162,6 @@ func DeserializeAttribute(data []byte) (Attribute, error) {
 		return nil, fmt.Errorf("Can't deserialize: %s (error: %s)", rawAttr, err)
 	}
 	attr.SetName(rawAttr.Name)
-	log.Printf("DeserializeAttribute = %s", attr)
 	return attr, nil
 }
 

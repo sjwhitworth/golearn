@@ -7,7 +7,6 @@ import (
 	"github.com/sjwhitworth/golearn/evaluation"
 	"encoding/json"
 	"sort"
-	"log"
 )
 
 // NodeType determines whether a DecisionTreeNode is a leaf or not.
@@ -59,7 +58,6 @@ func (d *DecisionTreeRule) unmarshalJSON(data []byte) error {
 		d.SplitVal = splitVal.(float64)
 	}
 	split := jsonMap["split_attribute"]
-	log.Printf("DecisionTreeRule/UnmarshalJSON: %v", split)
 	splitBytes, err := json.Marshal(split)
 	if err != nil {
 		panic(err)
@@ -76,9 +74,7 @@ func (d *DecisionTreeRule) unmarshalJSON(data []byte) error {
 }
 
 func (d *DecisionTreeRule) UnmarshalJSON(data []byte) error {
-	log.Printf("DecisionTreeRule/UnmarshalJSON: input is %s", data)
 	ret := d.unmarshalJSON(data)
-	log.Printf("DecisionTreeRule/UnmarshalJSON: output is %s, self = %s", ret, d.String())
 	return ret
 }
 
@@ -162,7 +158,6 @@ func (d *DecisionTreeNode) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON reads a JSON representation of this Attribute.
 func (d *DecisionTreeNode) UnmarshalJSON(data []byte) error {
-	log.Printf("Input JSON: %s", string(data))
 	jsonMap := make(map[string]interface{})
 	err := json.Unmarshal(data, &jsonMap)
 	if err != nil {
@@ -203,9 +198,6 @@ func (d *DecisionTreeNode) UnmarshalJSON(data []byte) error {
 	d.ClassAttr = classAttr
 	d.SplitRule = nil
 
-	log.Printf("Before adding children: %s", d.String())
-
-
 	if splitRule, ok := jsonMap["split_rule"]; ok {
 		d.SplitRule = &DecisionTreeRule{}
 		splitRuleBytes, err := json.Marshal(splitRule)
@@ -234,7 +226,6 @@ func (d *DecisionTreeNode) UnmarshalJSON(data []byte) error {
 
 	}
 
-	log.Printf("After adding children: %s", d.String())
 	return nil
 }
 
