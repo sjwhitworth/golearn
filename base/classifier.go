@@ -24,6 +24,10 @@ type SaveableClassifier interface {
 	Save(string) error
 	// Read recreates the classifier from a file
 	Load(string) error
+
+	// Used when something is saved as part of an ensembe
+	SaveWithPrefix(*ClassifierSerializer, string) error
+	LoadWithPrefix(*ClassifierDeserializer, string) error
 }
 
 // BaseClassifier stores options common to every classifier.

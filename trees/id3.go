@@ -241,15 +241,20 @@ func (d *DecisionTreeNode) Save(filePath string) error {
 	if err != nil {
 		return err
 	}
+	err = d.SaveWithPrefix(serializer, "")
+	serializer.Close()
+	return err
+}
+
+func (d *DecisionTreeNode) SaveWithPrefix(serializer *base.ClassifierSerializer, prefix string) error {
 	b, err := json.Marshal(d)
 	if err != nil {
 		return err
 	}
-	err = serializer.WriteBytesForKey("tree", b)
+	err = serializer.WriteBytesForKey(fmt.Sprintf("%s%s",prefix,"tree"), b)
 	if err != nil {
 		return err
 	}
-	serializer.Close()
 	return nil
 }
 
@@ -261,11 +266,13 @@ func (d *DecisionTreeNode) Load(filePath string) error {
 		return err
 	}
 
-	defer func() {
-		reader.Close()
-	}()
+	err = d.LoadWithPrefix(reader, "")
+	reader.Close()
+	return err
+}
 
-	b, err := reader.GetBytesForKey("tree")
+func (d *DecisionTreeNode) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix string) error {
+	b, err := reader.GetBytesForKey(fmt.Sprintf("%s%s",prefix, "tree"))
 	if err != nil {
 		return err
 	}
