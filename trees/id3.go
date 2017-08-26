@@ -233,7 +233,7 @@ func (d *DecisionTreeNode) UnmarshalJSON(data []byte) error {
 func (d *DecisionTreeNode) Save(filePath string) error {
 	metadata := base.ClassifierMetadataV1 {
 		FormatVersion: 1,
-		ClassifierName: "test",
+		ClassifierName: "DecisionTreeNode",
 		ClassifierVersion: "1",
 		ClassifierMetadata: nil,
 	}
