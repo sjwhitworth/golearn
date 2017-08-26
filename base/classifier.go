@@ -25,7 +25,11 @@ type SaveableClassifier interface {
 	// Read recreates the classifier from a file
 	Load(string) error
 
-	// Used when something is saved as part of an ensembe
+	// Retrieves the metadata associated with this classifer
+	// (required for Ensembles)
+	GetMetadata() ClassifierMetadataV1
+
+	// Used when something is saved as part of an ensemble
 	SaveWithPrefix(*ClassifierSerializer, string) error
 	LoadWithPrefix(*ClassifierDeserializer, string) error
 }
