@@ -114,7 +114,7 @@ func DeserializeInstancesFromTarReader(tr *FunctionalTarReader, prefix string) (
 	if err != nil {
 		return nil, DescribeError("Class Attribute deserialization error", err)
 	}
-	attrBytes, err = tr.GetNamedFile("ATTRS")
+	attrBytes, err = tr.GetNamedFile(p("ATTRS"))
 	if err != nil {
 		return nil, DescribeError("Unable to read ATTRS", err)
 	}

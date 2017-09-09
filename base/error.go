@@ -40,8 +40,20 @@ func (g *GoLearnError) attachFormattedStack() {
 	stackFrames := strings.Split(stackString, "\n")
 
 	stackFmt := make([]string, 0)
-	for i := 3; i < len(stackFrames); i++ {
+	for i := 0; i < len(stackFrames); i++ {
 		if strings.Contains(stackFrames[i], "golearn") {
+			if strings.Contains(stackFrames[i], "golearn/base/error.go") {
+				continue
+			}
+			if strings.Contains(stackFrames[i], "base.WrapError") {
+				continue
+			}
+			if strings.Contains(stackFrames[i], "base.DescribeError") {
+				continue
+			}
+			if strings.Contains(stackFrames[i], "golearn/base.(*GoLearnError).attachFormattedStack") {
+				continue
+			}
 			stackFmt = append(stackFmt, stackFrames[i])
 		}
 	}
