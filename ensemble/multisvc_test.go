@@ -4,6 +4,7 @@ import (
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
 	. "github.com/smartystreets/goconvey/convey"
+	"io/ioutil"
 	"testing"
 )
 
@@ -22,6 +23,30 @@ func TestMultiSVMUnweighted(t *testing.T) {
 			So(err, ShouldEqual, nil)
 			So(evaluation.GetAccuracy(cf), ShouldBeGreaterThan, 0.70)
 		})
+
+		Convey("Saving should work...", func() {
+			f, err := ioutil.TempFile("","tree")
+			So(err, ShouldBeNil)
+			err = m.Save(f.Name())
+			So(err, ShouldBeNil)
+
+			Convey("Loading should work...", func() {
+				mLoaded := NewMultiLinearSVC("l2", "l1", true, 1.00, 1e-8, weights)
+				err := mLoaded.Load(f.Name())
+				So(err, ShouldBeNil)
+
+				Convey("Predictions should be the same...", func() {
+					originalPredictions, err := m.Predict(Y)
+					So(err, ShouldBeNil)
+					newPredictions, err := mLoaded.Predict(Y)
+					So(err, ShouldBeNil)
+					So(originalPredictions, ShouldEqual, newPredictions)
+				})
+
+			})
+
+		})
+
 	})
 }
 
@@ -45,5 +70,34 @@ func TestMultiSVMWeighted(t *testing.T) {
 			So(err, ShouldEqual, nil)
 			So(evaluation.GetAccuracy(cf), ShouldBeGreaterThan, 0.70)
 		})
+
+		Convey("Saving should work...", func() {
+			f, err := ioutil.TempFile("","tree")
+			So(err, ShouldBeNil)
+			err = m.Save(f.Name())
+			So(err, ShouldBeNil)
+
+			Convey("Loading should work...", func() {
+				mLoaded := NewMultiLinearSVC("l2", "l1", true, 1.00, 1e-8, weights)
+				err := mLoaded.Load(f.Name())
+				So(err, ShouldBeNil)
+
+				Convey("Predictions should be the same...", func() {
+					originalPredictions, err := m.Predict(Y)
+					So(err, ShouldBeNil)
+					newPredictions, err := mLoaded.Predict(Y)
+					So(err, ShouldBeNil)
+					So(originalPredictions, ShouldEqual, newPredictions)
+				})
+
+			})
+
+		})
+	})
+}
+
+func TestMultiSVMSaved(t *testing.T) {
+	Convey("Loading data...", t, func() {
+
 	})
 }

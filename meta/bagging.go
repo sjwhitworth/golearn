@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"golang.org/x/tools/go/gcimporter15/testdata"
 )
 
 // BaggedModel trains base.Classifiers on subsets of the original
@@ -17,6 +18,12 @@ type BaggedModel struct {
 	RandomFeatures     int
 	lock               sync.Mutex
 	selectedAttributes map[int][]base.Attribute
+}
+
+// SaveableBaggedModel does exactly the same as BaggedModel, but stipulates
+// that any added classifiers are Saveable.
+type SaveableBaggedModel struct {
+	BaggedModel
 }
 
 // generateTrainingAttrs selects RandomFeatures number of base.Attributes from
@@ -74,6 +81,11 @@ func (b *BaggedModel) generateTrainingInstances(model int, from base.FixedDataGr
 
 // AddModel adds a base.Classifier to the current model
 func (b *BaggedModel) AddModel(m base.Classifier) {
+	b.Models = append(b.Models, m)
+}
+
+// AddModel adds a base.SaveableClassifier to the current model
+func (s *SaveableBaggedModel) AddModel(m base.SaveableClassifier) {
 	b.Models = append(b.Models, m)
 }
 
@@ -186,3 +198,6 @@ func (b *BaggedModel) String() string {
 	}
 	return fmt.Sprintf("BaggedModel(\n%s)", strings.Join(children, "\n\t"))
 }
+
+// Save exports the current SaveableBaggedModel to disk
+func (s *SaveableBaggedModel)

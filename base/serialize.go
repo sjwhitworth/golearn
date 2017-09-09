@@ -198,43 +198,30 @@ func DeserializeAttributes(data []byte) ([]Attribute, error) {
 	return ret, nil
 }
 
-func DeserializeInstances(f io.Reader) (ret *DenseInstances, err error) {
+func DeserializeInstancesFromTarReader(tr *tar.Reader, prefix string) (ret *DenseInstances, err error) {
 
-	// Recovery function
-	defer func() {
-		if r := recover(); r != nil {
-			if _, ok := r.(runtime.Error); ok {
-				panic(r)
-			}
-			err = r.(error)
-		}
-	}()
-
-	// Open the .gz layer
-	gzReader, err := gzip.NewReader(f)
-	if err != nil {
-		return nil, fmt.Errorf("Can't open: %s", err)
+	p := func(n string) string {
+		return fmt.Sprintf("%s%s", prefix, n)
 	}
-	// Open the .tar layer
-	tr := tar.NewReader(gzReader)
+
 	// Retrieve the MANIFEST and verify
-	manifestBytes := getTarContent(tr, "MANIFEST")
+	manifestBytes := getTarContent(tr, p("MANIFEST"))
 	if !reflect.DeepEqual(manifestBytes, []byte(SerializationFormatVersion)) {
 		return nil, fmt.Errorf("Unsupported MANIFEST: %s", string(manifestBytes))
 	}
 
 	// Get the size
-	sizeBytes := getTarContent(tr, "DIMS")
+	sizeBytes := getTarContent(tr, p("DIMS"))
 	attrCount := int(UnpackBytesToU64(sizeBytes[0:8]))
 	rowCount := int(UnpackBytesToU64(sizeBytes[8:]))
 
 	// Unmarshal the Attributes
-	attrBytes := getTarContent(tr, "CATTRS")
+	attrBytes := getTarContent(tr, p("CATTRS"))
 	cAttrs, err := DeserializeAttributes(attrBytes)
 	if err != nil {
 		return nil, err
 	}
-	attrBytes = getTarContent(tr, "ATTRS")
+	attrBytes = getTarContent(tr, p("ATTRS"))
 	normalAttrs, err := DeserializeAttributes(attrBytes)
 	if err != nil {
 		return nil, err
@@ -271,7 +258,7 @@ func DeserializeInstances(f io.Reader) (ret *DenseInstances, err error) {
 		} else if err != nil {
 			return nil, fmt.Errorf("Error seeking to DATA section: %s", err)
 		}
-		if hdr.Name == "DATA" {
+		if hdr.Name == p("DATA") {
 			break
 		}
 	}
@@ -294,11 +281,36 @@ func DeserializeInstances(f io.Reader) (ret *DenseInstances, err error) {
 		}
 	}
 
+	return ret, nil
+}
+
+func DeserializeInstances(f io.Reader) (ret *DenseInstances, err error) {
+
+	// Recovery function
+	defer func() {
+		if r := recover(); r != nil {
+			if _, ok := r.(runtime.Error); ok {
+				panic(r)
+			}
+			err = r.(error)
+		}
+	}()
+
+	// Open the .gz layer
+	gzReader, err := gzip.NewReader(f)
+	if err != nil {
+		return nil, fmt.Errorf("Can't open: %s", err)
+	}
+	// Open the .tar layer
+	tr := tar.NewReader(gzReader)
+
+	ret, deSerializeErr := DeserializeInstancesFromTarReader(tr)
+
 	if err = gzReader.Close(); err != nil {
 		return ret, fmt.Errorf("Error closing gzip stream: %s", err)
 	}
 
-	return ret, nil
+	return ret, deSerializeErr
 }
 
 // ClassifierMetadataV1 is what gets written into METADATA
@@ -385,6 +397,15 @@ func (c *ClassifierDeserializer) GetJSONForKey(key string, v interface{}) error 
 	return json.Unmarshal(b, v)
 }
 
+// GetUInt64ForKey returns a int64 stored at a given key
+func (c *ClassifierDeserializer) GetU64ForKey(key string) (uint64, error) {
+	b, err := c.GetBytesForKey(key)
+	if err != nil {
+		return 0, err
+	}
+	return UnpackBytesToU64(b), nil
+}
+
 // Close cleans up everything.
 func (c *ClassifierDeserializer) Close() {
 	c.fileReader.Close()
@@ -460,6 +481,10 @@ func (c *ClassifierSerializer) WriteJSONForKey(key string, v interface{}) error 
 
 }
 
+func (c *ClassifierSerializer) WriteInstancesForKey(key string, g FixedDataGrid, includeData bool) error {
+	return SerializeInstancesToTarWriter(g, c.tarWriter, fmt.Sprintf("%s/"), includeData)
+}
+
 // CreateSerializedClassifierStub generates a file to serialize into
 // and writes the METADATA header.
 func CreateSerializedClassifierStub(filePath string, metadata ClassifierMetadataV1) (*ClassifierSerializer, error) {
@@ -510,14 +535,41 @@ func CreateSerializedClassifierStub(filePath string, metadata ClassifierMetadata
 }
 
 func SerializeInstances(inst FixedDataGrid, f io.Writer) error {
-	var hdr *tar.Header
-
+	// Create a .tar.gz container
 	gzWriter := gzip.NewWriter(f)
 	tw := tar.NewWriter(gzWriter)
 
+	serializeErr := SerializeInstancesToTarWriter(inst, tw, "", true)
+	// Finally, close and flush the various levels
+	if err := tw.Flush(); err != nil {
+		return fmt.Errorf("Could not flush tar: %s", err)
+	}
+
+	if err := tw.Close(); err != nil {
+		return fmt.Errorf("Could not close tar: %s", err)
+	}
+
+	if err := gzWriter.Flush(); err != nil {
+		return fmt.Errorf("Could not flush gz: %s", err)
+	}
+
+	if err := gzWriter.Close(); err != nil {
+		return fmt.Errorf("Could not close gz: %s", err)
+	}
+
+	return serializeErr
+}
+
+func SerializeInstancesToTarWriter(inst FixedDataGrid, tw *tar.Writer, prefix string, includeData bool) error {
+	var hdr *tar.Header
+
+	p := func(n string) string {
+		return fmt.Sprintf("%s%s", prefix, n)
+	}
+
 	// Write the MANIFEST entry
 	hdr = &tar.Header{
-		Name: "MANIFEST",
+		Name: p("MANIFEST"),
 		Size: int64(len(SerializationFormatVersion)),
 	}
 	if err := tw.WriteHeader(hdr); err != nil {
@@ -531,7 +583,7 @@ func SerializeInstances(inst FixedDataGrid, f io.Writer) error {
 	// Now write the dimensions of the dataset
 	attrCount, rowCount := inst.Size()
 	hdr = &tar.Header{
-		Name: "DIMS",
+		Name: p("DIMS"),
 		Size: 16,
 	}
 	if err := tw.WriteHeader(hdr); err != nil {
@@ -548,11 +600,15 @@ func SerializeInstances(inst FixedDataGrid, f io.Writer) error {
 	// Write the ATTRIBUTES files
 	classAttrs := inst.AllClassAttributes()
 	normalAttrs := NonClassAttributes(inst)
-	if err := writeAttributesToFilePart(classAttrs, tw, "CATTRS"); err != nil {
+	if err := writeAttributesToFilePart(classAttrs, tw, p("CATTRS")); err != nil {
 		return fmt.Errorf("Could not write CATTRS: %s", err)
 	}
-	if err := writeAttributesToFilePart(normalAttrs, tw, "ATTRS"); err != nil {
+	if err := writeAttributesToFilePart(normalAttrs, tw, p("ATTRS")); err != nil {
 		return fmt.Errorf("Could not write ATTRS: %s", err)
+	}
+
+	if !includeData {
+		return nil
 	}
 
 	// Data must be written out in the same order as the Attributes
@@ -575,7 +631,7 @@ func SerializeInstances(inst FixedDataGrid, f io.Writer) error {
 
 	// Then write the header
 	hdr = &tar.Header{
-		Name: "DATA",
+		Name: p("DATA"),
 		Size: dataLength,
 	}
 	if err := tw.WriteHeader(hdr); err != nil {
@@ -599,23 +655,6 @@ func SerializeInstances(inst FixedDataGrid, f io.Writer) error {
 
 	if writtenLength != dataLength {
 		return fmt.Errorf("Could not write DATA: changed size from %v to %v", dataLength, writtenLength)
-	}
-
-	// Finally, close and flush the various levels
-	if err := tw.Flush(); err != nil {
-		return fmt.Errorf("Could not flush tar: %s", err)
-	}
-
-	if err := tw.Close(); err != nil {
-		return fmt.Errorf("Could not close tar: %s", err)
-	}
-
-	if err := gzWriter.Flush(); err != nil {
-		return fmt.Errorf("Could not flush gz: %s", err)
-	}
-
-	if err := gzWriter.Close(); err != nil {
-		return fmt.Errorf("Could not close gz: %s", err)
 	}
 
 	return nil

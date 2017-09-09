@@ -9,17 +9,17 @@ import (
 // and trains n wrapped classifiers. The actual class is chosen
 // by whichever is most confident. Only one CategoricalAttribute
 // class variable is supported.
-type OneVsAllModel struct {
-	NewClassifierFunction func(string) base.Classifier
+type SaveableOneVsAllModel struct {
+	NewClassifierFunction func(string) base.SaveableClassifier
 	filters               []*oneVsAllFilter
-	classifiers           []base.Classifier
+	classifiers           []base.SaveableClassifier
 	maxClassVal           uint64
 }
 
 // NewOneVsAllModel creates a new OneVsAllModel. The argument
 // must be a function which returns a base.Classifier ready for training.
-func NewOneVsAllModel(f func(string) base.Classifier) *OneVsAllModel {
-	return &OneVsAllModel{
+func NewSaveableOneVsAllModel(f func(string) base.SaveableClassifier) *SaveableOneVsAllModel {
+	return &SaveableOneVsAllModel{
 		f,
 		nil,
 		nil,
@@ -27,10 +27,75 @@ func NewOneVsAllModel(f func(string) base.Classifier) *OneVsAllModel {
 	}
 }
 
+func (m *SaveableOneVsAllModel) Load(filePath string) error {
+	reader, err := base.ReadSerializedClassifierStub(filePath)
+	if err != nil {
+		return err
+	}
+
+	err = m.LoadWithPrefix(reader, "")
+	reader.Close()
+	return err
+}
+
+func (m *SaveableOneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix string) error {
+
+	p := func(n string) string {
+		return fmt.Sprintf("%s/%s", prefix, n)
+	}
+	pI := func(n string, i int) string {
+		return fmt.Sprintf("%s/%d/%s", prefix, i, n)
+	}
+
+	inst, err := reader.ReadInstancesFromKey(p("STRUCTURE"))
+	if err != nil {
+		return fmt.Errorf("Can't read captured instance format: %v", err)
+	}
+
+	m.Fit(inst)
+
+	/*err = m.Fit(inst)
+	if err != nil {
+		return fmt.Errorf("Can't fit classifiers to stub format: %v", err)
+	}*/
+
+	for i, v := range m.classifiers {
+		err = v.LoadWithPrefix(reader, pI("classifier", i))
+		if err != nil {
+			return fmt.Errorf("Can't read classifier: %d, %v", i, err)
+		}
+	}
+
+	return nil
+}
+
+func (m *SaveableOneVsAllModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix string) error {
+
+}
+
+func (m *OneVsAllModel) generateAttributes(from base.FixedDataGrid) map[base.Attribute]base.Attribute {
+	attrs := from.AllAttributes()
+	classAttrs := from.AllClassAttributes()
+	if len(classAttrs) != 1 {
+		panic("Only 1 class Attribute is supported!")
+	}
+	ret := make(map[base.Attribute]base.Attribute)
+	for _, a := range attrs {
+		ret[a] = a
+		for _, b := range classAttrs {
+			if a.Equals(b) {
+				cur := base.NewFloatAttribute(b.GetName())
+				ret[a] = cur
+			}
+		}
+	}
+	return ret
+}
+
 // Fit creates n filtered datasets (where n is the number of values
 // a CategoricalAttribute can take) and uses them to train the
 // underlying classifiers.
-func (m *OneVsAllModel) Fit(using base.FixedDataGrid) {
+func (m *SaveableOneVsAllModel) Fit(using base.FixedDataGrid) {
 	var classAttr *base.CategoricalAttribute
 	// Do some validation
 	classAttrs := using.AllClassAttributes()
