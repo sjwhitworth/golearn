@@ -16,9 +16,6 @@ type Classifier interface {
 	Fit(FixedDataGrid) error
 	// Why not make every classifier return a nice-looking string?
 	String() string
-}
-
-type SaveableClassifier interface {
 
 	// Save the classifier to a file
 	Save(string) error

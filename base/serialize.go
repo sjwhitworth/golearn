@@ -304,7 +304,7 @@ func DeserializeInstances(f io.Reader) (ret *DenseInstances, err error) {
 	// Open the .tar layer
 	tr := tar.NewReader(gzReader)
 
-	ret, deSerializeErr := DeserializeInstancesFromTarReader(tr)
+	ret, deSerializeErr := DeserializeInstancesFromTarReader(tr, "")
 
 	if err = gzReader.Close(); err != nil {
 		return ret, fmt.Errorf("Error closing gzip stream: %s", err)
