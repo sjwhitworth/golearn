@@ -2,6 +2,7 @@ package base
 
 import (
 	"fmt"
+	"sort"
 )
 
 // This file contains utility functions relating to Attributes and Attribute specifications.
@@ -51,6 +52,9 @@ func ResolveAttributes(d DataGrid, attrs []Attribute) []AttributeSpec {
 		}
 		ret[i] = spec
 	}
+
+	sort.Sort(byPosition(ret))
+
 	return ret
 }
 
