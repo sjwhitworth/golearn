@@ -305,7 +305,7 @@ func (m *OneVsAllModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix
 		clsPrefix := pI(writer.Prefix(prefix, "CLASSIFIERS"), i)
 		err = c.SaveWithPrefix(writer, clsPrefix)
 		if err != nil {
-			base.FormatError(err, "Can't save classifier for class %s", m.classValues[i])
+			return base.FormatError(err, "Can't save classifier for class %s", m.classValues[i])
 		}
 	}
 
