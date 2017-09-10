@@ -220,6 +220,27 @@ func (c *ClassifierDeserializer) GetAttributeForKey(key string) (Attribute, erro
 	return attr, nil
 }
 
+// GetAttributesForKey returns an Attribute list stored at a given key
+func (c *ClassifierDeserializer) GetAttributesForKey(key string) ([]Attribute, error) {
+
+	attrCountKey := c.Prefix(key, "ATTR_COUNT")
+	attrCount, err := c.GetU64ForKey(attrCountKey)
+	if err != nil {
+		return nil, DescribeError("Unable to read ATTR_COUNT", err)
+	}
+
+	ret := make([]Attribute, attrCount)
+
+	for i := range ret {
+		attrKey := c.Prefix(key, fmt.Sprintf("%d", i))
+		ret[i], err = c.GetAttributeForKey(attrKey)
+		if err != nil {
+			return nil, DescribeError("Unable to read Attribute", err)
+		}
+	}
+	return ret, nil
+}
+
 // Close cleans up everything.
 func (c *ClassifierDeserializer) Close() {
 	c.fileReader.Close()
@@ -319,6 +340,24 @@ func (c *ClassifierSerializer) WriteAttributeForKey(key string, a Attribute) err
 		return WrapError(err)
 	}
 	return c.WriteBytesForKey(key, b)
+}
+
+// WriteAttributesForKey does the same as WriteAttributeForKey, just with more than one Attribute.
+func (c *ClassifierSerializer) WriteAttributesForKey(key string, attrs []Attribute) error {
+
+	attrCountKey := c.Prefix(key, "ATTR_COUNT")
+	err := c.WriteU64ForKey(attrCountKey, uint64(len(attrs)))
+	if err != nil {
+		return DescribeError("Unable to write ATTR_COUNT", err)
+	}
+	for i, a := range attrs {
+		attrKey := c.Prefix(key, fmt.Sprintf("%d", i))
+		err = c.WriteAttributeForKey(attrKey, a)
+		if err != nil {
+			return DescribeError("Unable to write Attribute", err)
+		}
+	}
+	return nil
 }
 
 // WriteInstances for key creates a new entry in the file containing some training instances
