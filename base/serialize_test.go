@@ -23,7 +23,7 @@ func TestSerializeToCSV(t *testing.T) {
 			Convey("What's written out should match what's read in", func() {
 				dinst, err := ParseCSVToInstances(f.Name(), true)
 				So(err, ShouldBeNil)
-				So(inst.String(), ShouldEqual, dinst.String())
+				So(InstancesAreEqual(inst, dinst), ShouldBeTrue)
 			})
 		})
 	})

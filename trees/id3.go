@@ -657,7 +657,7 @@ func (t *ID3DecisionTree) String() string {
 func (t *ID3DecisionTree) GetMetadata() base.ClassifierMetadataV1 {
 	return base.ClassifierMetadataV1{
 		FormatVersion:      1,
-		ClassifierName:     "KNN",
+		ClassifierName:     "ID3",
 		ClassifierVersion:  "1.0",
 		ClassifierMetadata: nil,
 	}

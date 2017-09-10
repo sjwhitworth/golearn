@@ -45,13 +45,15 @@ func (f *FunctionalTarReader) GetNamedFile(name string) ([]byte, error) {
 		}
 
 		if hdr.Name == name {
-			ret := make([]byte, hdr.Size)
-			n, err := tr.Read(ret)
-			if int64(n) != hdr.Size {
-				if int64(n) < hdr.Size {
-					log.Printf("Size mismatch, expected %d byte(s) for %s, got %d", n, hdr.Name, hdr.Size)
+			ret, err := ioutil.ReadAll(tr)
+			if err != nil {
+				return nil, WrapError(err)
+			}
+			if int64(len(ret)) != hdr.Size {
+				if int64(len(ret)) < hdr.Size {
+					log.Printf("Size mismatch, got %d byte(s) for %s, expected %d (err was %s)", len(ret), hdr.Name, hdr.Size, err)
 				} else {
-					return nil, WrapError(fmt.Errorf("Size mismatch, expected %d byte(s) for %s, got %d", n, hdr.Name, hdr.Size))
+					return nil, WrapError(fmt.Errorf("Size mismatch, expected %d byte(s) for %s, got %d", len(ret), hdr.Name, hdr.Size))
 				}
 			}
 			if err != nil {
@@ -248,7 +250,7 @@ func (c *ClassifierDeserializer) Close() {
 // ClassifierSerializer is an object used by SaveableClassifiers.
 type ClassifierSerializer struct {
 	gzipWriter *gzip.Writer
-	fileWriter io.WriteCloser
+	fileWriter *os.File
 	tarWriter  *tar.Writer
 	f          *os.File
 	filePath   string
@@ -272,6 +274,10 @@ func (c *ClassifierSerializer) Close() error {
 
 	if err := c.gzipWriter.Close(); err != nil {
 		return fmt.Errorf("Could not close gz: %s", err)
+	}
+
+	if err := c.fileWriter.Sync(); err != nil {
+		return fmt.Errorf("Could not close file writer: %s", err)
 	}
 
 	if err := c.fileWriter.Close(); err != nil {
@@ -310,6 +316,9 @@ func (c *ClassifierSerializer) WriteBytesForKey(key string, b []byte) error {
 		return fmt.Errorf("Could not write data for '%s': %s", key, err)
 	}
 
+	c.tarWriter.Flush()
+	c.gzipWriter.Flush()
+	c.fileWriter.Sync()
 	return nil
 }
 
