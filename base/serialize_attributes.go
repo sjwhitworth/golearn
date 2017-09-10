@@ -44,6 +44,15 @@ func MarshalAttribute(a Attribute) (map[string]interface{}, error) {
 	return ret, nil
 }
 
+func SerializeAttribute(attr Attribute) ([]byte, error) {
+	// Get the marshaled Attribute array
+	body, err := json.Marshal(attr)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(body), nil
+}
+
 func DeserializeAttribute(data []byte) (Attribute, error) {
 	type JSONAttribute struct {
 		Type string          `json:"type"`
@@ -98,5 +107,30 @@ func DeserializeAttributes(data []byte) ([]Attribute, error) {
 		}
 	}
 
+	return ret, nil
+}
+
+// ReplaceDeserializedAttributeWithVersionFromInstances takes an independently deserialized Attribute and matches it
+// if possible with one from a candidate FixedDataGrid.
+func ReplaceDeserializedAttributeWithVersionFromInstances(deserialized Attribute, matchingWith FixedDataGrid) (Attribute, error) {
+	for _, a := range matchingWith.AllAttributes() {
+		if a.Equals(deserialized) {
+			return a, nil
+		}
+	}
+	return nil, WrapError(fmt.Errorf("Unable to match %v in %v", deserialized, matchingWith))
+}
+
+// ReplaceDeserializedAttributesWithVersionsFromInstances takes some independently loaded Attributes and
+// matches them up with a candidate FixedDataGrid.
+func ReplaceDeserializedAttributesWithVersionsFromInstances(deserialized []Attribute, matchingWith FixedDataGrid) ([]Attribute, error) {
+	ret := make([]Attribute, len(deserialized))
+	for i, a := range deserialized {
+		match, err := ReplaceDeserializedAttributeWithVersionFromInstances(a, matchingWith)
+		if err != nil {
+			return nil, WrapError(err)
+		}
+		ret[i] = match
+	}
 	return ret, nil
 }

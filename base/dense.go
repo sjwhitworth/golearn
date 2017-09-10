@@ -44,10 +44,7 @@ func NewDenseInstances() *DenseInstances {
 	}
 }
 
-// NewDenseCopy generates a new DenseInstances set
-// from an existing FixedDataGrid.
-func NewDenseCopy(of FixedDataGrid) *DenseInstances {
-
+func copyFixedDataGridStructure(of FixedDataGrid) (*DenseInstances, []AttributeSpec, []AttributeSpec) {
 	ret := NewDenseInstances() // Create the skeleton
 	// Attribute creation
 	attrs := of.AllAttributes()
@@ -63,6 +60,22 @@ func NewDenseCopy(of FixedDataGrid) *DenseInstances {
 		// Add and store new AttributeSpec
 		specs2[i] = ret.AddAttribute(a)
 	}
+	return ret, specs1, specs2
+}
+
+// NewStructuralCopy generates an empty DenseInstances with the same layout as
+// an existing FixedDataGrid, but with no data.
+func NewStructuralCopy(of FixedDataGrid) *DenseInstances {
+	ret, _, _ := copyFixedDataGridStructure(of)
+	return ret
+}
+
+// NewDenseCopy generates a new DenseInstances set
+// from an existing FixedDataGrid.
+func NewDenseCopy(of FixedDataGrid) *DenseInstances {
+
+	ret, specs1, specs2 := copyFixedDataGridStructure(of)
+
 	// Allocate memory
 	_, rows := of.Size()
 	ret.Extend(rows)

@@ -174,6 +174,14 @@ func (c *ClassifierDeserializer) GetBytesForKey(key string) ([]byte, error) {
 	return c.tarReader.GetNamedFile(key)
 }
 
+func (c *ClassifierDeserializer) GetStringForKey(key string) (string, error) {
+	b, err := c.GetBytesForKey(key)
+	if err != nil {
+		return "", err
+	}
+	return string(b), err
+}
+
 // GetJSONForKey deserializes a JSON key in the output file.
 func (c *ClassifierDeserializer) GetJSONForKey(key string, v interface{}) error {
 	b, err := c.GetBytesForKey(key)
@@ -195,6 +203,19 @@ func (c *ClassifierDeserializer) GetU64ForKey(key string) (uint64, error) {
 		return 0, err
 	}
 	return UnpackBytesToU64(b), nil
+}
+
+// GetAttributeForKey returns an Attribute stored at a given key
+func (c *ClassifierDeserializer) GetAttributeForKey(key string) (Attribute, error) {
+	b, err := c.GetBytesForKey(key)
+	if err != nil {
+		return nil, WrapError(err)
+	}
+	attr, err := DeserializeAttribute(b)
+	if err != nil {
+		return nil, WrapError(err)
+	}
+	return attr, nil
 }
 
 // Close cleans up everything.
@@ -271,6 +292,12 @@ func (c *ClassifierSerializer) WriteBytesForKey(key string, b []byte) error {
 	return nil
 }
 
+// WriteU64ForKey creates a new entry in the serializer file with the bytes of a uint64
+func (c *ClassifierSerializer) WriteU64ForKey(key string, v uint64) error {
+	b := PackU64ToBytes(v)
+	return c.WriteBytesForKey(key, b)
+}
+
 // WriteJSONForKey creates a new entry in the file with an interface serialized as JSON.
 func (c *ClassifierSerializer) WriteJSONForKey(key string, v interface{}) error {
 
@@ -281,6 +308,15 @@ func (c *ClassifierSerializer) WriteJSONForKey(key string, v interface{}) error 
 
 	return c.WriteBytesForKey(key, b)
 
+}
+
+// WriteAttributeForKey creates a new entry in the file containing a serialized representation of Attribute
+func (c *ClassifierSerializer) WriteAttributeForKey(key string, a Attribute) error {
+	b, err := SerializeAttribute(a)
+	if err != nil {
+		return WrapError(err)
+	}
+	return c.WriteBytesForKey(key, b)
 }
 
 // WriteInstances for key creates a new entry in the file containing some training instances

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"io/ioutil"
 	"fmt"
+	"os"
 )
 
 func TestCanSaveLoadPredictions(t *testing.T) {
@@ -138,6 +139,28 @@ func verifyTreeClassification(trainData, testData base.FixedDataGrid) {
 				Convey("Predictions should be somewhat accurate", func() {
 					So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
 				})
+			})
+
+			Convey("Saving the tree and reloading it", func() {
+				predictions, err := root.Predict(testData)
+				So(err, ShouldBeNil)
+
+				f, err := ioutil.TempFile(os.TempDir(), "clsRandomTree")
+				So(err, ShouldBeNil)
+				defer func() {
+					f.Close()
+				}()
+
+				err = root.Save(f.Name())
+				So(err, ShouldBeNil)
+
+				newRoot := NewRandomTree(2)
+				err = newRoot.Load(f.Name())
+				So(err, ShouldBeNil)
+
+				newPredictions, err := newRoot.Predict(testData)
+
+				So(base.InstancesAreEqual(predictions, newPredictions), ShouldBeTrue)
 			})
 
 			Convey("Predicting with the tree, pruning first", func() {

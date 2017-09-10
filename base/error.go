@@ -78,3 +78,8 @@ func WrapError(err error) error {
 	ret.attachFormattedStack()
 	return ret
 }
+
+func FormatError(err error, format string, args ...interface{}) error {
+	description := fmt.Sprintf(format, args)
+	return DescribeError(description, err)
+}

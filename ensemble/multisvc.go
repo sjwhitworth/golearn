@@ -131,6 +131,15 @@ func (m *MultiLinearSVC) SaveWithPrefix(serializer *base.ClassifierSerializer, p
 	return err
 }
 
+func (m *MultiLinearSVC) GetMetadata() base.ClassifierMetadataV1 {
+	return base.ClassifierMetadataV1{
+		FormatVersion: 1,
+		ClassifierName: "MultiLinearSVC",
+		ClassifierVersion: "1.0",
+		ClassifierMetadata: nil,
+	}
+}
+
 func (m *MultiLinearSVC) Load(filePath string) error {
 	reader, err := base.ReadSerializedClassifierStub(filePath)
 	if err != nil {
