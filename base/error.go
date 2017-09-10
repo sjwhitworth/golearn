@@ -1,16 +1,16 @@
 package base
 
 import (
-	"runtime/debug"
-	"strings"
 	"fmt"
 	"os"
+	"runtime/debug"
+	"strings"
 )
 
 type GoLearnError struct {
 	WrappedError error
 	CurrentStack string
-	Description string
+	Description  string
 }
 
 func wrapLinesWithTabPrefix(s string) string {

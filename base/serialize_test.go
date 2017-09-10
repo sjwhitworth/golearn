@@ -29,17 +29,16 @@ func TestSerializeToCSV(t *testing.T) {
 	})
 }
 
-
 func TestCreateAndReadClassifierStub(t *testing.T) {
 	Convey("Creating a classifier stub...", t, func() {
 
 		exampleClassifierMetadata := make(map[string]interface{})
 		exampleClassifierMetadata["num_trees"] = 4
 
-		metadata := ClassifierMetadataV1 {
-			FormatVersion: 1,
-			ClassifierName: "test",
-			ClassifierVersion: "1",
+		metadata := ClassifierMetadataV1{
+			FormatVersion:      1,
+			ClassifierName:     "test",
+			ClassifierVersion:  "1",
 			ClassifierMetadata: exampleClassifierMetadata,
 		}
 

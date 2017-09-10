@@ -133,7 +133,7 @@ func TestBaggedModelRandomForestSerialization(t *testing.T) {
 					predictions, err := rf.Predict(testDataf)
 					So(err, ShouldBeNil)
 
-					Convey("Saving the model should be fine...", func(){
+					Convey("Saving the model should be fine...", func() {
 						f, err := ioutil.TempFile(os.TempDir(), "rf")
 						defer func() {
 							f.Close()
@@ -141,12 +141,12 @@ func TestBaggedModelRandomForestSerialization(t *testing.T) {
 						err = rf.Save(f.Name())
 						So(err, ShouldBeNil)
 
-						Convey("Loading the model should be fine...", func(){
+						Convey("Loading the model should be fine...", func() {
 							rf := new(BaggedModel)
 							f.Seek(0, os.SEEK_SET)
 							err := rf.Load(f.Name())
 							So(err, ShouldBeNil)
-							Convey("And the predictions should match...", func(){
+							Convey("And the predictions should match...", func() {
 								newPredictions, err := rf.Predict(testDataf)
 								So(err, ShouldBeNil)
 								So(base.InstancesAreEqual(newPredictions, predictions), ShouldBeTrue)

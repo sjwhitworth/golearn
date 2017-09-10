@@ -3,9 +3,9 @@ package knn
 import (
 	"testing"
 
+	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	. "github.com/smartystreets/goconvey/convey"
-	"fmt"
 )
 
 func TestKnnClassifierWithoutOptimisations(t *testing.T) {
@@ -54,10 +54,10 @@ func TestKnnSaveAndReload(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(predictions, ShouldNotEqual, nil)
 
-		Convey("So saving the classifier should work...", func(){
+		Convey("So saving the classifier should work...", func() {
 			err := cls.Save("temp.cls")
 			So(err, ShouldBeNil)
-			Convey("So loading the classifier should work...", func(){
+			Convey("So loading the classifier should work...", func() {
 				clsR, err := ReloadKNNClassifier("temp.cls")
 				So(err, ShouldBeNil)
 				So(cls.String(), ShouldEqual, clsR.String())

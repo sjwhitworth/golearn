@@ -337,9 +337,9 @@ func (KNN *KNNClassifier) GetMetadata() base.ClassifierMetadataV1 {
 	classifierParams["allow_optimizations"] = KNN.AllowOptimisations
 
 	return base.ClassifierMetadataV1{
-		FormatVersion: 1,
-		ClassifierName: "KNN",
-		ClassifierVersion: "1.0",
+		FormatVersion:      1,
+		ClassifierName:     "KNN",
+		ClassifierVersion:  "1.0",
 		ClassifierMetadata: classifierParams,
 	}
 }

@@ -3,7 +3,6 @@ package meta
 import (
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
-	"log"
 )
 
 // OneVsAllModel replaces class Attributes with numeric versions
@@ -15,8 +14,8 @@ type OneVsAllModel struct {
 	filters               []*oneVsAllFilter
 	classifiers           []base.Classifier
 	maxClassVal           uint64
-	fitOn				  base.FixedDataGrid
-	classValues			  []string
+	fitOn                 base.FixedDataGrid
+	classValues           []string
 }
 
 // NewOneVsAllModel creates a new OneVsAllModel. The argument
@@ -243,9 +242,9 @@ func (m *OneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, pref
 
 func (m *OneVsAllModel) GetMetadata() base.ClassifierMetadataV1 {
 	return base.ClassifierMetadataV1{
-		FormatVersion: 1,
-		ClassifierName: "OneVsAllModel",
-		ClassifierVersion: "1.0",
+		FormatVersion:      1,
+		ClassifierName:     "OneVsAllModel",
+		ClassifierVersion:  "1.0",
 		ClassifierMetadata: nil,
 	}
 }
@@ -263,7 +262,6 @@ func (m *OneVsAllModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix
 	pI := func(n string, i int) string {
 		return writer.Prefix(prefix, writer.Prefix(n, fmt.Sprintf("%d", i)))
 	}
-
 
 	// Save the instances
 	err := writer.WriteInstancesForKey(writer.Prefix(prefix, "INSTANCE_STRUCTURE"), m.fitOn, false)
@@ -330,24 +328,23 @@ func (m *OneVsAllModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix
 }
 
 func (m *OneVsAllModel) generateAttributes(from base.FixedDataGrid) map[base.Attribute]base.Attribute {
-	       attrs := from.AllAttributes()
-	       classAttrs := from.AllClassAttributes()
-	       if len(classAttrs) != 1 {
-		               panic(fmt.Errorf("Only 1 class Attribute is supported, had %d", len(classAttrs)))
-		      }
-	       ret := make(map[base.Attribute]base.Attribute)
-	       for _, a := range attrs {
-		               ret[a] = a
-		               for _, b := range classAttrs {
-			                       if a.Equals(b) {
-				                               cur := base.NewFloatAttribute(b.GetName())
-				                               ret[a] = cur
-				                       }
-			               }
-		      }
-	       return ret
+	attrs := from.AllAttributes()
+	classAttrs := from.AllClassAttributes()
+	if len(classAttrs) != 1 {
+		panic(fmt.Errorf("Only 1 class Attribute is supported, had %d", len(classAttrs)))
+	}
+	ret := make(map[base.Attribute]base.Attribute)
+	for _, a := range attrs {
+		ret[a] = a
+		for _, b := range classAttrs {
+			if a.Equals(b) {
+				cur := base.NewFloatAttribute(b.GetName())
+				ret[a] = cur
+			}
+		}
+	}
+	return ret
 }
-
 
 //
 // Filter implementation

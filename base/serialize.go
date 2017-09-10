@@ -6,34 +6,33 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
-	"reflect"
 	"io/ioutil"
 	"log"
+	"os"
+	"reflect"
 )
 
 const (
 	SerializationFormatVersion = "golearn 1.0"
 )
 
-
 // FunctionalTarReader allows you to read anything in a tar file in any order, rather than just
 // sequentially.
 type FunctionalTarReader struct {
-	Regenerate func()*tar.Reader
+	Regenerate func() *tar.Reader
 }
 
 // NewFunctionalTarReader creates a new FunctionalTarReader using a function that it can call
 // to get a tar.Reader at the beginning of the file.
-func NewFunctionalTarReader(regenFunc func()*tar.Reader) *FunctionalTarReader {
-	return &FunctionalTarReader {
+func NewFunctionalTarReader(regenFunc func() *tar.Reader) *FunctionalTarReader {
+	return &FunctionalTarReader{
 		regenFunc,
 	}
 }
 
 // GetNamedFile returns a file named a given thing from the tar file. If there's more than one
 // entry, the most recent is returned.
-func (f *FunctionalTarReader) GetNamedFile (name string) ([]byte, error) {
+func (f *FunctionalTarReader) GetNamedFile(name string) ([]byte, error) {
 	tr := f.Regenerate()
 
 	var returnCandidate []byte = nil
@@ -93,7 +92,7 @@ type ClassifierMetadataV1 struct {
 type ClassifierDeserializer struct {
 	gzipReader io.Reader
 	fileReader io.ReadCloser
-	tarReader *FunctionalTarReader
+	tarReader  *FunctionalTarReader
 	Metadata   *ClassifierMetadataV1
 }
 
@@ -251,8 +250,8 @@ type ClassifierSerializer struct {
 	gzipWriter *gzip.Writer
 	fileWriter io.WriteCloser
 	tarWriter  *tar.Writer
-	f *os.File
-	filePath string
+	f          *os.File
+	filePath   string
 }
 
 // Close finalizes the Classifier serialization session.
@@ -274,7 +273,6 @@ func (c *ClassifierSerializer) Close() error {
 	if err := c.gzipWriter.Close(); err != nil {
 		return fmt.Errorf("Could not close gz: %s", err)
 	}
-
 
 	if err := c.fileWriter.Close(); err != nil {
 		return fmt.Errorf("Could not close file writer: %s", err)
@@ -396,9 +394,9 @@ func CreateSerializedClassifierStub(filePath string, metadata ClassifierMetadata
 	ret := ClassifierSerializer{
 		gzipWriter: gzWriter,
 		fileWriter: f,
-		tarWriter: tw,
-		f: f,
-		filePath: filePath,
+		tarWriter:  tw,
+		f:          f,
+		filePath:   filePath,
 	}
 
 	//

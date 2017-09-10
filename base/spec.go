@@ -13,8 +13,8 @@ type AttributeSpec struct {
 	attr     Attribute
 }
 
-
 type byPosition []AttributeSpec
+
 func (b byPosition) Len() int {
 	return len(b)
 }

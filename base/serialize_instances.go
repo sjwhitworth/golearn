@@ -1,15 +1,14 @@
 package base
 
-
 import (
-	"os"
-	"fmt"
-	"io"
-	"encoding/csv"
-	"reflect"
-	"runtime"
 	"archive/tar"
 	"compress/gzip"
+	"encoding/csv"
+	"fmt"
+	"io"
+	"os"
+	"reflect"
+	"runtime"
 )
 
 func SerializeInstancesToFile(inst FixedDataGrid, path string) error {

@@ -3,12 +3,12 @@ package linear_models
 import "C"
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
-	"unsafe"
-	"encoding/json"
 	"io/ioutil"
 	"os"
+	"unsafe"
 )
 
 // LinearSVCParams represnts all available LinearSVC options.
@@ -228,9 +228,9 @@ func (lr *LinearSVC) GetMetadata() base.ClassifierMetadataV1 {
 	}
 
 	return base.ClassifierMetadataV1{
-		FormatVersion: 1,
-		ClassifierName: "LinearSVC",
-		ClassifierVersion: "1.0",
+		FormatVersion:      1,
+		ClassifierName:     "LinearSVC",
+		ClassifierVersion:  "1.0",
 		ClassifierMetadata: classifierParams,
 	}
 }

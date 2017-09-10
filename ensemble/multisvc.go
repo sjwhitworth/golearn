@@ -11,9 +11,9 @@ import (
 // MultiLinearSVC implements a multi-class Support Vector Classifier using a one-vs-all
 // voting scheme. Only one CategoricalAttribute class is supported.
 type MultiLinearSVC struct {
-	m *meta.OneVsAllModel
+	m          *meta.OneVsAllModel
 	parameters *linear_models.LinearSVCParams
-	weights map[string]float64
+	weights    map[string]float64
 }
 
 // NewMultiLinearSVC creates a new MultiLinearSVC using the OneVsAllModel.
@@ -33,7 +33,7 @@ func NewMultiLinearSVC(loss, penalty string, dual bool, C float64, eps float64, 
 	// Return me...
 	ret := &MultiLinearSVC{
 		parameters: params,
-		weights: weights,
+		weights:    weights,
 	}
 
 	ret.initializeOneVsAllModel()
@@ -83,10 +83,10 @@ func (m *MultiLinearSVC) Predict(from base.FixedDataGrid) (base.FixedDataGrid, e
 }
 
 func (m *MultiLinearSVC) GetClassifierMetadata() base.ClassifierMetadataV1 {
-	return  base.ClassifierMetadataV1{
-		FormatVersion: 1,
-		ClassifierName: "MultiLinearSVC",
-		ClassifierVersion: "1",
+	return base.ClassifierMetadataV1{
+		FormatVersion:      1,
+		ClassifierName:     "MultiLinearSVC",
+		ClassifierVersion:  "1",
 		ClassifierMetadata: nil,
 	}
 }
@@ -129,9 +129,9 @@ func (m *MultiLinearSVC) SaveWithPrefix(serializer *base.ClassifierSerializer, p
 
 func (m *MultiLinearSVC) GetMetadata() base.ClassifierMetadataV1 {
 	return base.ClassifierMetadataV1{
-		FormatVersion: 1,
-		ClassifierName: "MultiLinearSVC",
-		ClassifierVersion: "1.0",
+		FormatVersion:      1,
+		ClassifierName:     "MultiLinearSVC",
+		ClassifierVersion:  "1.0",
 		ClassifierMetadata: nil,
 	}
 }

@@ -58,9 +58,9 @@ type BernoulliNBClassifier struct {
 
 func (nb *BernoulliNBClassifier) GetMetadata() base.ClassifierMetadataV1 {
 	return base.ClassifierMetadataV1{
-		FormatVersion: 1,
-		ClassifierName: "KNN",
-		ClassifierVersion: "1.0",
+		FormatVersion:      1,
+		ClassifierName:     "KNN",
+		ClassifierVersion:  "1.0",
 		ClassifierMetadata: nil,
 	}
 }
@@ -134,7 +134,7 @@ func (nb *BernoulliNBClassifier) LoadWithPrefix(reader *base.ClassifierDeseriali
 func (nb *BernoulliNBClassifier) SaveWithPrefix(writer *base.ClassifierSerializer, prefix string) error {
 
 	// Save the instance template
-	err := writer.WriteInstancesForKey(writer.Prefix(prefix,"INSTANCE_STRUCTURE"), nb.fitOn, false)
+	err := writer.WriteInstancesForKey(writer.Prefix(prefix, "INSTANCE_STRUCTURE"), nb.fitOn, false)
 	if err != nil {
 		return base.DescribeError("Unable to write INSTANCE_STRUCTURE", err)
 	}

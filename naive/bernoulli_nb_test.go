@@ -4,9 +4,9 @@ import (
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/filters"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 	"io/ioutil"
 	"os"
+	"testing"
 )
 
 func TestNoFit(t *testing.T) {
@@ -55,7 +55,7 @@ func TestSerialize(t *testing.T) {
 				newNb := NewBernoulliNBClassifier()
 				err := newNb.Load(f.Name())
 				So(err, ShouldBeNil)
-				Convey("Predictions should match...", func(){
+				Convey("Predictions should match...", func() {
 					newPredictions, err := newNb.Predict(convertToBinary(testData))
 					So(err, ShouldBeNil)
 					So(base.InstancesAreEqual(oldPredictions, newPredictions), ShouldBeTrue)

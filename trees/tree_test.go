@@ -1,15 +1,15 @@
 package trees
 
 import (
+	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/filters"
 	. "github.com/smartystreets/goconvey/convey"
-	"math/rand"
-	"testing"
 	"io/ioutil"
-	"fmt"
+	"math/rand"
 	"os"
+	"testing"
 )
 
 func TestCanSaveLoadPredictions(t *testing.T) {
@@ -30,12 +30,12 @@ func TestCanSaveLoadPredictions(t *testing.T) {
 				So(err, ShouldBeNil)
 
 				Convey("Saving the tree...", func() {
-					f, err := ioutil.TempFile("","tree")
+					f, err := ioutil.TempFile("", "tree")
 					So(err, ShouldBeNil)
 					err = root.Save(f.Name())
 					So(err, ShouldBeNil)
 
-					Convey("Loading the tree...", func(){
+					Convey("Loading the tree...", func() {
 						d := &DecisionTreeNode{}
 						err := d.Load(f.Name())
 						So(err, ShouldBeNil)

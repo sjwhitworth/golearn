@@ -25,7 +25,7 @@ func TestMultiSVMUnweighted(t *testing.T) {
 		})
 
 		Convey("Saving should work...", func() {
-			f, err := ioutil.TempFile("","tree")
+			f, err := ioutil.TempFile("", "tree")
 			So(err, ShouldBeNil)
 			err = m.Save(f.Name())
 			So(err, ShouldBeNil)
@@ -69,7 +69,6 @@ func TestMultiSVMWeighted(t *testing.T) {
 			cf, err := evaluation.GetConfusionMatrix(Y, predictions)
 			So(err, ShouldEqual, nil)
 			So(evaluation.GetAccuracy(cf), ShouldBeGreaterThan, 0.60)
-
 
 			Convey("Saving should work...", func() {
 				f, err := ioutil.TempFile("", "tree")

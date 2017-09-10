@@ -6,9 +6,9 @@ import (
 	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/linear_models"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 	"io/ioutil"
 	"os"
+	"testing"
 )
 
 func TestOneVsAllModel(t *testing.T) {
@@ -48,7 +48,7 @@ func TestOneVsAllModel(t *testing.T) {
 			fmt.Println(evaluation.GetSummary(cf))
 		})
 
-		Convey("Saving and reloading should work...", func(){
+		Convey("Saving and reloading should work...", func() {
 			predictions, err := m.Predict(Y)
 			So(err, ShouldEqual, nil)
 			f, err := ioutil.TempFile(os.TempDir(), "tmpCls")

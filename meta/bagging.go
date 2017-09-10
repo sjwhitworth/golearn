@@ -17,7 +17,7 @@ type BaggedModel struct {
 	RandomFeatures     int
 	lock               sync.Mutex
 	selectedAttributes map[int][]base.Attribute
-	fitOn		       base.FixedDataGrid
+	fitOn              base.FixedDataGrid
 }
 
 // generateTrainingAttrs selects RandomFeatures number of base.Attributes from
@@ -192,10 +192,10 @@ func (b *BaggedModel) String() string {
 // GetMetadata returns required serialization information for this classifier
 func (b *BaggedModel) GetMetadata() base.ClassifierMetadataV1 {
 
-	return base.ClassifierMetadataV1 {
-		FormatVersion: 1,
-		ClassifierName: "BaggedModel",
-		ClassifierVersion: "1.0",
+	return base.ClassifierMetadataV1{
+		FormatVersion:      1,
+		ClassifierName:     "BaggedModel",
+		ClassifierVersion:  "1.0",
 		ClassifierMetadata: nil,
 	}
 
@@ -221,7 +221,6 @@ func (b *BaggedModel) Load(filePath string) error {
 	reader.Close()
 	return err
 }
-
 
 /* type BaggedModel struct {
 	base.BaseClassifier
