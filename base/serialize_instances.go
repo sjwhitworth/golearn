@@ -293,10 +293,6 @@ func SerializeInstancesToTarWriter(inst FixedDataGrid, tw *tar.Writer, prefix st
 		return fmt.Errorf("Could not write ATTRS: %s", err)
 	}
 
-	if !includeData {
-		return nil
-	}
-
 	// Data must be written out in the same order as the Attributes
 	allAttrs := make([]Attribute, attrCount)
 	normCount := copy(allAttrs, normalAttrs)
@@ -322,6 +318,11 @@ func SerializeInstancesToTarWriter(inst FixedDataGrid, tw *tar.Writer, prefix st
 	}
 	if err := tw.WriteHeader(hdr); err != nil {
 		return fmt.Errorf("Could not write DATA: %s", err)
+	}
+	tw.Flush()
+
+	if !includeData {
+		return nil
 	}
 
 	// Then write the actual data

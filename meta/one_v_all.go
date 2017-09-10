@@ -178,11 +178,8 @@ func (m *OneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, pref
 			if err != nil {
 				return base.FormatError(err, "Can't resolve this attribute: %s", keyAttrRaw)
 			}
-			valAttr, err := base.ReplaceDeserializedAttributeWithVersionFromInstances(valAttrRaw, m.fitOn)
-			if err != nil {
-				return base.FormatError(err, "Can't resolve this attribute: %s", valAttrRaw)
-			}
-			attrMap[keyAttr] = valAttr
+
+			attrMap[keyAttr] = valAttrRaw
 		}
 		f.attrs = attrMap
 		mapClassKey := reader.Prefix(mapPrefix, "CLASS_ATTR")
@@ -206,7 +203,7 @@ func (m *OneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, pref
 	}
 	// Reload the class values
 	var classVals = make([]string, 0)
-	err = reader.GetJSONForKey(reader.Prefix(prefix, "CLASS_VALUES"), classVals)
+	err = reader.GetJSONForKey(reader.Prefix(prefix, "CLASS_VALUES"), &classVals)
 	if err != nil {
 		return base.DescribeError("Can't read CLASS_VALUES", err)
 	}
@@ -217,34 +214,10 @@ func (m *OneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, pref
 	for i, c := range classVals {
 		cls := m.NewClassifierFunction(c)
 		clsPrefix := pI(reader.Prefix(prefix, "CLASSIFIERS"), i)
-		clsBodyPrefix := reader.Prefix(clsPrefix, "CLS")
 
-		err = cls.LoadWithPrefix(reader, clsBodyPrefix)
+		err = cls.LoadWithPrefix(reader, clsPrefix)
 		if err != nil {
-			return base.FormatError(err, "Could not reload classifier at: %s", clsBodyPrefix)
-		}
-		m.classifiers = append(m.classifiers, cls)
-	}
-
-	numClassifiersU64, err := reader.GetU64ForKey(reader.Prefix(prefix, "CLASSIFIER_COUNT"))
-	if err != nil {
-		return base.DescribeError("Can't load CLASSIFIER_COUNT", err)
-	}
-	numClassifiers := int(numClassifiersU64)
-
-	for i := 0; i < numClassifiers; i++ {
-		clsPrefix := pI(reader.Prefix(prefix, "CLASSIFIERS"), i)
-		clsStringPrefix := reader.Prefix(clsPrefix, "STRING")
-		clsBodyPrefix := reader.Prefix(clsPrefix, "CLS")
-		str, err := reader.GetStringForKey(clsStringPrefix)
-		if err != nil {
-			return base.FormatError(err, "Could not read class from: %s", clsStringPrefix)
-		}
-
-		cls := m.NewClassifierFunction(str)
-		err = cls.LoadWithPrefix(reader, clsBodyPrefix)
-		if err != nil {
-			return base.FormatError(err, "Could not reload classifier at: %s", clsBodyPrefix)
+			return base.FormatError(err, "Could not reload classifier at: %s", clsPrefix)
 		}
 		m.classifiers = append(m.classifiers, cls)
 	}
@@ -313,6 +286,7 @@ func (m *OneVsAllModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix
 			if err != nil {
 				return base.DescribeError("Unable to write filter map value", err)
 			}
+			j++
 		}
 		mapClassKey := writer.Prefix(mapPrefix, "CLASS_ATTR")
 		err = writer.WriteAttributeForKey(mapClassKey, f.classAttr)
