@@ -95,6 +95,9 @@ func (rt *RandomTree) Save(filePath string) error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		writer.Close()
+	}()
 	return rt.SaveWithPrefix(writer, "")
 }
 
