@@ -3,6 +3,7 @@ package meta
 import (
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
+	"log"
 )
 
 // OneVsAllModel replaces class Attributes with numeric versions
@@ -61,6 +62,10 @@ func (m *OneVsAllModel) Fit(using base.FixedDataGrid) {
 	}
 	m.maxClassVal = val
 
+	// If we're reloading, we may just be fitting to the structure
+	_, srcRows := using.Size()
+	fittingToStructure := srcRows == 0
+
 	// Create individual filtered instances for training
 	filters := make([]*oneVsAllFilter, val+1)
 	classifiers := make([]base.Classifier, val+1)
@@ -72,7 +77,9 @@ func (m *OneVsAllModel) Fit(using base.FixedDataGrid) {
 		}
 		filters[i] = f
 		classifiers[i] = m.NewClassifierFunction(classVals[int(i)])
-		classifiers[i].Fit(base.NewLazilyFilteredInstances(using, f))
+		if !fittingToStructure {
+			classifiers[i].Fit(base.NewLazilyFilteredInstances(using, f))
+		}
 	}
 
 	m.filters = filters
@@ -90,7 +97,13 @@ func (m *OneVsAllModel) Predict(what base.FixedDataGrid) (base.FixedDataGrid, er
 	ret := base.GeneratePredictionVector(what)
 	vecs := make([]base.FixedDataGrid, m.maxClassVal+1)
 	specs := make([]base.AttributeSpec, m.maxClassVal+1)
+
+	if int(m.maxClassVal) > len(m.filters) || (m.maxClassVal == 0 && len(m.filters) == 0) {
+		return nil, base.WrapError(fmt.Errorf("Internal error: m.Filter len = %d, maxClassVal = %d", len(m.filters), m.maxClassVal))
+	}
+
 	for i := uint64(0); i <= m.maxClassVal; i++ {
+		//log.Printf("i = %d, m.Filter len = %d, maxClassVal = %d", i, len(m.filters), m.maxClassVal)
 		f := m.filters[i]
 		c := base.NewLazilyFilteredInstances(what, f)
 		p, err := m.classifiers[i].Predict(c)
@@ -139,7 +152,10 @@ func (m *OneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, pref
 	if err != nil {
 		return base.DescribeError("Can't load INSTANCE_STRUCTURE", err)
 	}
-	m.fitOn = fitOn
+	m.Fit(fitOn)
+	/*if err != nil {
+		base.DescribeError("Could not fit reloaded classifier to the structure", err)
+	}*/
 
 	// Reload the filters
 	numFiltersU64, err := reader.GetU64ForKey(reader.Prefix(prefix, "FILTER_COUNT"))
@@ -151,7 +167,7 @@ func (m *OneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, pref
 	for i := 0; i < numFilters; i++ {
 		f := oneVsAllFilter{}
 
-		mapPrefix := pI(reader.Prefix(prefix, "FILTER"), i)
+		mapPrefix := pI("FILTER", i)
 		mapCountKey := reader.Prefix(mapPrefix, "COUNT")
 		numAttrsInMapU64, err := reader.GetU64ForKey(mapCountKey)
 		if err != nil {
@@ -161,7 +177,7 @@ func (m *OneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, pref
 		attrMap := make(map[base.Attribute]base.Attribute)
 
 		for j := 0; j < int(numAttrsInMapU64); j++ {
-			mapTupleKey := pI(mapPrefix, j)
+			mapTupleKey := reader.Prefix(mapPrefix, fmt.Sprintf("%d"))
 			mapKeyKeyKey := reader.Prefix(mapTupleKey, "KEY")
 			mapKeyValKey := reader.Prefix(mapTupleKey, "VAL")
 
@@ -213,7 +229,7 @@ func (m *OneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, pref
 	m.classifiers = make([]base.Classifier, 0)
 	for i, c := range classVals {
 		cls := m.NewClassifierFunction(c)
-		clsPrefix := pI(reader.Prefix(prefix, "CLASSIFIERS"), i)
+		clsPrefix := pI("CLASSIFIERS", i)
 
 		err = cls.LoadWithPrefix(reader, clsPrefix)
 		if err != nil {
@@ -248,6 +264,7 @@ func (m *OneVsAllModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix
 		return writer.Prefix(prefix, writer.Prefix(n, fmt.Sprintf("%d", i)))
 	}
 
+
 	// Save the instances
 	err := writer.WriteInstancesForKey(writer.Prefix(prefix, "INSTANCE_STRUCTURE"), m.fitOn, false)
 	if err != nil {
@@ -266,7 +283,7 @@ func (m *OneVsAllModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix
 		return base.DescribeError("Unable to write FILTER_COUNT", err)
 	}
 	for i, f := range m.filters {
-		mapPrefix := pI(writer.Prefix(prefix, "FILTER"), i)
+		mapPrefix := pI("FILTER", i)
 		mapCountKey := writer.Prefix(mapPrefix, "COUNT")
 		err := writer.WriteU64ForKey(mapCountKey, uint64(len(f.attrs)))
 		if err != nil {
@@ -274,7 +291,7 @@ func (m *OneVsAllModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix
 		}
 		j := 0
 		for key := range f.attrs {
-			mapTupleKey := pI(mapPrefix, j)
+			mapTupleKey := writer.Prefix(mapPrefix, fmt.Sprintf("%d"))
 			mapKeyKeyKey := writer.Prefix(mapTupleKey, "KEY")
 			mapKeyValKey := writer.Prefix(mapTupleKey, "VAL")
 
@@ -302,7 +319,7 @@ func (m *OneVsAllModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix
 
 	// Save the classifiers
 	for i, c := range m.classifiers {
-		clsPrefix := pI(writer.Prefix(prefix, "CLASSIFIERS"), i)
+		clsPrefix := pI("CLASSIFIERS", i)
 		err = c.SaveWithPrefix(writer, clsPrefix)
 		if err != nil {
 			return base.FormatError(err, "Can't save classifier for class %s", m.classValues[i])
@@ -316,7 +333,7 @@ func (m *OneVsAllModel) generateAttributes(from base.FixedDataGrid) map[base.Att
 	       attrs := from.AllAttributes()
 	       classAttrs := from.AllClassAttributes()
 	       if len(classAttrs) != 1 {
-		               panic("Only 1 class Attribute is supported!")
+		               panic(fmt.Errorf("Only 1 class Attribute is supported, had %d", len(classAttrs)))
 		      }
 	       ret := make(map[base.Attribute]base.Attribute)
 	       for _, a := range attrs {

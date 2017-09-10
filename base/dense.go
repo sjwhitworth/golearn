@@ -60,6 +60,12 @@ func copyFixedDataGridStructure(of FixedDataGrid) (*DenseInstances, []AttributeS
 		// Add and store new AttributeSpec
 		specs2[i] = ret.AddAttribute(a)
 	}
+
+	// Add class attributes
+	cAttrs := of.AllClassAttributes()
+	for _, a := range cAttrs {
+		ret.AddClassAttribute(a)
+	}
 	return ret, specs1, specs2
 }
 

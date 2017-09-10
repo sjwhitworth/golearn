@@ -654,3 +654,39 @@ func (t *ID3DecisionTree) Predict(what base.FixedDataGrid) (base.FixedDataGrid, 
 func (t *ID3DecisionTree) String() string {
 	return fmt.Sprintf("ID3DecisionTree(%s\n)", t.Root)
 }
+
+func (t *ID3DecisionTree) GetMetadata() base.ClassifierMetadataV1 {
+	return base.ClassifierMetadataV1{
+		FormatVersion: 1,
+		ClassifierName: "KNN",
+		ClassifierVersion: "1.0",
+		ClassifierMetadata: nil,
+	}
+}
+
+func (t *ID3DecisionTree) Save(filePath string) error {
+	writer, err := base.CreateSerializedClassifierStub(filePath, t.GetMetadata())
+	if err != nil {
+		return err
+	}
+	fmt.Printf("writer: %v", writer)
+	return t.SaveWithPrefix(writer, "")
+}
+
+func (t *ID3DecisionTree) SaveWithPrefix(writer *base.ClassifierSerializer, prefix string) error {
+	return t.Root.SaveWithPrefix(writer, prefix)
+}
+
+func (t *ID3DecisionTree) Load(filePath string) error {
+	reader, err := base.ReadSerializedClassifierStub(filePath)
+	if err != nil {
+		return err
+	}
+	return t.LoadWithPrefix(reader, "")
+}
+
+func (t *ID3DecisionTree) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix string) error {
+	t.Root = &DecisionTreeNode{}
+	return t.Root.LoadWithPrefix(reader, "")
+}
+

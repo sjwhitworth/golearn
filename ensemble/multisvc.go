@@ -4,10 +4,8 @@ import (
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/linear_models"
 	"github.com/sjwhitworth/golearn/meta"
-	"io"
-	"os"
+
 	"fmt"
-	"encoding/json"
 )
 
 // MultiLinearSVC implements a multi-class Support Vector Classifier using a one-vs-all
@@ -31,8 +29,6 @@ func NewMultiLinearSVC(loss, penalty string, dual bool, C float64, eps float64, 
 	if err != nil {
 		panic(err)
 	}
-
-
 
 	// Return me...
 	ret := &MultiLinearSVC{
@@ -91,7 +87,7 @@ func (m *MultiLinearSVC) GetClassifierMetadata() base.ClassifierMetadataV1 {
 		FormatVersion: 1,
 		ClassifierName: "MultiLinearSVC",
 		ClassifierVersion: "1",
-		ClassifierMetadata: nil
+		ClassifierMetadata: nil,
 	}
 }
 
@@ -101,7 +97,7 @@ func (m *MultiLinearSVC) Save(filePath string) error {
 	if err != nil {
 		return err
 	}
-	err := m.SaveWithPrefix(serializer, "")
+	err = m.SaveWithPrefix(serializer, "")
 	if err != nil {
 		return fmt.Errorf("Unable to Save(): %v", err)
 	}
@@ -168,12 +164,13 @@ func (m *MultiLinearSVC) LoadWithPrefix(reader *base.ClassifierDeserializer, pre
 		return fmt.Errorf("Can't load parameters: %v", err)
 	}
 
+	m.initializeOneVsAllModel()
+
 	// Load the model
 	err = m.m.LoadWithPrefix(reader, p("one-vs-all"))
 	if err != nil {
 		return err
 	}
 
-	m.initializeOneVsAllModel()
 	return nil
 }

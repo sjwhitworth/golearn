@@ -53,7 +53,7 @@ func (f *RandomForest) Fit(on base.FixedDataGrid) error {
 
 // Predict generates predictions from a trained RandomForest.
 func (f *RandomForest) Predict(with base.FixedDataGrid) (base.FixedDataGrid, error) {
-	return f.Model.Predict(with), nil
+	return f.Model.Predict(with)
 }
 
 // String returns a human-readable representation of this tree.

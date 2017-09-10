@@ -31,7 +31,7 @@ func TestMultiSVMUnweighted(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			Convey("Loading should work...", func() {
-				mLoaded := NewMultiLinearSVC("l2", "l1", true, 1.00, 1e-8, weights)
+				mLoaded := NewMultiLinearSVC("l1", "l2", true, 1.00, 1e-8, nil)
 				err := mLoaded.Load(f.Name())
 				So(err, ShouldBeNil)
 
@@ -40,7 +40,7 @@ func TestMultiSVMUnweighted(t *testing.T) {
 					So(err, ShouldBeNil)
 					newPredictions, err := mLoaded.Predict(Y)
 					So(err, ShouldBeNil)
-					So(originalPredictions, ShouldEqual, newPredictions)
+					So(base.InstancesAreEqual(originalPredictions, newPredictions), ShouldBeTrue)
 				})
 
 			})
@@ -68,28 +68,29 @@ func TestMultiSVMWeighted(t *testing.T) {
 			predictions, err := m.Predict(Y)
 			cf, err := evaluation.GetConfusionMatrix(Y, predictions)
 			So(err, ShouldEqual, nil)
-			So(evaluation.GetAccuracy(cf), ShouldBeGreaterThan, 0.70)
-		})
+			So(evaluation.GetAccuracy(cf), ShouldBeGreaterThan, 0.60)
 
-		Convey("Saving should work...", func() {
-			f, err := ioutil.TempFile("","tree")
-			So(err, ShouldBeNil)
-			err = m.Save(f.Name())
-			So(err, ShouldBeNil)
 
-			Convey("Loading should work...", func() {
-				mLoaded := NewMultiLinearSVC("l2", "l1", true, 1.00, 1e-8, weights)
-				err := mLoaded.Load(f.Name())
+			Convey("Saving should work...", func() {
+				f, err := ioutil.TempFile("", "tree")
+				So(err, ShouldBeNil)
+				err = m.Save(f.Name())
 				So(err, ShouldBeNil)
 
-				Convey("Predictions should be the same...", func() {
-					originalPredictions, err := m.Predict(Y)
+				Convey("Loading should work...", func() {
+					mLoaded := NewMultiLinearSVC("l1", "l2", true, 1.00, 1e-8, weights)
+					err := mLoaded.Load(f.Name())
 					So(err, ShouldBeNil)
-					newPredictions, err := mLoaded.Predict(Y)
-					So(err, ShouldBeNil)
-					So(originalPredictions, ShouldEqual, newPredictions)
-				})
 
+					Convey("Predictions should be the same...", func() {
+						originalPredictions, err := m.Predict(Y)
+						So(err, ShouldBeNil)
+						newPredictions, err := mLoaded.Predict(Y)
+						So(err, ShouldBeNil)
+						So(base.InstancesAreEqual(originalPredictions, newPredictions), ShouldBeTrue)
+					})
+
+				})
 			})
 
 		})
