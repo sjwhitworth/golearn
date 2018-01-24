@@ -1,9 +1,9 @@
 package base
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/gonum/matrix/mat64"
-	"bytes"
 )
 
 type Mat64Instances struct {
@@ -165,4 +165,3 @@ func (m *Mat64Instances) String() string {
 
 	return buffer.String()
 }
-

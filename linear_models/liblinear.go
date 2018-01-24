@@ -4,6 +4,8 @@ package linear_models
 #include "linear.h"
 */
 import "C"
+import "fmt"
+import "unsafe"
 
 type Problem struct {
 	c_prob C.struct_problem
@@ -14,7 +16,7 @@ type Parameter struct {
 }
 
 type Model struct {
-	c_model *C.struct_model
+	c_model unsafe.Pointer
 }
 
 const (
@@ -58,12 +60,30 @@ func NewProblem(X [][]float64, y []float64, bias float64) *Problem {
 
 func Train(prob *Problem, param *Parameter) *Model {
 	libLinearHookPrintFunc() // Sets up logging
-	return &Model{C.train(&prob.c_prob, &param.c_param)}
+	tmpCProb := &prob.c_prob
+	tmpCParam := &param.c_param
+	return &Model{unsafe.Pointer(C.train(tmpCProb, tmpCParam))}
+}
+
+func Export(model *Model, filePath string) error {
+	status := C.save_model(C.CString(filePath), (*C.struct_model)(model.c_model))
+	if status != 0 {
+		return fmt.Errorf("Problem occured during export to %s (status was %d)", filePath, status)
+	}
+	return nil
+}
+
+func Load(model *Model, filePath string) error {
+	model.c_model = unsafe.Pointer(C.load_model(C.CString(filePath)))
+	if model.c_model == nil {
+		return fmt.Errorf("Something went wrong")
+	}
+	return nil
 }
 
 func Predict(model *Model, x []float64) float64 {
 	c_x := convert_vector(x, 0)
-	c_y := C.predict(model.c_model, c_x)
+	c_y := C.predict((*C.struct_model)(model.c_model), c_x)
 	y := float64(c_y)
 	return y
 }

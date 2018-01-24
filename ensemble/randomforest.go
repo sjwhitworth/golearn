@@ -53,10 +53,47 @@ func (f *RandomForest) Fit(on base.FixedDataGrid) error {
 
 // Predict generates predictions from a trained RandomForest.
 func (f *RandomForest) Predict(with base.FixedDataGrid) (base.FixedDataGrid, error) {
-	return f.Model.Predict(with), nil
+	return f.Model.Predict(with)
 }
 
 // String returns a human-readable representation of this tree.
 func (f *RandomForest) String() string {
 	return fmt.Sprintf("RandomForest(ForestSize: %d, Features:%d, %s\n)", f.ForestSize, f.Features, f.Model)
+}
+
+func (f *RandomForest) GetMetadata() base.ClassifierMetadataV1 {
+	return base.ClassifierMetadataV1{
+		FormatVersion:      1,
+		ClassifierName:     "KNN",
+		ClassifierVersion:  "1.0",
+		ClassifierMetadata: nil,
+	}
+}
+
+func (f *RandomForest) Save(filePath string) error {
+	writer, err := base.CreateSerializedClassifierStub(filePath, f.GetMetadata())
+	if err != nil {
+		return err
+	}
+
+	err = f.SaveWithPrefix(writer, "model")
+	writer.Close()
+	return err
+}
+
+func (f *RandomForest) SaveWithPrefix(writer *base.ClassifierSerializer, prefix string) error {
+	return f.Model.SaveWithPrefix(writer, prefix)
+}
+
+func (f *RandomForest) Load(filePath string) error {
+	reader, err := base.ReadSerializedClassifierStub(filePath)
+	if err != nil {
+		return err
+	}
+	return f.LoadWithPrefix(reader, "model")
+}
+
+func (f *RandomForest) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix string) error {
+	f.Model = new(meta.BaggedModel)
+	return f.Model.LoadWithPrefix(reader, prefix)
 }
