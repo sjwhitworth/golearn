@@ -2,11 +2,14 @@ package meta
 
 import (
 	"fmt"
-	"github.com/sjwhitworth/golearn/base"
-	"github.com/sjwhitworth/golearn/evaluation"
-	"github.com/sjwhitworth/golearn/linear_models"
-	. "github.com/smartystreets/goconvey/convey"
+	"io/ioutil"
+	"os"
 	"testing"
+
+	"github.com/amclay/golearn/base"
+	"github.com/amclay/golearn/evaluation"
+	"github.com/amclay/golearn/linear_models"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestOneVsAllModel(t *testing.T) {
@@ -44,6 +47,25 @@ func TestOneVsAllModel(t *testing.T) {
 			So(err, ShouldEqual, nil)
 			fmt.Println(evaluation.GetAccuracy(cf))
 			fmt.Println(evaluation.GetSummary(cf))
+		})
+
+		Convey("Saving and reloading should work...", func() {
+			predictions, err := m.Predict(Y)
+			So(err, ShouldEqual, nil)
+			f, err := ioutil.TempFile(os.TempDir(), "tmpCls")
+			defer func() {
+				f.Close()
+			}()
+			err = m.Save(f.Name())
+			So(err, ShouldBeNil)
+			Convey("Reloaded classifier should output the same predictions", func() {
+				m := NewOneVsAllModel(classifierFunc)
+				err := m.Load(f.Name())
+				So(err, ShouldBeNil)
+				newPredictions, err := m.Predict(Y)
+				So(err, ShouldBeNil)
+				So(base.InstancesAreEqual(predictions, newPredictions), ShouldBeTrue)
+			})
 		})
 	})
 }

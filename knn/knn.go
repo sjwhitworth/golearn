@@ -7,12 +7,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/amclay/golearn/base"
+	"github.com/amclay/golearn/kdtree"
+	"github.com/amclay/golearn/metrics/pairwise"
+	"github.com/amclay/golearn/utilities"
 	"github.com/gonum/matrix"
 	"github.com/gonum/matrix/mat64"
-	"github.com/sjwhitworth/golearn/base"
-	"github.com/sjwhitworth/golearn/kdtree"
-	"github.com/sjwhitworth/golearn/metrics/pairwise"
-	"github.com/sjwhitworth/golearn/utilities"
 )
 
 // A KNNClassifier consists of a data matrix, associated labels in the same order as the matrix, searching algorithm, and a distance function.
@@ -324,6 +324,96 @@ func (KNN *KNNClassifier) weightedVote(maxmap map[string]float64, values []int, 
 		}
 	}
 	return maxClass
+}
+
+// GetMetadata returns required serialization information for this classifier
+func (KNN *KNNClassifier) GetMetadata() base.ClassifierMetadataV1 {
+
+	classifierParams := make(map[string]interface{})
+	classifierParams["distance_func"] = KNN.DistanceFunc
+	classifierParams["algorithm"] = KNN.Algorithm
+	classifierParams["neighbours"] = KNN.NearestNeighbours
+	classifierParams["weighted"] = KNN.Weighted
+	classifierParams["allow_optimizations"] = KNN.AllowOptimisations
+
+	return base.ClassifierMetadataV1{
+		FormatVersion:      1,
+		ClassifierName:     "KNN",
+		ClassifierVersion:  "1.0",
+		ClassifierMetadata: classifierParams,
+	}
+}
+
+// Save outputs a given KNN classifier.
+func (KNN *KNNClassifier) Save(filePath string) error {
+	writer, err := base.CreateSerializedClassifierStub(filePath, KNN.GetMetadata())
+	if err != nil {
+		return err
+	}
+	fmt.Printf("writer: %v", writer)
+	return KNN.SaveWithPrefix(writer, "")
+}
+
+// SaveWithPrefix outputs KNN as part of another file.
+func (KNN *KNNClassifier) SaveWithPrefix(writer *base.ClassifierSerializer, prefix string) error {
+	fmt.Printf("writer: %v", writer)
+	err := writer.WriteInstancesForKey(writer.Prefix(prefix, "TrainingInstances"), KNN.TrainingData, true)
+	if err != nil {
+		return err
+	}
+	err = writer.Close()
+	return err
+}
+
+// Load reloads a given KNN classifier when it's the only thing in the output file.
+func (KNN *KNNClassifier) Load(filePath string) error {
+	reader, err := base.ReadSerializedClassifierStub(filePath)
+	if err != nil {
+		return err
+	}
+
+	return KNN.LoadWithPrefix(reader, "")
+}
+
+// LoadWithPrefix reloads a given KNN classifier when it's part of another file.
+func (KNN *KNNClassifier) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix string) error {
+
+	clsMetadata, err := reader.ReadMetadataAtPrefix(prefix)
+	if err != nil {
+		return err
+	}
+
+	if clsMetadata.ClassifierName != "KNN" {
+		return fmt.Errorf("This file doesn't contain a KNN classifier")
+	}
+	if clsMetadata.ClassifierVersion != "1.0" {
+		return fmt.Errorf("Can't understand this file format")
+	}
+
+	metadata := clsMetadata.ClassifierMetadata
+	KNN.DistanceFunc = metadata["distance_func"].(string)
+	KNN.Algorithm = metadata["algorithm"].(string)
+	//KNN.NearestNeighbours = metadata["neighbours"].(int)
+	KNN.Weighted = metadata["weighted"].(bool)
+	KNN.AllowOptimisations = metadata["allow_optimizations"].(bool)
+
+	// 101 on why JSON is a bad serialization format
+	floatNeighbours := metadata["neighbours"].(float64)
+	KNN.NearestNeighbours = int(floatNeighbours)
+
+	KNN.TrainingData, err = reader.GetInstancesForKey(reader.Prefix(prefix, "TrainingInstances"))
+
+	return err
+}
+
+// ReloadKNNClassifier reloads a KNNClassifier when it's the only thing in an output file.
+func ReloadKNNClassifier(filePath string) (*KNNClassifier, error) {
+	stub := &KNNClassifier{}
+	err := stub.Load(filePath)
+	if err != nil {
+		return nil, err
+	}
+	return stub, nil
 }
 
 // A KNNRegressor consists of a data matrix, associated result variables in the same order as the matrix, and a name.

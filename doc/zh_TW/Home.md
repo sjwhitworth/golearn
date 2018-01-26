@@ -2,8 +2,8 @@ GoLearn
 =======
 
 <img src="http://talks.golang.org/2013/advconc/gopherhat.jpg" width=125><br>
-[![GoDoc](https://godoc.org/github.com/sjwhitworth/golearn?status.png)](https://godoc.org/github.com/sjwhitworth/golearn)
-[![Build Status](https://travis-ci.org/sjwhitworth/golearn.png?branch=master)](https://travis-ci.org/sjwhitworth/golearn)<br>
+[![GoDoc](https://godoc.org/github.com/amclay/golearn?status.png)](https://godoc.org/github.com/amclay/golearn)
+[![Build Status](https://travis-ci.org/amclay/golearn.png?branch=master)](https://travis-ci.org/amclay/golearn)<br>
 
 歡迎閱讀 GoLearn 中文文檔。 GoLearn 是一個 "開箱即用" 的 Go 語言機器學習函式庫。
 

@@ -5,7 +5,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sjwhitworth/golearn/base"
+
+	"github.com/amclay/golearn/base"
 )
 
 func main() {

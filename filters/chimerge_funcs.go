@@ -1,8 +1,9 @@
 package filters
 
 import (
-	"github.com/sjwhitworth/golearn/base"
 	"math"
+
+	"github.com/amclay/golearn/base"
 )
 
 func ChiMBuildFrequencyTable(attr base.Attribute, inst base.FixedDataGrid) []*FrequencyTableEntry {

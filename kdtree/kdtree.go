@@ -2,9 +2,10 @@ package kdtree
 
 import (
 	"errors"
-	"github.com/gonum/matrix/mat64"
-	"github.com/sjwhitworth/golearn/metrics/pairwise"
 	"sort"
+
+	"github.com/amclay/golearn/metrics/pairwise"
+	"github.com/gonum/matrix/mat64"
 )
 
 type node struct {

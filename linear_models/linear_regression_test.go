@@ -1,10 +1,11 @@
 package linear_models
 
 import (
-	"github.com/sjwhitworth/golearn/base"
-	. "github.com/smartystreets/goconvey/convey"
 	"strconv"
 	"testing"
+
+	"github.com/amclay/golearn/base"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestLinearRegression(t *testing.T) {

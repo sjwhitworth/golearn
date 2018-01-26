@@ -2,7 +2,8 @@ package linear_models
 
 import (
 	"fmt"
-	"github.com/sjwhitworth/golearn/base"
+
+	"github.com/amclay/golearn/base"
 )
 
 func generateClassWeightVectorFromDist(X base.FixedDataGrid) []float64 {

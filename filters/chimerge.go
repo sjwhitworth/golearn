@@ -2,8 +2,9 @@ package filters
 
 import (
 	"fmt"
-	"github.com/sjwhitworth/golearn/base"
 	"math"
+
+	"github.com/amclay/golearn/base"
 )
 
 // ChiMergeFilter implements supervised discretisation

@@ -9,13 +9,13 @@ GoLearn 除了少數依賴於 C 語言以外，皆使用 Go 語言基本函式�
 ### 安裝 GoLearn 內部依賴的函式庫
 安裝完 go 以及系統依賴相關的要件以後，輸入
 ```bash
-go get -t -u -v github.com/sjwhitworth/golearn
+go get -t -u -v github.com/amclay/golearn
 ```
 
 ### 完成安裝
 輸入以下指令完成安裝
 ```bash
-cd $GOPATH/src/github.com/sjwhitworth/golearn
+cd $GOPATH/src/github.com/amclay/golearn
 go get -t -u -v ./...
 ```
 
