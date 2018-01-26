@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sort"
+
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
-	"sort"
 )
 
 // NodeType determines whether a DecisionTreeNode is a leaf or not.
@@ -473,7 +474,9 @@ func (d *DecisionTreeNode) Predict(what base.FixedDataGrid) (base.FixedDataGrid,
 				if err != nil {
 					//predictions.Set(classAttrSpec, rowNo, classAttr.GetSysValFromString(cur.Class))
 					//break
+					fmt.Println("@@@3", splitVal, at, row, rowNo)
 					panic(err)
+					fmt.Println("@@@3", splitVal, at, row, rowNo)
 				}
 
 				var classVar string

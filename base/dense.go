@@ -271,7 +271,7 @@ func (inst *DenseInstances) GetAttribute(get Attribute) (AttributeSpec, error) {
 			}
 		}
 	}
-
+	fmt.Println("@@@2", get.String())
 	return AttributeSpec{-1, 0, nil}, fmt.Errorf("Couldn't resolve %s", get)
 }
 

@@ -2,6 +2,7 @@ package base
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -79,6 +80,44 @@ func ParseCSVEstimateFilePrecision(filepath string) (int, error) {
 	return maxL, nil
 }
 
+func ParseCSVEstimateFilePrecisionFromBytes(byteArray []byte) (int, error) {
+	// Creat a basic regexp
+	rexp := regexp.MustCompile("[0-9]+(.[0-9]+)?")
+	f := bytes.NewBuffer(byteArray)
+
+	// Scan through the file line-by-line
+	maxL := 0
+	scanner := bufio.NewScanner(f)
+	lineCount := 0
+	for scanner.Scan() {
+		if lineCount > 5 {
+			break
+		}
+		line := scanner.Text()
+		if len(line) == 0 {
+			continue
+		}
+		if line[0] == '@' {
+			continue
+		}
+		if line[0] == '%' {
+			continue
+		}
+		matches := rexp.FindAllString(line, -1)
+		for _, m := range matches {
+			p := strings.Split(m, ".")
+			if len(p) == 2 {
+				l := len(p[len(p)-1])
+				if l > maxL {
+					maxL = l
+				}
+			}
+		}
+		lineCount++
+	}
+	return maxL, nil
+}
+
 // ParseCSVGetAttributes returns an ordered slice of appropriate-ly typed
 // and named Attributes.
 func ParseCSVGetAttributes(filepath string, hasHeaders bool) []Attribute {
@@ -88,6 +127,38 @@ func ParseCSVGetAttributes(filepath string, hasHeaders bool) []Attribute {
 		attr.SetName(names[i])
 	}
 	return attrs
+}
+
+func ParseCSVGetAttributesFromBytes(byteArray []byte, hasHeaders bool) []Attribute {
+	attrs := ParseCSVSniffAttributeTypesFromBytes(byteArray, hasHeaders)
+	names := ParseCSVSniffAttributeNamesFromBytes(byteArray, hasHeaders)
+	for i, attr := range attrs {
+		attr.SetName(names[i])
+	}
+	return attrs
+}
+
+func ParseCSVSniffAttributeNamesFromBytes(byteArray []byte, hasHeaders bool) []string {
+	file := bytes.NewBuffer(byteArray)
+
+	reader := csv.NewReader(file)
+	headers, err := reader.Read()
+	if err != nil {
+		panic(err)
+	}
+
+	if hasHeaders {
+		for i, h := range headers {
+			headers[i] = strings.TrimSpace(h)
+		}
+		return headers
+	}
+
+	for i := range headers {
+		headers[i] = fmt.Sprintf("%d", i)
+	}
+	return headers
+
 }
 
 // ParseCSVSniffAttributeNames returns a slice containing the top row
@@ -131,6 +202,7 @@ func ParseCSVSniffAttributeTypes(filepath string, hasHeaders bool) []Attribute {
 		panic(err)
 	}
 	defer file.Close()
+
 	// Create the CSV reader
 	reader := csv.NewReader(file)
 	if hasHeaders {
@@ -162,6 +234,52 @@ func ParseCSVSniffAttributeTypes(filepath string, hasHeaders bool) []Attribute {
 
 	// Estimate file precision
 	maxP, err := ParseCSVEstimateFilePrecision(filepath)
+	if err != nil {
+		panic(err)
+	}
+	for _, a := range attrs {
+		if f, ok := a.(*FloatAttribute); ok {
+			f.Precision = maxP
+		}
+	}
+
+	return attrs
+}
+
+func ParseCSVSniffAttributeTypesFromBytes(byteArray []byte, hasHeaders bool) []Attribute {
+	var attrs []Attribute
+	file := bytes.NewBuffer(byteArray)
+	// Create the CSV reader
+	reader := csv.NewReader(file)
+	if hasHeaders {
+		// Skip the headers
+		_, err := reader.Read()
+		if err != nil {
+			panic(err)
+		}
+	}
+	// Read the first line of the file
+	columns, err := reader.Read()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, entry := range columns {
+		// Match the Attribute type with regular expressions
+		entry = strings.Trim(entry, " ")
+		matched, err := regexp.MatchString("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$", entry)
+		if err != nil {
+			panic(err)
+		}
+		if matched {
+			attrs = append(attrs, NewFloatAttribute(""))
+		} else {
+			attrs = append(attrs, new(CategoricalAttribute))
+		}
+	}
+
+	// Estimate file precision
+	maxP, err := ParseCSVEstimateFilePrecisionFromBytes(file.Bytes())
 	if err != nil {
 		panic(err)
 	}
