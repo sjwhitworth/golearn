@@ -2,7 +2,8 @@ package filters
 
 import (
 	"fmt"
-	"github.com/sjwhitworth/golearn/base"
+
+	"github.com/amclay/golearn/base"
 )
 
 // BinaryConvertFilters convert a given DataGrid into one which

@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	base "github.com/sjwhitworth/golearn/base"
-	evaluation "github.com/sjwhitworth/golearn/evaluation"
-	perceptron "github.com/sjwhitworth/golearn/perceptron"
 	"math/rand"
+
+	base "github.com/amclay/golearn/base"
+	evaluation "github.com/amclay/golearn/evaluation"
+	perceptron "github.com/amclay/golearn/perceptron"
 )
 
 func main() {

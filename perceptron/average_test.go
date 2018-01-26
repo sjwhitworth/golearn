@@ -2,10 +2,11 @@ package perceptron
 
 import (
 	"fmt"
-	"github.com/sjwhitworth/golearn/base"
-	"github.com/sjwhitworth/golearn/evaluation"
 	"path/filepath"
 	"testing"
+
+	"github.com/amclay/golearn/base"
+	"github.com/amclay/golearn/evaluation"
 )
 
 func TestProcessData(t *testing.T) {

@@ -2,7 +2,7 @@ package naive
 
 import (
 	"fmt"
-	"github.com/sjwhitworth/golearn/base"
+	"github.com/amclay/golearn/base"
 	"math"
 )
 

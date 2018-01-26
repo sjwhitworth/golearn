@@ -1,5 +1,5 @@
 **參照:
-[`examples/knnclassifier/knnclassifier_iris.go`](https://github.com/sjwhitworth/golearn/blob/master/examples/knnclassifier/knnclassifier_iris.go)**
+[`examples/knnclassifier/knnclassifier_iris.go`](https://github.com/amclay/golearn/blob/master/examples/knnclassifier/knnclassifier_iris.go)**
 
 KNN (K-Nearest Neighbours) 是一種將未知的事例透過最近的 K 筆訓練資料來決定類別的分類方法。
 

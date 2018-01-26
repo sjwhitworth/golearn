@@ -7,12 +7,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/amclay/golearn/base"
+	"github.com/amclay/golearn/kdtree"
+	"github.com/amclay/golearn/metrics/pairwise"
+	"github.com/amclay/golearn/utilities"
 	"github.com/gonum/matrix"
 	"github.com/gonum/matrix/mat64"
-	"github.com/sjwhitworth/golearn/base"
-	"github.com/sjwhitworth/golearn/kdtree"
-	"github.com/sjwhitworth/golearn/metrics/pairwise"
-	"github.com/sjwhitworth/golearn/utilities"
 )
 
 // A KNNClassifier consists of a data matrix, associated labels in the same order as the matrix, searching algorithm, and a distance function.

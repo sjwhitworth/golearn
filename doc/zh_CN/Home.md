@@ -3,7 +3,7 @@ GoLearn
 
 <img src="http://talks.golang.org/2013/advconc/gopherhat.jpg" width=125><br>
 
-欢迎阅读 GoLearn 中文文档. GoLearn 是一个 "开箱即用" 的机器学习库，使用并为 Go 语言编写。 machine learning library written for and in Go. [GoLearn Github](https://github.com/sjwhitworth/golearn).
+欢迎阅读 GoLearn 中文文档. GoLearn 是一个 "开箱即用" 的机器学习库，使用并为 Go 语言编写。 machine learning library written for and in Go. [GoLearn Github](https://github.com/amclay/golearn).
 
 
 [安装](Installation.md) |

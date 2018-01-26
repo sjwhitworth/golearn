@@ -2,8 +2,9 @@ package trees
 
 import (
 	"fmt"
-	"github.com/sjwhitworth/golearn/base"
 	"math/rand"
+
+	"github.com/amclay/golearn/base"
 )
 
 // RandomTreeRuleGenerator is used to generate decision rules for Random Trees

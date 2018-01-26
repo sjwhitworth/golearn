@@ -2,14 +2,15 @@ package trees
 
 import (
 	"fmt"
-	"github.com/sjwhitworth/golearn/base"
-	"github.com/sjwhitworth/golearn/evaluation"
-	"github.com/sjwhitworth/golearn/filters"
-	. "github.com/smartystreets/goconvey/convey"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
+
+	"github.com/amclay/golearn/base"
+	"github.com/amclay/golearn/evaluation"
+	"github.com/amclay/golearn/filters"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestCanSaveLoadPredictions(t *testing.T) {

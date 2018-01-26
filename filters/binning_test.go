@@ -1,9 +1,10 @@
 package filters
 
 import (
-	"github.com/sjwhitworth/golearn/base"
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+
+	"github.com/amclay/golearn/base"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestBinning(t *testing.T) {

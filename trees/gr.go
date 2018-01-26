@@ -1,8 +1,9 @@
 package trees
 
 import (
-	"github.com/sjwhitworth/golearn/base"
 	"math"
+
+	"github.com/amclay/golearn/base"
 )
 
 //
