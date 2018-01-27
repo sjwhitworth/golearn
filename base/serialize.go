@@ -3,6 +3,7 @@ package base
 import (
 	"archive/tar"
 	"compress/gzip"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -390,8 +391,8 @@ func (c *ClassifierSerializer) WriteMetadataAtPrefix(prefix string, metadata Cla
 // and writes the METADATA header.
 func CreateSerializedClassifierStub(filePath string, metadata ClassifierMetadataV1) (*ClassifierSerializer, error) {
 
-	// Write to a temporary path so we don't corrupt the output file
-	f, err := ioutil.TempFile(os.TempDir(), "clsTmp")
+	// Open the filePath
+	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_TRUNC, 0600)
 	if err != nil {
 		return nil, err
 	}
@@ -404,8 +405,6 @@ func CreateSerializedClassifierStub(filePath string, metadata ClassifierMetadata
 		gzipWriter: gzWriter,
 		fileWriter: f,
 		tarWriter:  tw,
-		f:          f,
-		filePath:   filePath,
 	}
 
 	//
@@ -433,4 +432,116 @@ func CreateSerializedClassifierStub(filePath string, metadata ClassifierMetadata
 
 	return &ret, nil
 
+}
+
+func SerializeInstances(inst FixedDataGrid, f io.Writer) error {
+	var hdr *tar.Header
+
+	gzWriter := gzip.NewWriter(f)
+	tw := tar.NewWriter(gzWriter)
+
+	// Write the MANIFEST entry
+	hdr = &tar.Header{
+		Name: "MANIFEST",
+		Size: int64(len(SerializationFormatVersion)),
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		return fmt.Errorf("Could not write MANIFEST header: %s", err)
+	}
+
+	if _, err := tw.Write([]byte(SerializationFormatVersion)); err != nil {
+		return fmt.Errorf("Could not write MANIFEST contents: %s", err)
+	}
+
+	// Now write the dimensions of the dataset
+	attrCount, rowCount := inst.Size()
+	hdr = &tar.Header{
+		Name: "DIMS",
+		Size: 16,
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		return fmt.Errorf("Could not write DIMS header: %s", err)
+	}
+
+	if _, err := tw.Write(PackU64ToBytes(uint64(attrCount))); err != nil {
+		return fmt.Errorf("Could not write DIMS (attrCount): %s", err)
+	}
+	if _, err := tw.Write(PackU64ToBytes(uint64(rowCount))); err != nil {
+		return fmt.Errorf("Could not write DIMS (rowCount): %s", err)
+	}
+
+	// Write the ATTRIBUTES files
+	classAttrs := inst.AllClassAttributes()
+	normalAttrs := NonClassAttributes(inst)
+	if err := writeAttributesToFilePart(classAttrs, tw, "CATTRS"); err != nil {
+		return fmt.Errorf("Could not write CATTRS: %s", err)
+	}
+	if err := writeAttributesToFilePart(normalAttrs, tw, "ATTRS"); err != nil {
+		return fmt.Errorf("Could not write ATTRS: %s", err)
+	}
+
+	// Data must be written out in the same order as the Attributes
+	allAttrs := make([]Attribute, attrCount)
+	normCount := copy(allAttrs, normalAttrs)
+	for i, v := range classAttrs {
+		allAttrs[normCount+i] = v
+	}
+
+	allSpecs := ResolveAttributes(inst, allAttrs)
+
+	// First, estimate the amount of data we'll need...
+	dataLength := int64(0)
+	inst.MapOverRows(allSpecs, func(val [][]byte, row int) (bool, error) {
+		for _, v := range val {
+			dataLength += int64(len(v))
+		}
+		return true, nil
+	})
+
+	// Then write the header
+	hdr = &tar.Header{
+		Name: "DATA",
+		Size: dataLength,
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		return fmt.Errorf("Could not write DATA: %s", err)
+	}
+
+	// Then write the actual data
+	writtenLength := int64(0)
+	if err := inst.MapOverRows(allSpecs, func(val [][]byte, row int) (bool, error) {
+		for _, v := range val {
+			wl, err := tw.Write(v)
+			writtenLength += int64(wl)
+			if err != nil {
+				return false, err
+			}
+		}
+		return true, nil
+	}); err != nil {
+		return err
+	}
+
+	if writtenLength != dataLength {
+		return fmt.Errorf("Could not write DATA: changed size from %v to %v", dataLength, writtenLength)
+	}
+
+	// Finally, close and flush the various levels
+	if err := tw.Flush(); err != nil {
+		return fmt.Errorf("Could not flush tar: %s", err)
+	}
+
+	if err := tw.Close(); err != nil {
+		return fmt.Errorf("Could not close tar: %s", err)
+	}
+
+	if err := gzWriter.Flush(); err != nil {
+		return fmt.Errorf("Could not flush gz: %s", err)
+	}
+
+	if err := gzWriter.Close(); err != nil {
+		return fmt.Errorf("Could not close gz: %s", err)
+	}
+
+	return nil
 }

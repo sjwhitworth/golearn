@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
+	"encoding/json"
 	"sort"
 )
 
@@ -106,155 +107,27 @@ func getClassAttr(from base.FixedDataGrid) base.Attribute {
 	return allClassAttrs[0]
 }
 
-// MarshalJSON returns a JSON representation of this Attribute
-// for serialisation.
-func (d *DecisionTreeNode) MarshalJSON() ([]byte, error) {
-	ret := map[string]interface{}{
-		"type":       d.Type,
-		"class_dist": d.ClassDist,
-		"class":      d.Class,
-	}
-
-	if d.SplitRule != nil && d.SplitRule.SplitAttr != nil {
-		rawDRule, err := d.SplitRule.MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
-		var dRule map[string]interface{}
-		err = json.Unmarshal(rawDRule, &dRule)
-		if err != nil {
-			panic(err)
-		}
-		ret["split_rule"] = dRule
-	}
-
-	rawClassAttr, err := d.ClassAttr.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	var classAttr map[string]interface{}
-	err = json.Unmarshal(rawClassAttr, &classAttr)
-	ret["class_attr"] = classAttr
-
-	if len(d.Children) > 0 {
-
-		children := make(map[string]interface{})
-		for k := range d.Children {
-			cur, err := d.Children[k].MarshalJSON()
-			if err != nil {
-				return nil, err
-			}
-			var child map[string]interface{}
-			err = json.Unmarshal(cur, &child)
-			if err != nil {
-				panic(err)
-			}
-			children[k] = child
-		}
-		ret["children"] = children
-	}
-	return json.Marshal(ret)
-}
-
-// UnmarshalJSON reads a JSON representation of this Attribute.
-func (d *DecisionTreeNode) UnmarshalJSON(data []byte) error {
-	jsonMap := make(map[string]interface{})
-	err := json.Unmarshal(data, &jsonMap)
-	if err != nil {
-		return err
-	}
-	rawType := int(jsonMap["type"].(float64))
-	if rawType == 1 {
-		d.Type = LeafNode
-	} else if rawType == 2 {
-		d.Type = RuleNode
-	} else {
-		return fmt.Errorf("Unknown nodeType: %d", rawType)
-	}
-	//d.Type = NodeType(int(jsonMap["type"].(float64)))
-	// Convert the class distribution back
-	classDist := jsonMap["class_dist"].(map[string]interface{})
-	d.ClassDist = make(map[string]int)
-	for k := range classDist {
-		d.ClassDist[k] = int(classDist[k].(float64))
-	}
-
-	d.Class = jsonMap["class"].(string)
-
-	//
-	// Decode the class attribute
-	//
-	// Temporarily re-marshal this field back to bytes
-	rawClassAttr := jsonMap["class_attr"]
-	rawClassAttrBytes, err := json.Marshal(rawClassAttr)
-	if err != nil {
-		return err
-	}
-
-	classAttr, err := base.DeserializeAttribute(rawClassAttrBytes)
-	if err != nil {
-		return err
-	}
-	d.ClassAttr = classAttr
-	d.SplitRule = nil
-
-	if splitRule, ok := jsonMap["split_rule"]; ok {
-		d.SplitRule = &DecisionTreeRule{}
-		splitRuleBytes, err := json.Marshal(splitRule)
-		if err != nil {
-			panic(err)
-		}
-		err = d.SplitRule.UnmarshalJSON(splitRuleBytes)
-		if err != nil {
-			return err
-		}
-
-		d.Children = make(map[string]*DecisionTreeNode)
-		childMap := jsonMap["children"].(map[string]interface{})
-		for i := range childMap {
-			cur := &DecisionTreeNode{}
-			childBytes, err := json.Marshal(childMap[i])
-			if err != nil {
-				panic(err)
-			}
-			err = cur.UnmarshalJSON(childBytes)
-			if err != nil {
-				return err
-			}
-			d.Children[i] = cur
-		}
-
-	}
-
-	return nil
-}
-
 // Save sends the classification tree to an output file
 func (d *DecisionTreeNode) Save(filePath string) error {
-	metadata := base.ClassifierMetadataV1{
-		FormatVersion:      1,
-		ClassifierName:     "DecisionTreeNode",
-		ClassifierVersion:  "1",
-		ClassifierMetadata: nil,
+	metadata := base.ClassifierMetadataV1 {
+		FormatVersion: 1,
+		ClassifierName: "test",
+		ClassifierVersion: "1",
+		ClassifierMetadata: exampleClassifierMetadata,
 	}
 	serializer, err := base.CreateSerializedClassifierStub(filePath, metadata)
 	if err != nil {
 		return err
 	}
-	err = d.SaveWithPrefix(serializer, "")
-	serializer.Close()
-	return err
-}
-
-func (d *DecisionTreeNode) SaveWithPrefix(serializer *base.ClassifierSerializer, prefix string) error {
 	b, err := json.Marshal(d)
 	if err != nil {
 		return err
 	}
-	err = serializer.WriteBytesForKey(fmt.Sprintf("%s%s", prefix, "tree"), b)
+	err = serializer.WriteBytesForKey("tree", b)
 	if err != nil {
 		return err
 	}
+	serializer.Close()
 	return nil
 }
 
@@ -266,13 +139,11 @@ func (d *DecisionTreeNode) Load(filePath string) error {
 		return err
 	}
 
-	err = d.LoadWithPrefix(reader, "")
-	reader.Close()
-	return err
-}
+	defer func() {
+		reader.Close()
+	}()
 
-func (d *DecisionTreeNode) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix string) error {
-	b, err := reader.GetBytesForKey(fmt.Sprintf("%s%s", prefix, "tree"))
+	b, err := reader.GetBytesForKey("tree")
 	if err != nil {
 		return err
 	}
