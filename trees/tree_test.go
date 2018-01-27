@@ -7,9 +7,9 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"io/ioutil"
 	"math/rand"
+	"fmt"
 	"os"
 	"testing"
-	"io/ioutil"
 )
 
 func testCanSaveLoadPredictions(trainData, testData base.FixedDataGrid) {
@@ -25,17 +25,18 @@ func testCanSaveLoadPredictions(trainData, testData base.FixedDataGrid) {
 				So(err, ShouldBeNil)
 
 				Convey("Saving the tree...", func() {
-					f, err := ioutil.TempFile("","tree")
+					f, err := ioutil.TempFile("", "tree")
 					So(err, ShouldBeNil)
 					err = root.Save(f.Name())
 					So(err, ShouldBeNil)
 
-					Convey("Loading the tree...", func(){
+					Convey("Loading the tree...", func() {
 						d := &DecisionTreeNode{}
 						err := d.Load(f.Name())
 						So(err, ShouldBeNil)
 						Convey("Generating predictions from the loaded tree...", func() {
 							predictions2, err := d.Predict(testData)
+							So(err, ShouldBeNil)
 							So(predictions, ShouldEqual, predictions2)
 						})
 					})
@@ -143,6 +144,8 @@ func verifyTreeClassification(trainData, testData base.FixedDataGrid) {
 				defer func() {
 					f.Close()
 				}()
+
+				fmt.Printf("%s", root)
 
 				err = root.Save(f.Name())
 				So(err, ShouldBeNil)

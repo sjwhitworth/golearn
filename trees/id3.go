@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
-	"encoding/json"
 	"sort"
 )
 
@@ -34,6 +33,11 @@ type DecisionTreeRule struct {
 
 func (d *DecisionTreeRule) MarshalJSON() ([]byte, error) {
 	ret := make(map[string]interface{})
+	if d.SplitAttr == nil {
+		ret["split_attribute"] = "unknown"
+		ret["split_val"] = 0
+		return json.Marshal(ret)
+	}
 	marshaledSplitAttrRaw, err := d.SplitAttr.MarshalJSON()
 	if err != nil {
 		return nil, err
@@ -63,13 +67,18 @@ func (d *DecisionTreeRule) unmarshalJSON(data []byte) error {
 	if err != nil {
 		panic(err)
 	}
-	d.SplitAttr, err = base.DeserializeAttribute(splitBytes)
-	if err != nil {
-		return err
-	}
-	if d.SplitAttr == nil {
-		panic("Should not be nil")
-		return fmt.Errorf("base.DeserializeAttribute returned nil")
+	fmt.Printf("%s\n", splitBytes)
+	if string(splitBytes) != "\"unknown\"" {
+		d.SplitAttr, err = base.DeserializeAttribute(splitBytes)
+		if err != nil {
+			return err
+		}
+		if d.SplitAttr == nil {
+			panic("Should not be nil")
+			return fmt.Errorf("base.DeserializeAttribute returned nil")
+		}
+	} else {
+		d.SplitAttr = nil
 	}
 	return nil
 }
@@ -98,7 +107,7 @@ type DecisionTreeNode struct {
 	Children  map[string]*DecisionTreeNode `json:"children"`
 	ClassDist map[string]int               `json:"class_dist"`
 	Class     string                       `json:"class_string"`
-	ClassAttr base.Attribute               `json:"class_attribute"`
+	ClassAttr base.Attribute 				`json:"-"`
 	SplitRule *DecisionTreeRule            `json:"decision_tree_rule"`
 }
 
@@ -109,25 +118,34 @@ func getClassAttr(from base.FixedDataGrid) base.Attribute {
 
 // Save sends the classification tree to an output file
 func (d *DecisionTreeNode) Save(filePath string) error {
-	metadata := base.ClassifierMetadataV1 {
-		FormatVersion: 1,
-		ClassifierName: "test",
+	metadata := base.ClassifierMetadataV1{
+		FormatVersion:     1,
+		ClassifierName:    "test",
 		ClassifierVersion: "1",
-		ClassifierMetadata: exampleClassifierMetadata,
 	}
 	serializer, err := base.CreateSerializedClassifierStub(filePath, metadata)
 	if err != nil {
 		return err
 	}
+	return d.SaveWithPrefix(serializer, "")
+}
+
+func (d *DecisionTreeNode) SaveWithPrefix(writer *base.ClassifierSerializer, prefix string) error {
 	b, err := json.Marshal(d)
 	if err != nil {
 		return err
 	}
-	err = serializer.WriteBytesForKey("tree", b)
+	err = writer.WriteBytesForKey(writer.Prefix(prefix, "tree"), b)
 	if err != nil {
 		return err
 	}
-	serializer.Close()
+
+	err = writer.WriteAttributeForKey(writer.Prefix(prefix, "treeClassAttr"), d.ClassAttr)
+	if err != nil {
+		return err
+	}
+
+	writer.Close()
 	return nil
 }
 
@@ -139,11 +157,13 @@ func (d *DecisionTreeNode) Load(filePath string) error {
 		return err
 	}
 
-	defer func() {
-		reader.Close()
-	}()
+	return d.LoadWithPrefix(reader, "")
+}
 
-	b, err := reader.GetBytesForKey("tree")
+// LoadWithPrefix reads from the classifier from part of another model
+func (d *DecisionTreeNode) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix string) error {
+
+	b, err := reader.GetBytesForKey(reader.Prefix(prefix, "tree"))
 	if err != nil {
 		return err
 	}
@@ -153,6 +173,13 @@ func (d *DecisionTreeNode) Load(filePath string) error {
 		return err
 	}
 
+	a, err := reader.GetAttributeForKey(reader.Prefix(prefix, "treeClassAttr"))
+	if err != nil {
+		return err
+	}
+
+	d.ClassAttr = a
+
 	return nil
 }
 
@@ -161,6 +188,7 @@ func (d *DecisionTreeNode) Load(filePath string) error {
 func InferID3Tree(from base.FixedDataGrid, with RuleGenerator) *DecisionTreeNode {
 	// Count the number of classes at this node
 	classes := base.GetClassDistribution(from)
+	classAttr := getClassAttr(from)
 	// If there's only one class, return a DecisionTreeLeaf with
 	// the only class available
 	if len(classes) == 1 {
@@ -173,7 +201,7 @@ func InferID3Tree(from base.FixedDataGrid, with RuleGenerator) *DecisionTreeNode
 			nil,
 			classes,
 			maxClass,
-			getClassAttr(from),
+			classAttr,
 			&DecisionTreeRule{nil, 0.0},
 		}
 		return ret
@@ -198,7 +226,7 @@ func InferID3Tree(from base.FixedDataGrid, with RuleGenerator) *DecisionTreeNode
 			nil,
 			classes,
 			maxClass,
-			getClassAttr(from),
+			classAttr,
 			&DecisionTreeRule{nil, 0.0},
 		}
 		return ret
@@ -210,7 +238,7 @@ func InferID3Tree(from base.FixedDataGrid, with RuleGenerator) *DecisionTreeNode
 		nil,
 		classes,
 		maxClass,
-		getClassAttr(from),
+		classAttr,
 		nil,
 	}
 
