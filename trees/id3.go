@@ -67,7 +67,6 @@ func (d *DecisionTreeRule) unmarshalJSON(data []byte) error {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%s\n", splitBytes)
 	if string(splitBytes) != "\"unknown\"" {
 		d.SplitAttr, err = base.DeserializeAttribute(splitBytes)
 		if err != nil {
@@ -107,7 +106,7 @@ type DecisionTreeNode struct {
 	Children  map[string]*DecisionTreeNode `json:"children"`
 	ClassDist map[string]int               `json:"class_dist"`
 	Class     string                       `json:"class_string"`
-	ClassAttr base.Attribute 				`json:"-"`
+	ClassAttr base.Attribute               `json:"-"`
 	SplitRule *DecisionTreeRule            `json:"decision_tree_rule"`
 }
 

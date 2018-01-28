@@ -356,7 +356,6 @@ func (KNN *KNNClassifier) Save(filePath string) error {
 
 // SaveWithPrefix outputs KNN as part of another file.
 func (KNN *KNNClassifier) SaveWithPrefix(writer *base.ClassifierSerializer, prefix string) error {
-	fmt.Printf("writer: %v", writer)
 	err := writer.WriteInstancesForKey(writer.Prefix(prefix, "TrainingInstances"), KNN.TrainingData, true)
 	if err != nil {
 		return err

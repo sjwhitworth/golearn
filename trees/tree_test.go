@@ -7,7 +7,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"io/ioutil"
 	"math/rand"
-	"fmt"
 	"os"
 	"testing"
 )
@@ -144,8 +143,6 @@ func verifyTreeClassification(trainData, testData base.FixedDataGrid) {
 				defer func() {
 					f.Close()
 				}()
-
-				fmt.Printf("%s", root)
 
 				err = root.Save(f.Name())
 				So(err, ShouldBeNil)
