@@ -126,7 +126,11 @@ func (d *DecisionTreeNode) Save(filePath string) error {
 	if err != nil {
 		return err
 	}
-	return d.SaveWithPrefix(serializer, "")
+	err = d.SaveWithPrefix(serializer, "")
+	if err != nil {
+		return err
+	}
+	return serializer.Close()
 }
 
 func (d *DecisionTreeNode) SaveWithPrefix(writer *base.ClassifierSerializer, prefix string) error {
@@ -144,7 +148,6 @@ func (d *DecisionTreeNode) SaveWithPrefix(writer *base.ClassifierSerializer, pre
 		return err
 	}
 
-	writer.Close()
 	return nil
 }
 
