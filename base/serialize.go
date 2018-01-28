@@ -383,7 +383,7 @@ func (c *ClassifierSerializer) WriteMetadataAtPrefix(prefix string, metadata Cla
 func CreateSerializedClassifierStub(filePath string, metadata ClassifierMetadataV1) (*ClassifierSerializer, error) {
 
 	// Open the filePath
-	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_TRUNC|os.O_CREAT, 0600)
+	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
 	}
