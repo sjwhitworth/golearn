@@ -3,8 +3,11 @@ package linear_models
 import "C"
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/sjwhitworth/golearn/base"
+	"io/ioutil"
+	"os"
 	"unsafe"
 )
 
@@ -209,6 +212,119 @@ func (lr *LinearSVC) Predict(X base.FixedDataGrid) (base.FixedDataGrid, error) {
 	})
 
 	return ret, nil
+}
+
+func (lr *LinearSVC) GetMetadata() base.ClassifierMetadataV1 {
+
+	params, err := json.Marshal(lr.Param)
+	if err != nil {
+		panic(err)
+	}
+
+	classifierParams := make(map[string]interface{})
+	err = json.Unmarshal(params, &classifierParams)
+	if err != nil {
+		panic(err)
+	}
+
+	return base.ClassifierMetadataV1{
+		FormatVersion:      1,
+		ClassifierName:     "LinearSVC",
+		ClassifierVersion:  "1.0",
+		ClassifierMetadata: classifierParams,
+	}
+}
+
+// Save outputs this classifier
+func (lr *LinearSVC) Save(filePath string) error {
+	writer, err := base.CreateSerializedClassifierStub(filePath, lr.GetMetadata())
+	if err != nil {
+		return err
+	}
+	defer func() {
+		writer.Close()
+	}()
+	fmt.Printf("writer: %v", writer)
+	return lr.SaveWithPrefix(writer, "")
+}
+
+func (lr *LinearSVC) SaveWithPrefix(writer *base.ClassifierSerializer, prefix string) error {
+	params, err := json.Marshal(lr.Param)
+	if err != nil {
+		return base.DescribeError("Error marshalling parameters", err)
+	}
+
+	classifierParams := make(map[string]interface{})
+	err = json.Unmarshal(params, &classifierParams)
+	if err != nil {
+		return base.DescribeError("Error marshalling parameters", err)
+	}
+
+	f, err := ioutil.TempFile(os.TempDir(), "liblinear")
+	defer func() {
+		f.Close()
+	}()
+
+	err = Export(lr.model, f.Name())
+	if err != nil {
+		return base.DescribeError("Error exporting model", err)
+	}
+
+	f.Seek(0, os.SEEK_SET)
+	bytes, err := ioutil.ReadAll(f)
+	if err != nil {
+		return base.DescribeError("Error reading model in again", err)
+	}
+
+	err = writer.WriteBytesForKey(writer.Prefix(prefix, "PARAMETERS"), params)
+	if err != nil {
+		return base.DescribeError("Error writing model parameters", err)
+	}
+	writer.WriteBytesForKey(writer.Prefix(prefix, "MODEL"), bytes)
+	if err != nil {
+		return base.DescribeError("Error writing model", err)
+	}
+
+	return nil
+}
+
+func (lr *LinearSVC) Load(filePath string) error {
+	reader, err := base.ReadSerializedClassifierStub(filePath)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		reader.Close()
+	}()
+
+	return lr.LoadWithPrefix(reader, "")
+}
+
+func (lr *LinearSVC) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix string) error {
+	err := reader.GetJSONForKey(reader.Prefix(prefix, "PARAMETERS"), &lr.Param)
+	if err != nil {
+		return base.DescribeError("Error reading PARAMETERS", err)
+	}
+
+	modelBytes, err := reader.GetBytesForKey(reader.Prefix(prefix, "MODEL"))
+	if err != nil {
+		return base.DescribeError("Error reading MODEL", err)
+	}
+
+	f, err := ioutil.TempFile(os.TempDir(), "linear")
+	defer func() {
+		f.Close()
+	}()
+
+	f.WriteAt(modelBytes, 0)
+
+	lr.model = &Model{}
+
+	err = Load(lr.model, f.Name())
+	if err != nil {
+		return base.DescribeError("Unable to reload the model", err)
+	}
+	return nil
 }
 
 // String return a humaan-readable version.

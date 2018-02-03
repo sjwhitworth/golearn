@@ -4,6 +4,8 @@ import (
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/filters"
 	. "github.com/smartystreets/goconvey/convey"
+	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -30,8 +32,41 @@ func convertToBinary(src base.FixedDataGrid) base.FixedDataGrid {
 	return ret
 }
 
+func TestSerialize(t *testing.T) {
+	Convey("Given simple training/test data", t, func() {
+		trainingData, err := base.ParseCSVToInstances("test/simple_train.csv", false)
+		So(err, ShouldBeNil)
+
+		testData, err := base.ParseCSVToTemplatedInstances("test/simple_test.csv", false, trainingData)
+		So(err, ShouldBeNil)
+
+		nb := NewBernoulliNBClassifier()
+		nb.Fit(convertToBinary(trainingData))
+		oldPredictions, err := nb.Predict(convertToBinary(testData))
+
+		Convey("Saving the classifer should work...", func() {
+			f, err := ioutil.TempFile(os.TempDir(), "nb")
+			defer func() {
+				f.Close()
+			}()
+			err = nb.Save(f.Name())
+			So(err, ShouldBeNil)
+			Convey("Loading the classifier should work...", func() {
+				newNb := NewBernoulliNBClassifier()
+				err := newNb.Load(f.Name())
+				So(err, ShouldBeNil)
+				Convey("Predictions should match...", func() {
+					newPredictions, err := newNb.Predict(convertToBinary(testData))
+					So(err, ShouldBeNil)
+					So(base.InstancesAreEqual(oldPredictions, newPredictions), ShouldBeTrue)
+				})
+			})
+		})
+	})
+}
+
 func TestSimple(t *testing.T) {
-	Convey("Given a simple training data", t, func() {
+	Convey("Given a simple training dataset", t, func() {
 		trainingData, err := base.ParseCSVToInstances("test/simple_train.csv", false)
 		So(err, ShouldBeNil)
 
@@ -89,12 +124,13 @@ func TestSimple(t *testing.T) {
 		})
 
 		Convey("Predict should work as expected", func() {
-			testData, err := base.ParseCSVToInstances("test/simple_test.csv", false)
+			testData, err := base.ParseCSVToTemplatedInstances("test/simple_test.csv", false, trainingData)
 			So(err, ShouldBeNil)
 
-			predictions := nb.Predict(convertToBinary(testData))
+			predictions, err := nb.Predict(convertToBinary(testData))
+			So(err, ShouldBeNil)
 
-			Convey("All simple predicitions should be correct", func() {
+			Convey("All simple predictions should be correct", func() {
 				So(base.GetClass(predictions, 0), ShouldEqual, "blue")
 				So(base.GetClass(predictions, 1), ShouldEqual, "red")
 				So(base.GetClass(predictions, 2), ShouldEqual, "blue")

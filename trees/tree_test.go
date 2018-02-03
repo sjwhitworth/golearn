@@ -5,9 +5,45 @@ import (
 	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/filters"
 	. "github.com/smartystreets/goconvey/convey"
+	"io/ioutil"
 	"math/rand"
+	"os"
 	"testing"
 )
+
+func testCanSaveLoadPredictions(trainData, testData base.FixedDataGrid) {
+	rand.Seed(44414515)
+	Convey("Using InferID3Tree to create the tree and do the fitting", func() {
+		Convey("Using a RandomTreeRule", func() {
+			randomTreeRuleGenerator := new(RandomTreeRuleGenerator)
+			randomTreeRuleGenerator.Attributes = 2
+			root := InferID3Tree(trainData, randomTreeRuleGenerator)
+
+			Convey("Predicting with the tree...", func() {
+				predictions, err := root.Predict(testData)
+				So(err, ShouldBeNil)
+
+				Convey("Saving the tree...", func() {
+					f, err := ioutil.TempFile("", "tree")
+					So(err, ShouldBeNil)
+					err = root.Save(f.Name())
+					So(err, ShouldBeNil)
+
+					Convey("Loading the tree...", func() {
+						d := &DecisionTreeNode{}
+						err := d.Load(f.Name())
+						So(err, ShouldBeNil)
+						Convey("Generating predictions from the loaded tree...", func() {
+							predictions2, err := d.Predict(testData)
+							So(err, ShouldBeNil)
+							So(predictions, ShouldEqual, predictions2)
+						})
+					})
+				})
+			})
+		})
+	})
+}
 
 func verifyTreeClassification(trainData, testData base.FixedDataGrid) {
 	rand.Seed(44414515)
@@ -96,6 +132,28 @@ func verifyTreeClassification(trainData, testData base.FixedDataGrid) {
 				Convey("Predictions should be somewhat accurate", func() {
 					So(evaluation.GetAccuracy(confusionMatrix), ShouldBeGreaterThan, 0.5)
 				})
+			})
+
+			Convey("Saving the tree and reloading it", func() {
+				predictions, err := root.Predict(testData)
+				So(err, ShouldBeNil)
+
+				f, err := ioutil.TempFile(os.TempDir(), "clsRandomTree")
+				So(err, ShouldBeNil)
+				defer func() {
+					f.Close()
+				}()
+
+				err = root.Save(f.Name())
+				So(err, ShouldBeNil)
+
+				newRoot := NewRandomTree(2)
+				err = newRoot.Load(f.Name())
+				So(err, ShouldBeNil)
+
+				newPredictions, err := newRoot.Predict(testData)
+
+				So(base.InstancesAreEqual(predictions, newPredictions), ShouldBeTrue)
 			})
 
 			Convey("Predicting with the tree, pruning first", func() {

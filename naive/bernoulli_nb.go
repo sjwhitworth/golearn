@@ -52,6 +52,122 @@ type BernoulliNBClassifier struct {
 	features int
 	// Attributes used to Train
 	attrs []base.Attribute
+	// Instance template
+	fitOn base.FixedDataGrid
+}
+
+func (nb *BernoulliNBClassifier) GetMetadata() base.ClassifierMetadataV1 {
+	return base.ClassifierMetadataV1{
+		FormatVersion:      1,
+		ClassifierName:     "KNN",
+		ClassifierVersion:  "1.0",
+		ClassifierMetadata: nil,
+	}
+}
+
+func (nb *BernoulliNBClassifier) Save(filePath string) error {
+	writer, err := base.CreateSerializedClassifierStub(filePath, nb.GetMetadata())
+	if err != nil {
+		return err
+	}
+	err = nb.SaveWithPrefix(writer, "")
+	writer.Close()
+	return err
+}
+
+func (nb *BernoulliNBClassifier) Load(filePath string) error {
+	reader, err := base.ReadSerializedClassifierStub(filePath)
+	if err != nil {
+		return err
+	}
+
+	return nb.LoadWithPrefix(reader, "")
+}
+
+func (nb *BernoulliNBClassifier) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix string) error {
+
+	instances, err := reader.GetInstancesForKey(reader.Prefix(prefix, "INSTANCE_STRUCTURE"))
+	if err != nil {
+		return base.DescribeError("Unable to read INSTANCE_STRUCTURE", err)
+	}
+
+	rawAttrs, err := reader.GetAttributesForKey(reader.Prefix(prefix, "TRAINING_ATTRIBUTES"))
+	if err != nil {
+		return base.DescribeError("Unable to read training attributes", err)
+	}
+	attrs, err := base.ReplaceDeserializedAttributesWithVersionsFromInstances(rawAttrs, instances)
+	if err != nil {
+		return base.DescribeError("Unable to match up attributes", err)
+	}
+
+	numFeatures, err := reader.GetU64ForKey(reader.Prefix(prefix, "NUM_FEATURES"))
+	if err != nil {
+		return base.DescribeError("Unable to read training feature count", err)
+	}
+	numTrainingInstances, err := reader.GetU64ForKey(reader.Prefix(prefix, "NUM_TRAINING_INSTANCES"))
+	if err != nil {
+		return base.DescribeError("Unable to read training feature count", err)
+	}
+
+	// Save the class instances map
+	condProbs := make(map[string][]float64)
+	classInstances := make(map[string]int)
+
+	err = reader.GetJSONForKey(reader.Prefix(prefix, "CLASS_INSTANCES"), &classInstances)
+	if err != nil {
+		return base.DescribeError("Unable to read the number of things in each class", err)
+	}
+	err = reader.GetJSONForKey(reader.Prefix(prefix, "COND_MAP"), &condProbs)
+	if err != nil {
+		return base.DescribeError("Unable to read the number of things in each class", err)
+	}
+
+	nb.fitOn = instances
+	nb.attrs = attrs
+	nb.features = int(numFeatures)
+	nb.trainingInstances = int(numTrainingInstances)
+	nb.classInstances = classInstances
+	nb.condProb = condProbs
+	return nil
+}
+
+func (nb *BernoulliNBClassifier) SaveWithPrefix(writer *base.ClassifierSerializer, prefix string) error {
+
+	// Save the instance template
+	err := writer.WriteInstancesForKey(writer.Prefix(prefix, "INSTANCE_STRUCTURE"), nb.fitOn, false)
+	if err != nil {
+		return base.DescribeError("Unable to write INSTANCE_STRUCTURE", err)
+	}
+
+	// Save the attributes used to train
+	err = writer.WriteAttributesForKey(writer.Prefix(prefix, "TRAINING_ATTRIBUTES"), nb.attrs)
+	if err != nil {
+		return base.DescribeError("Unable to write training attributes", err)
+	}
+
+	// Save the number of features
+	err = writer.WriteU64ForKey(writer.Prefix(prefix, "NUM_FEATURES"), uint64(nb.features))
+	if err != nil {
+		return base.DescribeError("Unable to write training feature count", err)
+	}
+
+	// Save the number of instances
+	err = writer.WriteU64ForKey(writer.Prefix(prefix, "NUM_TRAINING_INSTANCES"), uint64(nb.trainingInstances))
+	if err != nil {
+		return base.DescribeError("Unable to write training feature count", err)
+	}
+
+	// Save the class instances map
+	err = writer.WriteJSONForKey(writer.Prefix(prefix, "CLASS_INSTANCES"), nb.classInstances)
+	if err != nil {
+		return base.DescribeError("Unable to save the number of things in each class", err)
+	}
+
+	err = writer.WriteJSONForKey(writer.Prefix(prefix, "COND_MAP"), nb.condProb)
+	if err != nil {
+		return base.DescribeError("Unable to save conditional probability map", err)
+	}
+	return nil
 }
 
 // Create a new Bernoulli Naive Bayes Classifier. The argument 'classes'
@@ -140,6 +256,8 @@ func (nb *BernoulliNBClassifier) Fit(X base.FixedDataGrid) {
 			classCondProb[feat] = float64(numDocs+1) / float64(docsInClass+1)
 		}
 	}
+
+	nb.fitOn = base.NewStructuralCopy(X)
 }
 
 // Use trained model to predict test vector's class. The following
@@ -195,7 +313,7 @@ func (nb *BernoulliNBClassifier) PredictOne(vector [][]byte) string {
 //
 // IMPORTANT: Predict panics if Fit was not called or if the
 // document vector and train matrix have a different number of columns.
-func (nb *BernoulliNBClassifier) Predict(what base.FixedDataGrid) base.FixedDataGrid {
+func (nb *BernoulliNBClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, error) {
 	// Generate return vector
 	ret := base.GeneratePredictionVector(what)
 
@@ -207,5 +325,5 @@ func (nb *BernoulliNBClassifier) Predict(what base.FixedDataGrid) base.FixedData
 		return true, nil
 	})
 
-	return ret
+	return ret, nil
 }
