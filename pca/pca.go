@@ -8,6 +8,7 @@ import (
 
 type PCA struct {
 	Num_components int
+	svd            *mat64.SVD
 }
 
 // Number of components. 0 - by default, use number of features as number of components
@@ -15,18 +16,21 @@ func NewPCA(num_components int) *PCA {
 	return &PCA{Num_components: num_components}
 }
 
-//Need return is base.FixedDataGrid
-func (pca *PCA) Transform(X *mat64.Dense) *mat64.Dense {
-	//Prepare before PCA
+// Fit PCA model and transform data
+// Need return is base.FixedDataGrid
+func (pca *PCA) FitTransform(X *mat64.Dense) *mat64.Dense {
+	return pca.Fit(X).Transform(X)
+}
 
-	num_samples, num_features := X.Dims()
-	//Mean to input data
+// Fit PCA model
+func (pca *PCA) Fit(X *mat64.Dense) *PCA {
+	// Mean to input data
 	M := mean(X)
 	X = matrixSubVector(X, M)
 
-	//Get SVD decomposition from data
-	var svd mat64.SVD
-	ok := svd.Factorize(X, matrix.SVDThin)
+	// Get SVD decomposition from data
+	pca.svd = &mat64.SVD{}
+	ok := pca.svd.Factorize(X, matrix.SVDThin)
 	if !ok {
 		panic("Unable to factorize")
 	}
@@ -34,8 +38,19 @@ func (pca *PCA) Transform(X *mat64.Dense) *mat64.Dense {
 		panic("Number of components can't be less than zero")
 	}
 
+	return pca
+}
+
+// Need return is base.FixedDataGrid
+func (pca *PCA) Transform(X *mat64.Dense) *mat64.Dense {
+	if pca.svd == nil {
+		panic("You should to fit PCA model first")
+	}
+
+	num_samples, num_features := X.Dims()
+
 	vTemp := new(mat64.Dense)
-	vTemp.VFromSVD(&svd)
+	vTemp.VFromSVD(pca.svd)
 	//Compute to full data
 	if pca.Num_components == 0 || pca.Num_components > num_features {
 		return compute(X, vTemp)
