@@ -307,8 +307,6 @@ func (inst *DenseInstances) AddClassAttribute(a Attribute) error {
 
 // RemoveClassAttribute removes an Attribute from the set of class Attributes.
 func (inst *DenseInstances) RemoveClassAttribute(a Attribute) error {
-	inst.lock.Lock()
-	defer inst.lock.Unlock()
 
 	as, err := inst.GetAttribute(a)
 	if err != nil {
