@@ -72,7 +72,7 @@ func tarPrefix(prefix string, suffix string) string {
 	if prefix == "" {
 		return suffix
 	}
-	return fmt.Sprintf("%s/%s")
+	return fmt.Sprintf("%s/%s", prefix, suffix)
 }
 
 // ClassifierMetadataV1 is what gets written into METADATA

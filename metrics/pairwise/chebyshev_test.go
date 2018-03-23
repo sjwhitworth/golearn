@@ -3,17 +3,17 @@ package pairwise
 import (
 	"testing"
 
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestChebyshev(t *testing.T) {
-	var vectorX, vectorY *mat64.Dense
+	var vectorX, vectorY *mat.Dense
 	chebyshev := NewChebyshev()
 
 	Convey("Given two vectors", t, func() {
-		vectorX = mat64.NewDense(4, 1, []float64{1, 2, 3, 4})
-		vectorY = mat64.NewDense(4, 1, []float64{-5, -6, 7, 8})
+		vectorX = mat.NewDense(4, 1, []float64{1, 2, 3, 4})
+		vectorY = mat.NewDense(4, 1, []float64{-5, -6, 7, 8})
 
 		Convey("When calculating distance with two vectors", func() {
 			result := chebyshev.Distance(vectorX, vectorY)

@@ -3,18 +3,18 @@ package base
 import (
 	"bytes"
 	"fmt"
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 )
 
 type Mat64Instances struct {
 	attributes []Attribute
 	classAttrs map[int]bool
-	Data       *mat64.Dense
+	Data       *mat.Dense
 	rows       int
 }
 
 // InstancesFromMat64 returns a new Mat64Instances from a literal provided.
-func InstancesFromMat64(rows, cols int, data *mat64.Dense) *Mat64Instances {
+func InstancesFromMat64(rows, cols int, data *mat.Dense) *Mat64Instances {
 
 	var ret Mat64Instances
 	for i := 0; i < cols; i++ {

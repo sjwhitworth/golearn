@@ -1,7 +1,7 @@
 package clustering
 
 import (
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/metrics/pairwise"
 	"math/big"
@@ -22,7 +22,7 @@ type DBSCANParameters struct {
 	MinCount int
 }
 
-func regionQuery(p int, ret *big.Int, dist *mat64.Dense, eps float64) *big.Int {
+func regionQuery(p int, ret *big.Int, dist *mat.Dense, eps float64) *big.Int {
 	rows, _ := dist.Dims()
 	// Return any points within the Eps neighbourhood
 	for i := 0; i < rows; i++ {
@@ -33,7 +33,7 @@ func regionQuery(p int, ret *big.Int, dist *mat64.Dense, eps float64) *big.Int {
 	return ret
 }
 
-func computePairwiseDistances(inst base.FixedDataGrid, attrs []base.Attribute, metric pairwise.PairwiseDistanceFunc) (*mat64.Dense, error) {
+func computePairwiseDistances(inst base.FixedDataGrid, attrs []base.Attribute, metric pairwise.PairwiseDistanceFunc) (*mat.Dense, error) {
 	// Compute pair-wise distances
 	// First convert everything to floats
 	mats, err := base.ConvertAllRowsToMat64(attrs, inst)
@@ -43,7 +43,7 @@ func computePairwiseDistances(inst base.FixedDataGrid, attrs []base.Attribute, m
 
 	// Next, do an n^2 computation of all pairwise distances
 	_, rows := inst.Size()
-	dist := mat64.NewDense(rows, rows, nil)
+	dist := mat.NewDense(rows, rows, nil)
 	for i := 0; i < rows; i++ {
 		for j := i + 1; j < rows; j++ {
 			d := metric.Distance(mats[i], mats[j])

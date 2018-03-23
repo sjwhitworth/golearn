@@ -1,7 +1,7 @@
 package neural
 
 import (
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 	"github.com/sjwhitworth/golearn/base"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
@@ -129,7 +129,7 @@ func TestLayeredXOR(t *testing.T) {
 				}
 
 			})
-			out := mat64.NewDense(6, 1, []float64{1.0, 0.0, 0.0, 0.0, 0.0, 0.0})
+			out := mat.NewDense(6, 1, []float64{1.0, 0.0, 0.0, 0.0, 0.0, 0.0})
 			net.network.Activate(out, 2)
 			So(out.At(5, 0), ShouldAlmostEqual, 1.0, 0.1)
 
@@ -160,7 +160,7 @@ func TestLayeredXORInline(t *testing.T) {
 
 	Convey("Given an inline XOR dataset...", t, func() {
 
-		data := mat64.NewDense(4, 3, []float64{
+		data := mat.NewDense(4, 3, []float64{
 			1, 0, 1,
 			0, 1, 1,
 			0, 0, 0,
@@ -186,7 +186,7 @@ func TestLayeredXORInline(t *testing.T) {
 				}
 
 			})
-			out := mat64.NewDense(6, 1, []float64{1.0, 0.0, 0.0, 0.0, 0.0, 0.0})
+			out := mat.NewDense(6, 1, []float64{1.0, 0.0, 0.0, 0.0, 0.0, 0.0})
 			net.network.Activate(out, 2)
 			So(out.At(5, 0), ShouldAlmostEqual, 1.0, 0.1)
 

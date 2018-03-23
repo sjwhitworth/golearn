@@ -1,7 +1,7 @@
 package base
 
 import (
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 )
 
 // Classifier implementations predict categorical class labels.
@@ -37,7 +37,7 @@ type BaseClassifier struct {
 }
 
 type BaseRegressor struct {
-	Data   mat64.Dense
+	Data   mat.Dense
 	Name   string
 	Labels []float64
 }

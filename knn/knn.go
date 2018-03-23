@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/gonum/matrix"
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/kdtree"
 	"github.com/sjwhitworth/golearn/metrics/pairwise"
@@ -434,11 +434,11 @@ func (KNN *KNNRegressor) Fit(values []float64, numbers []float64, rows int, cols
 		panic(matrix.ErrShape)
 	}
 
-	KNN.Data = mat64.NewDense(rows, cols, numbers)
+	KNN.Data = mat.NewDense(rows, cols, numbers)
 	KNN.Values = values
 }
 
-func (KNN *KNNRegressor) Predict(vector *mat64.Dense, K int) float64 {
+func (KNN *KNNRegressor) Predict(vector *mat.Dense, K int) float64 {
 	// Get the number of rows
 	rows, _ := KNN.Data.Dims()
 	rownumbers := make(map[int]float64)

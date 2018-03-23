@@ -2,13 +2,12 @@
 package pca
 
 import (
-	"github.com/gonum/matrix"
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 )
 
 type PCA struct {
 	Num_components int
-	svd            *mat64.SVD
+	svd            *mat.SVD
 }
 
 // Number of components. 0 - by default, use number of features as number of components
@@ -18,19 +17,19 @@ func NewPCA(num_components int) *PCA {
 
 // Fit PCA model and transform data
 // Need return is base.FixedDataGrid
-func (pca *PCA) FitTransform(X *mat64.Dense) *mat64.Dense {
+func (pca *PCA) FitTransform(X *mat.Dense) *mat.Dense {
 	return pca.Fit(X).Transform(X)
 }
 
 // Fit PCA model
-func (pca *PCA) Fit(X *mat64.Dense) *PCA {
+func (pca *PCA) Fit(X *mat.Dense) *PCA {
 	// Mean to input data
 	M := mean(X)
 	X = matrixSubVector(X, M)
 
 	// Get SVD decomposition from data
-	pca.svd = &mat64.SVD{}
-	ok := pca.svd.Factorize(X, matrix.SVDThin)
+	pca.svd = &mat.SVD{}
+	ok := pca.svd.Factorize(X, mat.SVDThin)
 	if !ok {
 		panic("Unable to factorize")
 	}
@@ -42,41 +41,41 @@ func (pca *PCA) Fit(X *mat64.Dense) *PCA {
 }
 
 // Need return is base.FixedDataGrid
-func (pca *PCA) Transform(X *mat64.Dense) *mat64.Dense {
+func (pca *PCA) Transform(X *mat.Dense) *mat.Dense {
 	if pca.svd == nil {
 		panic("You should to fit PCA model first")
 	}
 
 	num_samples, num_features := X.Dims()
 
-	vTemp := new(mat64.Dense)
-	vTemp.VFromSVD(pca.svd)
+	vTemp := new(mat.Dense)
+	pca.svd.VTo(vTemp)
 	//Compute to full data
 	if pca.Num_components == 0 || pca.Num_components > num_features {
 		return compute(X, vTemp)
 	}
 
 	X = compute(X, vTemp)
-	result := mat64.NewDense(num_samples, pca.Num_components, nil)
-	result.Copy(X.View(0, 0, num_samples, pca.Num_components))
+	result := mat.NewDense(num_samples, pca.Num_components, nil)
+	result.Copy(X)
 	return result
 }
 
 //Helpful private functions
 
 //Compute mean of the columns of input matrix
-func mean(matrix *mat64.Dense) *mat64.Dense {
+func mean(matrix *mat.Dense) *mat.Dense {
 	rows, cols := matrix.Dims()
 	meanVector := make([]float64, cols)
 	for i := 0; i < cols; i++ {
-		sum := mat64.Sum(matrix.ColView(i))
+		sum := mat.Sum(matrix.ColView(i))
 		meanVector[i] = sum / float64(rows)
 	}
-	return mat64.NewDense(1, cols, meanVector)
+	return mat.NewDense(1, cols, meanVector)
 }
 
 // After computing of mean, compute: X(input matrix)  - X(mean vector)
-func matrixSubVector(mat, vec *mat64.Dense) *mat64.Dense {
+func matrixSubVector(mat, vec *mat.Dense) *mat.Dense {
 	rowsm, colsm := mat.Dims()
 	_, colsv := vec.Dims()
 	if colsv != colsm {
@@ -91,8 +90,8 @@ func matrixSubVector(mat, vec *mat64.Dense) *mat64.Dense {
 }
 
 //Multiplication of X(input data) and V(from SVD)
-func compute(X, Y mat64.Matrix) *mat64.Dense {
-	var ret mat64.Dense
+func compute(X, Y mat.Matrix) *mat.Dense {
+	var ret mat.Dense
 	ret.Mul(X, Y)
 	return &ret
 }

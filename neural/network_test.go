@@ -1,7 +1,7 @@
 package neural
 
 import (
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -29,7 +29,7 @@ func TestNetworkWith1Layer(t *testing.T) {
 
 		// Create the Activation vector
 		// NewDense is rows then columns
-		a := mat64.NewDense(6, 1, make([]float64, 6))
+		a := mat.NewDense(6, 1, make([]float64, 6))
 		// Set is rows then columns
 		a.Set(0, 0, 1)
 		a.Set(2, 0, 1)
@@ -42,7 +42,7 @@ func TestNetworkWith1Layer(t *testing.T) {
 			So(a.At(3, 0), ShouldAlmostEqual, 0.332, 0.01)
 
 			// Set the observed error on the output node
-			e := mat64.NewDense(6, 1, make([]float64, 6))
+			e := mat.NewDense(6, 1, make([]float64, 6))
 			e.Set(5, 0, 1.0-a.At(5, 0))
 
 			// Run back-propagated error
