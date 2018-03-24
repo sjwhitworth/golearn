@@ -164,16 +164,19 @@ func DeserializeInstancesFromTarReader(tr *FunctionalTarReader, prefix string) (
 
 	// Finally, read the values out of the data section
 	for i := 0; i < rowCount; i++ {
-		for _, s := range specs {
+		for j, s := range specs {
 			r := ret.Get(s, i)
 			n, err := reader.Read(r)
 			if n != len(r) {
-				return nil, fmt.Errorf("Expected %d bytes (read %d) on row %d", len(r), n, i)
-			}
-			if err != nil {
-				return nil, fmt.Errorf("Read error: %s", err)
+				return nil, WrapError(fmt.Errorf("Expected %d bytes (read %d) on row %d", len(r), n, i))
 			}
 			ret.Set(s, i, r)
+			if err != nil {
+				if i == rowCount-1 && j == len(specs)-1 && err == io.EOF {
+					break
+				}
+				return nil, WrapError(fmt.Errorf("Read error in data section (at row %d from %d, attr %d from %d): %s", i, rowCount, j, len(specs), err))
+			}
 		}
 	}
 
@@ -300,6 +303,9 @@ func SerializeInstancesToTarWriter(inst FixedDataGrid, tw *tar.Writer, prefix st
 	}
 
 	allSpecs := ResolveAttributes(inst, allAttrs)
+	if len(allSpecs) != len(allAttrs) {
+		return WrapError(fmt.Errorf("Error resolving all Attributes: resolved %d, expected %d", len(allSpecs), len(allAttrs)))
+	}
 
 	// First, estimate the amount of data we'll need...
 	dataLength := int64(0)
