@@ -2,7 +2,7 @@ package clustering
 
 import (
 	"bufio"
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/metrics/pairwise"
 	. "github.com/smartystreets/goconvey/convey"
@@ -76,8 +76,8 @@ func TestDBSCANDistanceMetric(t *testing.T) {
 
 	Convey("Check the distance function is sane...", t, func() {
 
-		d1 := mat64.NewDense(1, 2, nil)
-		d2 := mat64.NewDense(1, 2, nil)
+		d1 := mat.NewDense(1, 2, nil)
+		d2 := mat.NewDense(1, 2, nil)
 
 		d1.Set(0, 0, 0.494260967249)
 		d1.Set(0, 1, 1.45106696541)

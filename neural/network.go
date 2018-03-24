@@ -3,7 +3,7 @@ package neural
 import (
 	"bytes"
 	"fmt"
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 	"math"
 )
 
@@ -11,8 +11,8 @@ import (
 // Weights are stored in a dense matrix, each can have its own
 // NeuralFunction.
 type Network struct {
-	origWeights *mat64.Dense
-	weights     *mat64.Dense     // n * n
+	origWeights *mat.Dense
+	weights     *mat.Dense     // n * n
 	biases      []float64        // n for each neuron
 	funcs       []NeuralFunction // for each neuron
 	size        int
@@ -27,7 +27,7 @@ type Network struct {
 // connected to themselves for propagation.
 func NewNetwork(size int, input int, f NeuralFunction) *Network {
 	ret := new(Network)
-	ret.weights = mat64.NewDense(size, size, make([]float64, size*size))
+	ret.weights = mat.NewDense(size, size, make([]float64, size*size))
 	ret.biases = make([]float64, size)
 	ret.funcs = make([]NeuralFunction, size)
 	ret.size = size
@@ -104,7 +104,7 @@ func (n *Network) GetBias(node int) float64 {
 // should be set to the number of layers.
 //
 // This function overwrites whatever's stored in its first argument.
-func (n *Network) Activate(with *mat64.Dense, maxIterations int) {
+func (n *Network) Activate(with *mat.Dense, maxIterations int) {
 
 	// Add bias and feed to activation
 	biasFunc := func(r, c int, v float64) float64 {
@@ -114,7 +114,7 @@ func (n *Network) Activate(with *mat64.Dense, maxIterations int) {
 		return n.funcs[r].Forward(v)
 	}
 
-	tmp := new(mat64.Dense)
+	tmp := new(mat.Dense)
 	tmp.Clone(with)
 
 	// Main loop
@@ -128,10 +128,10 @@ func (n *Network) Activate(with *mat64.Dense, maxIterations int) {
 // UpdateWeights takes an output size * 1 output vector and a size * 1
 // back-propagated error vector, as well as a learnRate and updates
 // the internal weights matrix.
-func (n *Network) UpdateWeights(out, err *mat64.Dense, learnRate float64) {
+func (n *Network) UpdateWeights(out, err *mat.Dense, learnRate float64) {
 
 	if n.origWeights == nil {
-		n.origWeights = mat64.DenseCopyOf(n.weights)
+		n.origWeights = mat.DenseCopyOf(n.weights)
 	}
 
 	// Multiply that by the learning rate
@@ -151,7 +151,7 @@ func (n *Network) UpdateWeights(out, err *mat64.Dense, learnRate float64) {
 
 // UpdateBias computes B = B + l.E and updates the bias weights
 // from a size * 1 back-propagated error vector.
-func (n *Network) UpdateBias(err *mat64.Dense, learnRate float64) {
+func (n *Network) UpdateBias(err *mat.Dense, learnRate float64) {
 
 	for i, b := range n.biases {
 		if i < n.input {
@@ -172,11 +172,11 @@ func (n *Network) UpdateBias(err *mat64.Dense, learnRate float64) {
 //
 // If the network is conceptually organised into n layers, maxIterations
 // should be set to n.
-func (n *Network) Error(outArg, errArg *mat64.Dense, maxIterations int) *mat64.Dense {
+func (n *Network) Error(outArg, errArg *mat.Dense, maxIterations int) *mat.Dense {
 
 	// Copy the arguments
-	out := mat64.DenseCopyOf(outArg)
-	err := mat64.DenseCopyOf(errArg)
+	out := mat.DenseCopyOf(outArg)
+	err := mat.DenseCopyOf(errArg)
 
 	// err should be the difference between observed and expected
 	// for observation nodes only (everything else should be zero)
@@ -187,7 +187,7 @@ func (n *Network) Error(outArg, errArg *mat64.Dense, maxIterations int) *mat64.D
 		panic("Unsupported output size")
 	}
 
-	ret := mat64.NewDense(outRows, 1, make([]float64, outRows))
+	ret := mat.NewDense(outRows, 1, make([]float64, outRows))
 
 	// Do differential calculation
 	diffFunc := func(r, c int, v float64) float64 {
@@ -196,7 +196,7 @@ func (n *Network) Error(outArg, errArg *mat64.Dense, maxIterations int) *mat64.D
 	out.Apply(diffFunc, out)
 
 	// Transpose weights matrix
-	reverseWeights := mat64.DenseCopyOf(n.weights)
+	reverseWeights := mat.DenseCopyOf(n.weights)
 	reverseWeights.Clone(n.weights.T())
 
 	// We only need a certain number of passes

@@ -2,7 +2,7 @@
 package neural
 
 import (
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 )
 
 type ActivationFunction func(float64) float64
@@ -16,4 +16,4 @@ type NeuralFunction struct {
 
 // LayerFuncs are vectorised layer value transformation functions
 // (e.g. sigmoid). They must operate in-place.
-type LayerFunc func(*mat64.Dense)
+type LayerFunc func(*mat.Dense)

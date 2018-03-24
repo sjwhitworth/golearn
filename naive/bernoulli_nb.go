@@ -212,7 +212,7 @@ func (nb *BernoulliNBClassifier) Fit(X base.FixedDataGrid) {
 	docsContainingTerm := make(map[string][]int)
 
 	// This algorithm could be vectorized after binarizing the data
-	// matrix. Since mat64 doesn't have this function, a iterative
+	// matrix. Since mat doesn't have this function, a iterative
 	// version is used.
 	X.MapOverRows(featAttrSpecs, func(docVector [][]byte, r int) (bool, error) {
 		class := base.GetClass(X, r)

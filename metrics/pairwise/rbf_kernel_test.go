@@ -3,17 +3,17 @@ package pairwise
 import (
 	"testing"
 
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestRBFKernel(t *testing.T) {
-	var vectorX, vectorY *mat64.Dense
+	var vectorX, vectorY *mat.Dense
 	rbfKernel := NewRBFKernel(0.1)
 
 	Convey("Given two vectors", t, func() {
-		vectorX = mat64.NewDense(3, 1, []float64{1, 2, 3})
-		vectorY = mat64.NewDense(3, 1, []float64{2, 4, 5})
+		vectorX = mat.NewDense(3, 1, []float64{1, 2, 3})
+		vectorY = mat.NewDense(3, 1, []float64{2, 4, 5})
 
 		Convey("When doing inner product", func() {
 			result := rbfKernel.InnerProduct(vectorX, vectorY)

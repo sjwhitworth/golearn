@@ -7,7 +7,7 @@ import (
 
 	"fmt"
 	_ "github.com/gonum/blas"
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 )
 
 var (
@@ -59,8 +59,8 @@ func (lr *LinearRegression) Fit(inst base.FixedDataGrid) error {
 
 	// Split into two matrices, observed results (dependent variable y)
 	// and the explanatory variables (X) - see http://en.wikipedia.org/wiki/Linear_regression
-	observed := mat64.NewDense(rows, 1, nil)
-	explVariables := mat64.NewDense(rows, cols, nil)
+	observed := mat.NewDense(rows, 1, nil)
+	explVariables := mat.NewDense(rows, cols, nil)
 
 	// Build the observed matrix
 	inst.MapOverRows(classAttrSpecs, func(row [][]byte, i int) (bool, error) {
@@ -80,13 +80,13 @@ func (lr *LinearRegression) Fit(inst base.FixedDataGrid) error {
 	})
 
 	n := cols
-	qr := new(mat64.QR)
+	qr := new(mat.QR)
 	qr.Factorize(explVariables)
-	var q, reg mat64.Dense
-	q.QFromQR(qr)
-	reg.RFromQR(qr)
+	var q, reg mat.Dense
+	qr.QTo(&q)
+	qr.RTo(&reg)
 
-	var transposed, qty mat64.Dense
+	var transposed, qty mat.Dense
 	transposed.Clone(q.T())
 	qty.Mul(&transposed, observed)
 

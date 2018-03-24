@@ -176,7 +176,7 @@ func (m *OneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, pref
 		attrMap := make(map[base.Attribute]base.Attribute)
 
 		for j := 0; j < int(numAttrsInMapU64); j++ {
-			mapTupleKey := reader.Prefix(mapPrefix, fmt.Sprintf("%d"))
+			mapTupleKey := reader.Prefix(mapPrefix, fmt.Sprintf("%d", j))
 			mapKeyKeyKey := reader.Prefix(mapTupleKey, "KEY")
 			mapKeyValKey := reader.Prefix(mapTupleKey, "VAL")
 
@@ -289,7 +289,7 @@ func (m *OneVsAllModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix
 		}
 		j := 0
 		for key := range f.attrs {
-			mapTupleKey := writer.Prefix(mapPrefix, fmt.Sprintf("%d"))
+			mapTupleKey := writer.Prefix(mapPrefix, fmt.Sprintf("%d", j))
 			mapKeyKeyKey := writer.Prefix(mapTupleKey, "KEY")
 			mapKeyValKey := writer.Prefix(mapTupleKey, "VAL")
 

@@ -3,13 +3,13 @@ package pca
 import (
 	"testing"
 
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestPCAWithZeroComponents(t *testing.T) {
 	Convey("Set to pca 0 components with first matrix", t, func() {
-		X1 := mat64.NewDense(3, 7, []float64{6, 5, 4, 3, 8, 2, 9, 5, 1, 10, 2, 3, 8, 7, 5, 14, 2, 3, 6, 3, 2})
+		X1 := mat.NewDense(3, 7, []float64{6, 5, 4, 3, 8, 2, 9, 5, 1, 10, 2, 3, 8, 7, 5, 14, 2, 3, 6, 3, 2})
 		pca := NewPCA(0)
 		rows, cols := pca.FitTransform(X1).Dims()
 		So(rows, ShouldEqual, 3)
@@ -17,7 +17,7 @@ func TestPCAWithZeroComponents(t *testing.T) {
 	})
 
 	Convey("Set to pca 0 components with second matrix", t, func() {
-		X1 := mat64.NewDense(10, 5, []float64{
+		X1 := mat.NewDense(10, 5, []float64{
 			0.52984892, 0.1141001, 0.91599294, 0.9574267, 0.15361222,
 			0.07057588, 0.46371013, 0.73091854, 0.84641034, 0.08122213,
 			0.96221946, 0.60367214, 0.69851546, 0.91965564, 0.27040597,
@@ -37,7 +37,7 @@ func TestPCAWithZeroComponents(t *testing.T) {
 
 func TestPCAWithNComponents(t *testing.T) {
 	Convey("Set to pca 3 components with 5x5 matrix", t, func() {
-		X := mat64.NewDense(5, 5, []float64{
+		X := mat.NewDense(5, 5, []float64{
 			0.23030838, 0.05669317, 0.3187813, 0.34455114, 0.98062806,
 			0.38995469, 0.2996771, 0.99043575, 0.04443827, 0.99527955,
 			0.27266308, 0.14068906, 0.46999473, 0.03296131, 0.90855405,
@@ -50,7 +50,7 @@ func TestPCAWithNComponents(t *testing.T) {
 	})
 
 	Convey("Set to pca 2 components with 3x5 matrix", t, func() {
-		X := mat64.NewDense(3, 5, []float64{
+		X := mat.NewDense(3, 5, []float64{
 			0.12294845, 0.55170713, 0.67572832, 0.60615516, 0.38184551,
 			0.93486821, 0.15120374, 0.89760169, 0.74715672, 0.81373931,
 			0.42821569, 0.47457753, 0.18960954, 0.42466159, 0.34166049})
@@ -63,7 +63,7 @@ func TestPCAWithNComponents(t *testing.T) {
 
 func TestPCAFitAndTransformSeparately(t *testing.T) {
 	Convey("Set to pca 3 components with 5x5 matrix", t, func() {
-		X := mat64.NewDense(5, 5, []float64{
+		X := mat.NewDense(5, 5, []float64{
 			0.23030838, 0.05669317, 0.3187813, 0.34455114, 0.98062806,
 			0.38995469, 0.2996771, 0.99043575, 0.04443827, 0.99527955,
 			0.27266308, 0.14068906, 0.46999473, 0.03296131, 0.90855405,

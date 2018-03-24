@@ -2,7 +2,7 @@ package neural
 
 import (
 	"fmt"
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/filters"
 	"math"
@@ -105,7 +105,7 @@ func (m *MultiLayerNet) Predict(X base.FixedDataGrid) base.FixedDataGrid {
 	}
 
 	// Create the activation vector
-	a := mat64.NewDense(m.network.size, 1, make([]float64, m.network.size))
+	a := mat.NewDense(m.network.size, 1, make([]float64, m.network.size))
 
 	// Resolve the input AttributeSpecs
 	inputAs := base.ResolveAttributes(insts, inputAttrs)
@@ -277,9 +277,9 @@ func (m *MultiLayerNet) Fit(X base.FixedDataGrid) {
 	}
 
 	// Create the training activation vector
-	trainVec := mat64.NewDense(size, 1, make([]float64, size))
+	trainVec := mat.NewDense(size, 1, make([]float64, size))
 	// Create the error vector
-	errVec := mat64.NewDense(size, 1, make([]float64, size))
+	errVec := mat.NewDense(size, 1, make([]float64, size))
 
 	// Resolve training AttributeSpecs
 	trainAs := base.ResolveAllAttributes(insts)
@@ -322,7 +322,7 @@ func (m *MultiLayerNet) Fit(X base.FixedDataGrid) {
 			}
 
 			// Update total error
-			totalError += math.Abs(mat64.Sum(errVec))
+			totalError += math.Abs(mat.Sum(errVec))
 
 			// Back-propagate the error
 			b := m.network.Error(trainVec, errVec, totalLayers)

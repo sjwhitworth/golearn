@@ -1,15 +1,15 @@
 package base
 
 import (
-	"github.com/gonum/matrix/mat64"
 	. "github.com/smartystreets/goconvey/convey"
+	"gonum.org/v1/gonum/mat"
 	"testing"
 )
 
 func TestInlineMat64Creation(t *testing.T) {
 
 	Convey("Given a literal array...", t, func() {
-		mat := mat64.NewDense(4, 3, []float64{
+		mat := mat.NewDense(4, 3, []float64{
 			1, 0, 1,
 			0, 1, 1,
 			0, 0, 0,
