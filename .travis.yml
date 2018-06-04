@@ -14,3 +14,6 @@ before_install:
 install:
  - go get github.com/smartystreets/goconvey/convey
  - go get -v ./...
+
+after_success:
+ - bash <(curl -s https://codecov.io/bash)
