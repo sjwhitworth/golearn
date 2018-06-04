@@ -29,7 +29,7 @@ func TestKdtree(t *testing.T) {
 			})
 		})
 
-		Convey("When k is 2 with euclidean", func() {
+		Convey("When k is 2 with euclidean ", func() {
 			result, _, _ := kd.Search(2, euclidean, []float64{7, 3})
 
 			Convey("The result[0] should be 4", func() {
