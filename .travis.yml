@@ -1,7 +1,5 @@
 language: go
 go:
- - "1.8"
- - "1.9"
  - "1.10"
 env:
  # Temporary workaround for go 1.6
@@ -16,7 +14,7 @@ install:
  - go get -v ./...
 
 script:
- - go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+ - go test -v -coverprofile=coverage.txt -covermode=atomic ./...
 
 after_success:
  - bash <(curl -s https://codecov.io/bash)
