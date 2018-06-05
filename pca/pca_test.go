@@ -3,8 +3,8 @@ package pca
 import (
 	"testing"
 
-	"gonum.org/v1/gonum/mat"
 	. "github.com/smartystreets/goconvey/convey"
+	"gonum.org/v1/gonum/mat"
 )
 
 func TestPCAWithZeroComponents(t *testing.T) {
@@ -75,5 +75,32 @@ func TestPCAFitAndTransformSeparately(t *testing.T) {
 		rows, cols := pca.Transform(X).Dims()
 		So(rows, ShouldEqual, 5)
 		So(cols, ShouldEqual, 3)
+	})
+}
+
+func TestPCAWithNilSVD(t *testing.T) {
+	Convey("Transform before fit PCA model", t, func() {
+		X := mat.NewDense(3, 2, []float64{5, 7, 2, 3, 1, -9})
+		pca := NewPCA(2)
+
+		So(func() { pca.Transform(X) }, ShouldPanic)
+	})
+}
+
+func TestPCAWithLessThanZeroComponents(t *testing.T) {
+	Convey("Set to pca -2 components", t, func() {
+		X := mat.NewDense(1, 2, []float64{3, 0})
+		pca := NewPCA(-2)
+
+		So(func() { pca.Fit(X) }, ShouldPanic)
+	})
+}
+
+func TestMatrixAndVectorMismatchDim(t *testing.T) {
+	Convey("Mismatch dimensions between matrix and vector", t, func() {
+		X := mat.NewDense(3, 1, []float64{-3, 0, 1})
+		v := mat.NewDense(2, 3, []float64{9, 4, 8, 7, 8, 7})
+
+		So(func() { matrixSubVector(X, v) }, ShouldPanic)
 	})
 }
