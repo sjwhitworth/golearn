@@ -104,3 +104,13 @@ func TestMatrixAndVectorMismatchDim(t *testing.T) {
 		So(func() { matrixSubVector(X, v) }, ShouldPanic)
 	})
 }
+
+func TestPCAComponentBiggerThanFeature(t *testing.T) {
+	Convey("Set to pca 5 components with 3x3 matrix", t, func() {
+		X := mat.NewDense(3, 3, []float64{-3, 0, 1, 55, 2, 9, -9, 3, 66})
+		pca := NewPCA(5)
+		rows, cols := pca.FitTransform(X).Dims()
+		So(rows, ShouldEqual, 3)
+		So(cols, ShouldEqual, 3)
+	})
+}
