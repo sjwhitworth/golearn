@@ -3,8 +3,8 @@ package pairwise
 import (
 	"testing"
 
-	"gonum.org/v1/gonum/mat"
 	. "github.com/smartystreets/goconvey/convey"
+	"gonum.org/v1/gonum/mat"
 )
 
 func TestRBFKernel(t *testing.T) {

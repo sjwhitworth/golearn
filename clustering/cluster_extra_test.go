@@ -71,42 +71,42 @@ func Test(t *testing.T) {
 	})
 
 	Convey("m[1] size diff", t, func() {
-                m1 := ClusterMap(make(map[int][]int))
-                m1[1] = []int{1, 3}
-                m1[0] = []int{4, 5}
+		m1 := ClusterMap(make(map[int][]int))
+		m1[1] = []int{1, 3}
+		m1[0] = []int{4, 5}
 
-                m2 := ClusterMap(make(map[int][]int))
-                m2[1] = []int{1, 2, 3}
-                m1[0] = []int{4, 5}
+		m2 := ClusterMap(make(map[int][]int))
+		m2[1] = []int{1, 2, 3}
+		m1[0] = []int{4, 5}
 
-                _, err := m1.Equals(m2)
-                So(err, ShouldNotBeNil)
-        })
+		_, err := m1.Equals(m2)
+		So(err, ShouldNotBeNil)
+	})
 
 	Convey("m[1] duplicate", t, func() {
-                m1 := ClusterMap(make(map[int][]int))
-                m1[1] = []int{1, 1}
-                m1[0] = []int{4, 5}
+		m1 := ClusterMap(make(map[int][]int))
+		m1[1] = []int{1, 1}
+		m1[0] = []int{4, 5}
 
-                m2 := ClusterMap(make(map[int][]int))
-                m1[1] = []int{1, 1}
-                m1[0] = []int{4, 5}
+		m2 := ClusterMap(make(map[int][]int))
+		m1[1] = []int{1, 1}
+		m1[0] = []int{4, 5}
 
-                _, err := m1.Equals(m2)
-                So(err, ShouldNotBeNil)
-        })
+		_, err := m1.Equals(m2)
+		So(err, ShouldNotBeNil)
+	})
 
 	Convey("m[0] duplicate", t, func() {
-                m1 := ClusterMap(make(map[int][]int))
-                m1[1] = []int{1, 2}
-                m1[0] = []int{4, 4}
+		m1 := ClusterMap(make(map[int][]int))
+		m1[1] = []int{1, 2}
+		m1[0] = []int{4, 4}
 
-                m2 := ClusterMap(make(map[int][]int))
-                m1[1] = []int{1, 2}
-                m1[0] = []int{4, 4}
+		m2 := ClusterMap(make(map[int][]int))
+		m1[1] = []int{1, 2}
+		m1[0] = []int{4, 4}
 
-                _, err := m1.Equals(m2)
-                So(err, ShouldNotBeNil)
-        })
+		_, err := m1.Equals(m2)
+		So(err, ShouldNotBeNil)
+	})
 
 }

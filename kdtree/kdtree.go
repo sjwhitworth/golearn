@@ -2,13 +2,13 @@ package kdtree
 
 import (
 	"errors"
-	"gonum.org/v1/gonum/mat"
 	"github.com/sjwhitworth/golearn/metrics/pairwise"
+	"gonum.org/v1/gonum/mat"
 	"sort"
 )
 
 type node struct {
-        feature  int                          // -1: leaf, -2: nil
+	feature  int // -1: leaf, -2: nil
 	value    []float64
 	srcRowNo int
 	left     *node

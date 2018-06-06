@@ -12,7 +12,7 @@ import (
 // NeuralFunction.
 type Network struct {
 	origWeights *mat.Dense
-	weights     *mat.Dense     // n * n
+	weights     *mat.Dense       // n * n
 	biases      []float64        // n for each neuron
 	funcs       []NeuralFunction // for each neuron
 	size        int

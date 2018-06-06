@@ -10,25 +10,25 @@ func TestExpectationMaximization(t *testing.T) {
 	Convey("Doing EM-based clustering", t, func() {
 		em, _ := NewExpectationMaximization(2)
 
-        // Initialization tests
-        // Trying to create NewExpectationMaximization with < 1 component
-        Convey("With less than one component", func() {
-            Convey("Creating a new instance", func () {
-		        _, err := NewExpectationMaximization(0)
+		// Initialization tests
+		// Trying to create NewExpectationMaximization with < 1 component
+		Convey("With less than one component", func() {
+			Convey("Creating a new instance", func() {
+				_, err := NewExpectationMaximization(0)
 				Convey("Should result in a InsufficientComponentsError", func() {
 					So(err, ShouldEqual, InsufficientComponentsError)
 				})
-            })
-        })
+			})
+		})
 
-        // Data tests
-        // Trying to Fit with fewer samples than components
+		// Data tests
+		// Trying to Fit with fewer samples than components
 		Convey("With insufficient training data", func() {
 			Convey("Fitting", func() {
 				testData, err := base.ParseCSVToInstances("./gaussian_mixture_single_obs.csv", false)
 				So(err, ShouldBeNil)
 
-                err = em.Fit(testData)
+				err = em.Fit(testData)
 
 				Convey("Should result in a InsufficientDataError", func() {
 					So(err, ShouldEqual, InsufficientDataError)
@@ -36,7 +36,7 @@ func TestExpectationMaximization(t *testing.T) {
 			})
 		})
 
-        // Trying to Predict before having Fit
+		// Trying to Predict before having Fit
 		Convey("With no training data", func() {
 			Convey("Predicting", func() {
 				testData, err := base.ParseCSVToInstances("./gaussian_mixture.csv", false)
@@ -50,8 +50,8 @@ func TestExpectationMaximization(t *testing.T) {
 			})
 		})
 
-        // Computation tests
-        // Test the predictions are resonable
+		// Computation tests
+		// Test the predictions are resonable
 		Convey("With sufficient training data", func() {
 			instances, err := base.ParseCSVToInstances("./gaussian_mixture.csv", true)
 			So(err, ShouldBeNil)
@@ -60,10 +60,10 @@ func TestExpectationMaximization(t *testing.T) {
 				err := em.Fit(instances)
 				So(err, ShouldBeNil)
 
-                first_mean := em.Params.Means.At(0,0)
+				first_mean := em.Params.Means.At(0, 0)
 
 				Convey("It converges to reasonable a value", func() {
-                    So(first_mean, ShouldAlmostEqual, -5.973, .1)
+					So(first_mean, ShouldAlmostEqual, -5.973, .1)
 				})
 			})
 		})
@@ -76,9 +76,9 @@ func BenchmarkExpectationMaximizationOneRow(b *testing.B) {
 	testData, _ := base.ParseCSVToInstances("./gaussian_mixture.csv", false)
 
 	em, err := NewExpectationMaximization(2)
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 	em.Fit(trainData)
 
 	b.ResetTimer()
