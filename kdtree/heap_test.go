@@ -8,7 +8,7 @@ import (
 
 func TestHeap(t *testing.T) {
 	Convey("Given a heap", t, func() {
-		h := newHeap()
+	        h := newHeap()
 
 		Convey("When heap is empty", func() {
 
