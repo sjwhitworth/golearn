@@ -8,7 +8,7 @@ import (
 )
 
 type node struct {
-	feature  int
+        feature  int                          // -1: leaf, -2: nil
 	value    []float64
 	srcRowNo int
 	left     *node
