@@ -106,3 +106,8 @@ Join the team
 =============
 
 Please send me a mail at stephenjameswhitworth@gmail.com
+
+Test report
+===========
+
+https://docs.google.com/document/d/1eXAeN2hHj0aV7uwQpaiKPDq2kkE_wk-jCGQqI-67V9g/edit?usp=sharing
