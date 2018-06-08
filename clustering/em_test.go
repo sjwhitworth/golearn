@@ -67,6 +67,19 @@ func TestExpectationMaximization(t *testing.T) {
 				})
 			})
 		})
+
+		Convey("Test more code", func() {
+			trainData, _ := base.ParseCSVToInstances("./gaussian_mixture.csv", false)
+			testData, _ := base.ParseCSVToInstances("./gaussian_mixture.csv", false)
+
+			em, err := NewExpectationMaximization(1)
+			if err != nil {
+				panic(err)
+			}
+			em.Fit(trainData)
+
+			em.Predict(testData)
+		})
 	})
 }
 
