@@ -264,6 +264,7 @@ func (lr *LinearSVC) SaveWithPrefix(writer *base.ClassifierSerializer, prefix st
 	defer func() {
 		f.Close()
 	}()
+
 	err = Export(lr.model, f.Name())
 	if err != nil {
 		return base.DescribeError("Error exporting model", err)
