@@ -77,7 +77,6 @@ func TestExpectationMaximization(t *testing.T) {
 				panic(err)
 			}
 			em.Fit(trainData)
-
 			em.Predict(testData)
 		})
 	})
@@ -99,4 +98,3 @@ func BenchmarkExpectationMaximizationOneRow(b *testing.B) {
 		em.Predict(testData)
 	}
 }
-
