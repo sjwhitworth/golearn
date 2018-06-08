@@ -99,3 +99,4 @@ func BenchmarkExpectationMaximizationOneRow(b *testing.B) {
 		em.Predict(testData)
 	}
 }
+
