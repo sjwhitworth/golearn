@@ -6,6 +6,7 @@ import (
 	"fmt"
 )
 
+
 func TestId3(t *testing.T) {
 	Convey("Doing a id3 test", t, func(){
 		var rule DecisionTreeRule

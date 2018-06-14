@@ -9,6 +9,7 @@ import (
 	//"fmt"
 )
 
+
 func TestLinearSVC(t *testing.T) {
 	Convey("Doing a LinearSVC test", t, func(){
 		var SVC *LinearSVC
