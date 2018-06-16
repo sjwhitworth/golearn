@@ -1,5 +1,7 @@
 language: go
 go:
+ - "1.8"
+ - "1.9"
  - "1.10"
 env:
  # Temporary workaround for go 1.6

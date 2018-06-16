@@ -3,8 +3,8 @@ GoLearn
 
 <img src="http://talks.golang.org/2013/advconc/gopherhat.jpg" width=125><br>
 [![GoDoc](https://godoc.org/github.com/sjwhitworth/golearn?status.png)](https://godoc.org/github.com/sjwhitworth/golearn)
-[![Build Status](https://travis-ci.com/frozenkp/golearn.svg?branch=master)](https://travis-ci.com/frozenkp/golearn)
-[![codecov](https://codecov.io/gh/frozenkp/golearn/branch/master/graph/badge.svg)](https://codecov.io/gh/frozenkp/golearn)
+[![Build Status](https://travis-ci.org/sjwhitworth/golearn.png?branch=master)](https://travis-ci.org/sjwhitworth/golearn)<br>
+[![Code Coverage](https://codecov.io/gh/sjwhitworth/golearn/branch/master/graph/badge.svg)](https://codecov.io/gh/sjwhitworth/golearn)
 
 [![Support via Gittip](https://rawgithub.com/twolfson/gittip-badge/0.2.0/dist/gittip.png)](https://www.gittip.com/sjwhitworth/)
 
@@ -106,8 +106,3 @@ Join the team
 =============
 
 Please send me a mail at stephenjameswhitworth@gmail.com
-
-Test report
-===========
-
-https://docs.google.com/document/d/1eXAeN2hHj0aV7uwQpaiKPDq2kkE_wk-jCGQqI-67V9g/edit?usp=sharing
