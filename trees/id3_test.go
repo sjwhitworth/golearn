@@ -1,14 +1,14 @@
 package trees
+
 import (
+	"fmt"
 	"github.com/sjwhitworth/golearn/base"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
-	"fmt"
 )
 
-
 func TestId3(t *testing.T) {
-	Convey("Doing a id3 test", t, func(){
+	Convey("Doing a id3 test", t, func() {
 		var rule DecisionTreeRule
 		s := rule.String()
 		So(s, ShouldNotBeNil)

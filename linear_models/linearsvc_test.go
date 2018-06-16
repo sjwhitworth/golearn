@@ -9,12 +9,11 @@ import (
 	//"fmt"
 )
 
-
 func TestLinearSVC(t *testing.T) {
-	Convey("Doing a LinearSVC test", t, func(){
+	Convey("Doing a LinearSVC test", t, func() {
 		var SVC *LinearSVC
 		var err error
-		Convey("Test NewLinearSVC", func(){
+		Convey("Test NewLinearSVC", func() {
 			_, err = NewLinearSVC("l1", "l1", false, 1.0, -1e6)
 			So(err, ShouldNotBeNil)
 			_, err = NewLinearSVC("l0", "l1", false, 1.0, -1e6)
@@ -35,7 +34,7 @@ func TestLinearSVC(t *testing.T) {
 			_, err = NewLinearSVC("l2", "l1", true, 1.0, -1e6)
 			So(err, ShouldNotBeNil)
 
-			So(func(){ SVC.GetMetadata() } , ShouldNotPanic)
+			So(func() { SVC.GetMetadata() }, ShouldNotPanic)
 
 			params := &LinearSVCParams{0, []float64{0.0}, 1.0, -1e6, false, false}
 			params = params.Copy()
@@ -60,7 +59,6 @@ func TestLinearSVC(t *testing.T) {
 				err = SVC.Load("tmp")
 				So(err, ShouldBeNil)
 
-
 				inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 				inst.RemoveClassAttribute(inst.AllAttributes()[4])
 				inst.AddClassAttribute(inst.AllAttributes()[1])
@@ -75,7 +73,6 @@ func TestLinearSVC(t *testing.T) {
 			So(s, ShouldEqual, "LogisticSVC")
 		})
 		//err = SVC.Save("tmp")
-
 
 		//var problem *Problem
 		//var param *Parameter

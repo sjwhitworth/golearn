@@ -7,7 +7,7 @@ import (
 )
 
 func TestLogistic(t *testing.T) {
-	Convey("Doing a logistic test", t, func(){
+	Convey("Doing a logistic test", t, func() {
 		X, err := base.ParseCSVToInstances("train.csv", false)
 		So(err, ShouldEqual, nil)
 		Y, err := base.ParseCSVToInstances("test.csv", false)

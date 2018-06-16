@@ -1,12 +1,12 @@
 package base
+
 import (
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
-
 func TestId3(t *testing.T) {
-	Convey("Doing a error test", t, func(){
+	Convey("Doing a error test", t, func() {
 		var _gerr GoLearnError
 		gerr := &_gerr
 		gerr.attachFormattedStack()
