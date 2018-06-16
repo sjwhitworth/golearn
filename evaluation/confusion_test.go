@@ -94,9 +94,9 @@ func TestMetrics(t *testing.T) {
 			X, _ := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
 			Y, _ := base.ParseCSVToInstances("../examples/datasets/exam.csv", true)
 			Convey("Nomarl ref and gen matrices", func() {
-				C, _ := GetConfusionMatrix(X, X)
+				out, _ := GetConfusionMatrix(X, X)
 				ret := make(map[string]map[string]int)
-				So(C, ShouldHaveSameTypeAs, ret)
+				So(out, ShouldHaveSameTypeAs, ret)
 			})
 			Convey("Row count mismatch", func() {
 				_, err := GetConfusionMatrix(X, Y)
