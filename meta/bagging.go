@@ -253,7 +253,7 @@ func (b *BaggedModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix s
 
 	// Save the classifiers
 	for i, c := range b.Models {
-		clsPrefix := fmt.Sprintf("%s/", pI( "CLASSIFIERS", i))
+		clsPrefix := fmt.Sprintf("%s/", pI("CLASSIFIERS", i))
 		err = c.SaveWithPrefix(writer, clsPrefix)
 		if err != nil {
 			return base.FormatError(err, "Can't save classifier %d", i)
@@ -308,7 +308,7 @@ func (b *BaggedModel) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix
 
 	// Reload the classifiers
 	for i, m := range b.Models {
-		clsPrefix := fmt.Sprintf("%s/", pI( "CLASSIFIERS", i))
+		clsPrefix := fmt.Sprintf("%s/", pI("CLASSIFIERS", i))
 		err := m.LoadWithPrefix(reader, clsPrefix)
 		if err != nil {
 			return base.DescribeError("Can't read classifier", err)

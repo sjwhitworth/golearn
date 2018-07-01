@@ -14,7 +14,7 @@ type heap struct {
 func newHeap() *heap {
 	h := &heap{}
 	h.tree = make([]heapNode, 0)
-	return &heap{}
+	return h
 }
 
 // maximum return the max heapNode in the heap.

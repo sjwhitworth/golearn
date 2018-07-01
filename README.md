@@ -4,6 +4,7 @@ GoLearn
 <img src="http://talks.golang.org/2013/advconc/gopherhat.jpg" width=125><br>
 [![GoDoc](https://godoc.org/github.com/sjwhitworth/golearn?status.png)](https://godoc.org/github.com/sjwhitworth/golearn)
 [![Build Status](https://travis-ci.org/sjwhitworth/golearn.png?branch=master)](https://travis-ci.org/sjwhitworth/golearn)<br>
+[![Code Coverage](https://codecov.io/gh/sjwhitworth/golearn/branch/master/graph/badge.svg)](https://codecov.io/gh/sjwhitworth/golearn)
 
 [![Support via Gittip](https://rawgithub.com/twolfson/gittip-badge/0.2.0/dist/gittip.png)](https://www.gittip.com/sjwhitworth/)
 
