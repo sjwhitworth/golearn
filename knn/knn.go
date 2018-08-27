@@ -133,7 +133,6 @@ func (KNN *KNNClassifier) Predict(what base.FixedDataGrid) (base.FixedDataGrid, 
 			}
 		}
 	}
-	fmt.Println("Optimisations are switched off")
 
 	// Remove the Attributes which aren't numeric
 	allNumericAttrs := make([]base.Attribute, 0)
