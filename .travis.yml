@@ -1,8 +1,9 @@
 language: go
 go:
- - "1.8"
- - "1.9"
- - "1.10"
+ - "1.8.x"
+ - "1.9.x"
+ - "1.10.x"
+ - "1.11.x"
 env:
  # Temporary workaround for go 1.6
  - GODEBUG=cgocheck=0
