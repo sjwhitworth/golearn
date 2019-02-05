@@ -10,7 +10,7 @@ func checkAllAttributesAreFloat(attrs []Attribute) error {
 	// Check that all the attributes are float
 	for _, a := range attrs {
 		if _, ok := a.(*FloatAttribute); !ok {
-			return fmt.Errorf("All []Attributes to this method must be FloatAttributes")
+			return fmt.Errorf("all []Attributes to this method must be FloatAttributes")
 		}
 	}
 	return nil

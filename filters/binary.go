@@ -144,7 +144,7 @@ func (b *BinaryConvertFilter) Train() error {
 			fAttr := base.FilteredAttribute{af, newAttr}
 			b.converted = append(b.converted, fAttr)
 		} else {
-			return fmt.Errorf("Unsupported Attribute type: %v", a)
+			return fmt.Errorf("unsupported Attribute type: %v", a)
 		}
 	}
 	return nil

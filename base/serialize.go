@@ -53,7 +53,7 @@ func (f *FunctionalTarReader) GetNamedFile(name string) ([]byte, error) {
 				if int64(len(ret)) < hdr.Size {
 					log.Printf("Size mismatch, got %d byte(s) for %s, expected %d (err was %s)", len(ret), hdr.Name, hdr.Size, err)
 				} else {
-					return nil, WrapError(fmt.Errorf("Size mismatch, expected %d byte(s) for %s, got %d", len(ret), hdr.Name, hdr.Size))
+					return nil, WrapError(fmt.Errorf("size mismatch, expected %d byte(s) for %s, got %d", len(ret), hdr.Name, hdr.Size))
 				}
 			}
 			if err != nil {
@@ -63,7 +63,7 @@ func (f *FunctionalTarReader) GetNamedFile(name string) ([]byte, error) {
 		}
 	}
 	if returnCandidate == nil {
-		return nil, WrapError(fmt.Errorf("Not found (looking for %s)", name))
+		return nil, WrapError(fmt.Errorf("not found (looking for %s)", name))
 	}
 	return returnCandidate, nil
 }
@@ -144,7 +144,7 @@ func ReadSerializedClassifierStub(filePath string) (*ClassifierDeserializer, err
 		return nil, DescribeError("Error reading CLS_MANIFEST", err)
 	}
 	if !reflect.DeepEqual(manifestBytes, []byte(SerializationFormatVersion)) {
-		return nil, fmt.Errorf("Unsupported CLS_MANIFEST: %s", string(manifestBytes))
+		return nil, fmt.Errorf("unsupported CLS_MANIFEST: %s", string(manifestBytes))
 	}
 
 	//
@@ -160,13 +160,13 @@ func ReadSerializedClassifierStub(filePath string) (*ClassifierDeserializer, err
 
 	metadata, err = ret.ReadMetadataAtPrefix("")
 	if err != nil {
-		return nil, fmt.Errorf("Error whilst reading METADATA: %s", err)
+		return nil, fmt.Errorf("error whilst reading METADATA: %s", err)
 	}
 	ret.Metadata = &metadata
 
 	// Check that we can understand this archive
 	if metadata.FormatVersion != 1 {
-		return nil, fmt.Errorf("METADATA: wrong format_version for this version of golearn")
+		return nil, fmt.Errorf("mETADATA: wrong format_version for this version of golearn")
 	}
 
 	return ret, nil
@@ -261,27 +261,27 @@ func (c *ClassifierSerializer) Close() error {
 
 	// Finally, close and flush the various levels
 	if err := c.tarWriter.Flush(); err != nil {
-		return fmt.Errorf("Could not flush tar: %s", err)
+		return fmt.Errorf("could not flush tar: %s", err)
 	}
 
 	if err := c.tarWriter.Close(); err != nil {
-		return fmt.Errorf("Could not close tar: %s", err)
+		return fmt.Errorf("could not close tar: %s", err)
 	}
 
 	if err := c.gzipWriter.Flush(); err != nil {
-		return fmt.Errorf("Could not flush gz: %s", err)
+		return fmt.Errorf("could not flush gz: %s", err)
 	}
 
 	if err := c.gzipWriter.Close(); err != nil {
-		return fmt.Errorf("Could not close gz: %s", err)
+		return fmt.Errorf("could not close gz: %s", err)
 	}
 
 	if err := c.fileWriter.Sync(); err != nil {
-		return fmt.Errorf("Could not close file writer: %s", err)
+		return fmt.Errorf("could not close file writer: %s", err)
 	}
 
 	if err := c.fileWriter.Close(); err != nil {
-		return fmt.Errorf("Could not close file writer: %s", err)
+		return fmt.Errorf("could not close file writer: %s", err)
 	}
 
 	return nil
@@ -299,13 +299,13 @@ func (c *ClassifierSerializer) WriteBytesForKey(key string, b []byte) error {
 	}
 
 	if err := c.tarWriter.WriteHeader(hdr); err != nil {
-		return fmt.Errorf("Could not write header for '%s': %s", key, err)
+		return fmt.Errorf("could not write header for '%s': %s", key, err)
 	}
 	//
 	// Write data
 	//
 	if _, err := c.tarWriter.Write(b); err != nil {
-		return fmt.Errorf("Could not write data for '%s': %s", key, err)
+		return fmt.Errorf("could not write data for '%s': %s", key, err)
 	}
 
 	c.tarWriter.Flush()
@@ -406,11 +406,11 @@ func CreateSerializedClassifierStub(filePath string, metadata ClassifierMetadata
 		Size: int64(len(SerializationFormatVersion)),
 	}
 	if err := tw.WriteHeader(hdr); err != nil {
-		return nil, fmt.Errorf("Could not write CLS_MANIFEST header: %s", err)
+		return nil, fmt.Errorf("could not write CLS_MANIFEST header: %s", err)
 	}
 
 	if _, err := tw.Write([]byte(SerializationFormatVersion)); err != nil {
-		return nil, fmt.Errorf("Could not write CLS_MANIFEST contents: %s", err)
+		return nil, fmt.Errorf("could not write CLS_MANIFEST contents: %s", err)
 	}
 
 	//
@@ -418,7 +418,7 @@ func CreateSerializedClassifierStub(filePath string, metadata ClassifierMetadata
 	//
 	err = ret.WriteMetadataAtPrefix("", metadata)
 	if err != nil {
-		return nil, fmt.Errorf("JSON marshal error: %s", err)
+		return nil, fmt.Errorf("jSON marshal error: %s", err)
 	}
 
 	return &ret, nil

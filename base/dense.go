@@ -141,7 +141,7 @@ func (inst *DenseInstances) CreateAttributeGroup(name string, size int) (err err
 		if r := recover(); r != nil {
 			var ok bool
 			if err, ok = r.(error); !ok {
-				err = fmt.Errorf("CreateAttributeGroup: %v (not created)", r)
+				err = fmt.Errorf("createAttributeGroup: %v (not created)", r)
 			}
 		}
 	}()
@@ -169,7 +169,7 @@ func (inst *DenseInstances) GetAttributeGroup(name string) (AttributeGroup, erro
 
 	// Check if the ag exists
 	if id, ok := inst.agMap[name]; !ok {
-		return nil, fmt.Errorf("AttributeGroup '%s' doesn't exist", name)
+		return nil, fmt.Errorf("attributeGroup '%s' doesn't exist", name)
 	} else {
 		// Return the ag
 		return inst.ags[id], nil
@@ -239,14 +239,14 @@ func (inst *DenseInstances) AddAttributeToAttributeGroup(newAttribute Attribute,
 
 	// Check if the ag exists
 	if _, ok := inst.agMap[ag]; !ok {
-		return AttributeSpec{-1, 0, nil}, fmt.Errorf("AttributeGroup '%s' doesn't exist. Call CreateAttributeGroup() first", ag)
+		return AttributeSpec{-1, 0, nil}, fmt.Errorf("attributeGroup '%s' doesn't exist. Call CreateAttributeGroup() first", ag)
 	}
 
 	id := inst.agMap[ag]
 	p := inst.ags[id]
 	for i, a := range p.Attributes() {
 		if !a.Compatible(newAttribute) {
-			return AttributeSpec{-1, 0, nil}, fmt.Errorf("Attribute %s is not Compatible with %s in pond '%s' (position %d)", newAttribute, a, ag, i)
+			return AttributeSpec{-1, 0, nil}, fmt.Errorf("attribute %s is not Compatible with %s in pond '%s' (position %d)", newAttribute, a, ag, i)
 		}
 	}
 
@@ -272,7 +272,7 @@ func (inst *DenseInstances) GetAttribute(get Attribute) (AttributeSpec, error) {
 		}
 	}
 
-	return AttributeSpec{-1, 0, nil}, fmt.Errorf("Couldn't resolve %s", get)
+	return AttributeSpec{-1, 0, nil}, fmt.Errorf("couldn't resolve %s", get)
 }
 
 // AllAttributes returns a slice of all Attributes.

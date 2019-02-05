@@ -65,7 +65,7 @@ func (l *LazilyFilteredInstances) GetAttribute(target Attribute) (AttributeSpec,
 			return ret, nil
 		}
 	}
-	return ret, fmt.Errorf("Couldn't resolve %s", target)
+	return ret, fmt.Errorf("couldn't resolve %s", target)
 }
 
 // AllAttributes returns every Attribute defined in the source datagrid,
@@ -101,7 +101,7 @@ func (l *LazilyFilteredInstances) AddClassAttribute(cls Attribute) error {
 		}
 	}
 	if !matched {
-		return fmt.Errorf("Attribute %s could not be resolved", cls)
+		return fmt.Errorf("attribute %s could not be resolved", cls)
 	}
 	return nil
 }
@@ -119,7 +119,7 @@ func (l *LazilyFilteredInstances) RemoveClassAttribute(cls Attribute) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Attribute %s could not be resolved", cls)
+	return fmt.Errorf("attribute %s could not be resolved", cls)
 }
 
 // AllClassAttributes returns details of all Attributes currently specified
@@ -145,12 +145,12 @@ func (l *LazilyFilteredInstances) transformNewToOldAttribute(as AttributeSpec) (
 		if a.Old.Equals(as.attr) || a.New.Equals(as.attr) {
 			as, err := l.src.GetAttribute(a.Old)
 			if err != nil {
-				return AttributeSpec{}, fmt.Errorf("Internal error in Attribute resolution: '%s'", err)
+				return AttributeSpec{}, fmt.Errorf("internal error in Attribute resolution: '%s'", err)
 			}
 			return as, nil
 		}
 	}
-	return AttributeSpec{}, fmt.Errorf("No matching Attribute")
+	return AttributeSpec{}, fmt.Errorf("no matching Attribute")
 }
 
 // Get returns a transformed byte slice stored at a given AttributeSpec and row.
@@ -177,7 +177,7 @@ func (l *LazilyFilteredInstances) MapOverRows(asv []AttributeSpec, mapFunc func(
 	for i, a := range asv {
 		old, err := l.transformNewToOldAttribute(a)
 		if err != nil {
-			return fmt.Errorf("Couldn't fetch old Attribute: '%s'", a.String())
+			return fmt.Errorf("couldn't fetch old Attribute: '%s'", a.String())
 		}
 		oldAsv[i] = old
 	}

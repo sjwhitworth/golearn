@@ -78,12 +78,12 @@ func DeserializeAttribute(data []byte) (Attribute, error) {
 		attr = new(CategoricalAttribute)
 		break
 	default:
-		return nil, fmt.Errorf("Unrecognised Attribute format: %s", rawAttr.Type)
+		return nil, fmt.Errorf("unrecognised Attribute format: %s", rawAttr.Type)
 	}
 
 	err = attr.UnmarshalJSON(rawAttr.Attr)
 	if err != nil {
-		return nil, fmt.Errorf("Can't deserialize: %s (error: %s)", rawAttr, err)
+		return nil, fmt.Errorf("can't deserialize: %s (error: %s)", rawAttr, err)
 	}
 	attr.SetName(rawAttr.Name)
 	return attr, nil
@@ -96,7 +96,7 @@ func DeserializeAttributes(data []byte) ([]Attribute, error) {
 	var attrs []json.RawMessage
 	err := json.Unmarshal(data, &attrs)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to deserialize attributes: %v", err)
+		return nil, fmt.Errorf("failed to deserialize attributes: %v", err)
 	}
 
 	ret := make([]Attribute, len(attrs))
@@ -118,7 +118,7 @@ func ReplaceDeserializedAttributeWithVersionFromInstances(deserialized Attribute
 			return a, nil
 		}
 	}
-	return nil, WrapError(fmt.Errorf("Unable to match %v in %v", deserialized, matchingWith))
+	return nil, WrapError(fmt.Errorf("unable to match %v in %v", deserialized, matchingWith))
 }
 
 // ReplaceDeserializedAttributesWithVersionsFromInstances takes some independently loaded Attributes and

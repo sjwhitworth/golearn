@@ -35,7 +35,7 @@ func (m *Mat64Instances) GetAttribute(a Attribute) (AttributeSpec, error) {
 			return AttributeSpec{0, i, at}, nil
 		}
 	}
-	return AttributeSpec{}, fmt.Errorf("Couldn't find a matching attribute")
+	return AttributeSpec{}, fmt.Errorf("couldn't find a matching attribute")
 }
 
 // AllAttributes returns every defined Attribute.

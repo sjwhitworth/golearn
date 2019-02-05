@@ -48,7 +48,7 @@ func ResolveAttributes(d DataGrid, attrs []Attribute) []AttributeSpec {
 		a := attrs[i]
 		spec, err := d.GetAttribute(a)
 		if err != nil {
-			panic(fmt.Errorf("Error resolving Attribute %s: %s", a, err))
+			panic(fmt.Errorf("error resolving Attribute %s: %s", a, err))
 		}
 		ret[i] = spec
 	}

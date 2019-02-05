@@ -68,7 +68,7 @@ func Train(prob *Problem, param *Parameter) *Model {
 func Export(model *Model, filePath string) error {
 	status := C.save_model(C.CString(filePath), (*C.struct_model)(model.c_model))
 	if status != 0 {
-		return fmt.Errorf("Problem occured during export to %s (status was %d)", filePath, status)
+		return fmt.Errorf("problem occured during export to %s (status was %d)", filePath, status)
 	}
 	return nil
 }
@@ -76,7 +76,7 @@ func Export(model *Model, filePath string) error {
 func Load(model *Model, filePath string) error {
 	model.c_model = unsafe.Pointer(C.load_model(C.CString(filePath)))
 	if model.c_model == nil {
-		return fmt.Errorf("Something went wrong")
+		return fmt.Errorf("something went wrong")
 	}
 	return nil
 }

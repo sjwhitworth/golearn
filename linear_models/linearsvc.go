@@ -69,7 +69,7 @@ func (p *LinearSVCParams) SetKindFromStrings(loss, penalty string) error {
 	if penalty == "l2" {
 		if loss == "l1" {
 			if !p.Dual {
-				ret = fmt.Errorf("Important: changed to dual form")
+				ret = fmt.Errorf("important: changed to dual form")
 			}
 			p.SolverType = L2R_L1LOSS_SVC_DUAL
 			p.Dual = true
@@ -83,20 +83,20 @@ func (p *LinearSVCParams) SetKindFromStrings(loss, penalty string) error {
 	} else if penalty == "l1" {
 		if loss == "l2" {
 			if p.Dual {
-				ret = fmt.Errorf("Important: changed to primary form")
+				ret = fmt.Errorf("important: changed to primary form")
 			}
 			p.Dual = false
 			p.SolverType = L1R_L2LOSS_SVC
 		} else {
-			return fmt.Errorf("Must have L2 loss with L1 penalty")
+			return fmt.Errorf("must have L2 loss with L1 penalty")
 		}
 	} else {
-		return fmt.Errorf("Penalty must be \"l1\" or \"l2\"")
+		return fmt.Errorf("penalty must be \\"l1\\" or \\"l2\")
 	}
 
 	// Final validation
 	if p.SolverType == 0 {
-		return fmt.Errorf("Invalid parameter combination")
+		return fmt.Errorf("invalid parameter combination")
 	}
 	return ret
 }

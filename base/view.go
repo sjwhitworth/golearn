@@ -116,7 +116,7 @@ func NewInstancesViewFromAttrs(src FixedDataGrid, attrs []Attribute) *InstancesV
 // source FixedDataGrid.
 func (v *InstancesView) GetAttribute(a Attribute) (AttributeSpec, error) {
 	if a == nil {
-		return AttributeSpec{}, fmt.Errorf("Attribute can't be nil")
+		return AttributeSpec{}, fmt.Errorf("attribute can't be nil")
 	}
 	// Pass-through on nil
 	if v.attrs == nil {
@@ -129,7 +129,7 @@ func (v *InstancesView) GetAttribute(a Attribute) (AttributeSpec, error) {
 			return r, nil
 		}
 	}
-	return AttributeSpec{}, fmt.Errorf("Requested Attribute has been filtered")
+	return AttributeSpec{}, fmt.Errorf("requested Attribute has been filtered")
 }
 
 // AllAttributes returns every Attribute which hasn't been filtered.
@@ -159,7 +159,7 @@ func (v *InstancesView) AddClassAttribute(a Attribute) error {
 		}
 	}
 	if !matched {
-		return fmt.Errorf("Attribute has been filtered")
+		return fmt.Errorf("attribute has been filtered")
 	}
 
 	v.classAttrs[a] = true

@@ -65,7 +65,7 @@ func (b *BinningFilter) Train() error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("Training error: %s", err)
+		return fmt.Errorf("training error: %s", err)
 	}
 	b.trained = true
 	return nil

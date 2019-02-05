@@ -134,7 +134,7 @@ func (f *FloatConvertFilter) Train() error {
 			fAttr := base.FilteredAttribute{af, newAttr}
 			f.converted = append(f.converted, fAttr)
 		} else {
-			return fmt.Errorf("Unsupported Attribute type: %v", a)
+			return fmt.Errorf("unsupported Attribute type: %v", a)
 		}
 	}
 	return nil

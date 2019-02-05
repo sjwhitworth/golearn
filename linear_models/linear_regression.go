@@ -35,7 +35,7 @@ func (lr *LinearRegression) Fit(inst base.FixedDataGrid) error {
 	// Validate class Attribute count
 	classAttrs := inst.AllClassAttributes()
 	if len(classAttrs) != 1 {
-		return fmt.Errorf("Only 1 class variable is permitted")
+		return fmt.Errorf("only 1 class variable is permitted")
 	}
 	classAttrSpecs := base.ResolveAttributes(inst, classAttrs)
 

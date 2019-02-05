@@ -53,7 +53,7 @@ func (d *AbstractDiscretizeFilter) getAttributeSpecs() []base.AttributeSpec {
 		// Get the AttributeSpec for the training set
 		a, err := d.train.GetAttribute(attr)
 		if err != nil {
-			panic(fmt.Errorf("Attribute resolution error: %s", err))
+			panic(fmt.Errorf("attribute resolution error: %s", err))
 		}
 		// Append to return set
 		as = append(as, a)

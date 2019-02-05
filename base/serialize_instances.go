@@ -22,7 +22,7 @@ func SerializeInstancesToFile(inst FixedDataGrid, path string) error {
 	}
 	err = f.Sync()
 	if err != nil {
-		return fmt.Errorf("Couldn't flush file: %s", err)
+		return fmt.Errorf("couldn't flush file: %s", err)
 	}
 	f.Close()
 	return nil
@@ -90,16 +90,16 @@ func DeserializeInstancesFromTarReader(tr *FunctionalTarReader, prefix string) (
 		return nil, err
 	}
 	if !reflect.DeepEqual(manifestBytes, []byte(SerializationFormatVersion)) {
-		return nil, fmt.Errorf("Unsupported MANIFEST: %s", string(manifestBytes))
+		return nil, fmt.Errorf("unsupported MANIFEST: %s", string(manifestBytes))
 	}
 
 	// Get the size
 	sizeBytes, err := tr.GetNamedFile(p("DIMS"))
 	if err != nil {
-		return nil, WrapError(fmt.Errorf("Unable to read DIMS: %v", err))
+		return nil, WrapError(fmt.Errorf("unable to read DIMS: %v", err))
 	}
 	if len(sizeBytes) < 16 {
-		return nil, WrapError(fmt.Errorf("DIMS: must be 16 bytes"))
+		return nil, WrapError(fmt.Errorf("dIMS: must be 16 bytes"))
 	}
 	attrCount := int(UnpackBytesToU64(sizeBytes[0:8]))
 	rowCount := int(UnpackBytesToU64(sizeBytes[8:]))
@@ -142,7 +142,7 @@ func DeserializeInstancesFromTarReader(tr *FunctionalTarReader, prefix string) (
 	// Allocate memory
 	err = ret.Extend(int(rowCount))
 	if err != nil {
-		return nil, WrapError(fmt.Errorf("Could not allocate memory"))
+		return nil, WrapError(fmt.Errorf("could not allocate memory"))
 	}
 
 	// Seek through the TAR file until we get to the DATA section
@@ -150,9 +150,9 @@ func DeserializeInstancesFromTarReader(tr *FunctionalTarReader, prefix string) (
 	for {
 		hdr, err := reader.Next()
 		if err == io.EOF {
-			return nil, WrapError(fmt.Errorf("DATA section missing!"))
+			return nil, WrapError(fmt.Errorf("dATA section missing"))
 		} else if err != nil {
-			return nil, WrapError(fmt.Errorf("Error seeking to DATA section: %s", err))
+			return nil, WrapError(fmt.Errorf("error seeking to DATA section: %s", err))
 		}
 		if hdr.Name == p("DATA") {
 			break
@@ -168,14 +168,14 @@ func DeserializeInstancesFromTarReader(tr *FunctionalTarReader, prefix string) (
 			r := ret.Get(s, i)
 			n, err := reader.Read(r)
 			if n != len(r) {
-				return nil, WrapError(fmt.Errorf("Expected %d bytes (read %d) on row %d", len(r), n, i))
+				return nil, WrapError(fmt.Errorf("expected %d bytes (read %d) on row %d", len(r), n, i))
 			}
 			ret.Set(s, i, r)
 			if err != nil {
 				if i == rowCount-1 && j == len(specs)-1 && err == io.EOF {
 					break
 				}
-				return nil, WrapError(fmt.Errorf("Read error in data section (at row %d from %d, attr %d from %d): %s", i, rowCount, j, len(specs), err))
+				return nil, WrapError(fmt.Errorf("read error in data section (at row %d from %d, attr %d from %d): %s", i, rowCount, j, len(specs), err))
 			}
 		}
 	}
@@ -213,7 +213,7 @@ func DeserializeInstances(f io.ReadSeeker) (ret *DenseInstances, err error) {
 	ret, deSerializeErr := DeserializeInstancesFromTarReader(tr, "")
 
 	if err = gzReader.Close(); err != nil {
-		return ret, fmt.Errorf("Error closing gzip stream: %s", err)
+		return ret, fmt.Errorf("error closing gzip stream: %s", err)
 	}
 
 	return ret, deSerializeErr
@@ -228,19 +228,19 @@ func SerializeInstances(inst FixedDataGrid, f io.Writer) error {
 	serializeErr := SerializeInstancesToTarWriter(inst, tw, "", true)
 	// Finally, close and flush the various levels
 	if err := tw.Flush(); err != nil {
-		return fmt.Errorf("Could not flush tar: %s", err)
+		return fmt.Errorf("could not flush tar: %s", err)
 	}
 
 	if err := tw.Close(); err != nil {
-		return fmt.Errorf("Could not close tar: %s", err)
+		return fmt.Errorf("could not close tar: %s", err)
 	}
 
 	if err := gzWriter.Flush(); err != nil {
-		return fmt.Errorf("Could not flush gz: %s", err)
+		return fmt.Errorf("could not flush gz: %s", err)
 	}
 
 	if err := gzWriter.Close(); err != nil {
-		return fmt.Errorf("Could not close gz: %s", err)
+		return fmt.Errorf("could not close gz: %s", err)
 	}
 
 	return serializeErr
@@ -260,11 +260,11 @@ func SerializeInstancesToTarWriter(inst FixedDataGrid, tw *tar.Writer, prefix st
 		Size: int64(len(SerializationFormatVersion)),
 	}
 	if err := tw.WriteHeader(hdr); err != nil {
-		return fmt.Errorf("Could not write MANIFEST header: %s", err)
+		return fmt.Errorf("could not write MANIFEST header: %s", err)
 	}
 
 	if _, err := tw.Write([]byte(SerializationFormatVersion)); err != nil {
-		return fmt.Errorf("Could not write MANIFEST contents: %s", err)
+		return fmt.Errorf("could not write MANIFEST contents: %s", err)
 	}
 	tw.Flush()
 
@@ -275,24 +275,24 @@ func SerializeInstancesToTarWriter(inst FixedDataGrid, tw *tar.Writer, prefix st
 		Size: 16,
 	}
 	if err := tw.WriteHeader(hdr); err != nil {
-		return fmt.Errorf("Could not write DIMS header: %s", err)
+		return fmt.Errorf("could not write DIMS header: %s", err)
 	}
 
 	if _, err := tw.Write(PackU64ToBytes(uint64(attrCount))); err != nil {
-		return fmt.Errorf("Could not write DIMS (attrCount): %s", err)
+		return fmt.Errorf("could not write DIMS (attrCount): %s", err)
 	}
 	if _, err := tw.Write(PackU64ToBytes(uint64(rowCount))); err != nil {
-		return fmt.Errorf("Could not write DIMS (rowCount): %s", err)
+		return fmt.Errorf("could not write DIMS (rowCount): %s", err)
 	}
 
 	// Write the ATTRIBUTES files
 	classAttrs := inst.AllClassAttributes()
 	normalAttrs := NonClassAttributes(inst)
 	if err := writeAttributesToFilePart(classAttrs, tw, p("CATTRS")); err != nil {
-		return fmt.Errorf("Could not write CATTRS: %s", err)
+		return fmt.Errorf("could not write CATTRS: %s", err)
 	}
 	if err := writeAttributesToFilePart(normalAttrs, tw, p("ATTRS")); err != nil {
-		return fmt.Errorf("Could not write ATTRS: %s", err)
+		return fmt.Errorf("could not write ATTRS: %s", err)
 	}
 
 	// Data must be written out in the same order as the Attributes
@@ -304,7 +304,7 @@ func SerializeInstancesToTarWriter(inst FixedDataGrid, tw *tar.Writer, prefix st
 
 	allSpecs := ResolveAttributes(inst, allAttrs)
 	if len(allSpecs) != len(allAttrs) {
-		return WrapError(fmt.Errorf("Error resolving all Attributes: resolved %d, expected %d", len(allSpecs), len(allAttrs)))
+		return WrapError(fmt.Errorf("error resolving all Attributes: resolved %d, expected %d", len(allSpecs), len(allAttrs)))
 	}
 
 	// First, estimate the amount of data we'll need...
@@ -322,7 +322,7 @@ func SerializeInstancesToTarWriter(inst FixedDataGrid, tw *tar.Writer, prefix st
 		Size: dataLength,
 	}
 	if err := tw.WriteHeader(hdr); err != nil {
-		return fmt.Errorf("Could not write DATA: %s", err)
+		return fmt.Errorf("could not write DATA: %s", err)
 	}
 	tw.Flush()
 
@@ -346,7 +346,7 @@ func SerializeInstancesToTarWriter(inst FixedDataGrid, tw *tar.Writer, prefix st
 	}
 
 	if writtenLength != dataLength {
-		return fmt.Errorf("Could not write DATA: changed size from %v to %v", dataLength, writtenLength)
+		return fmt.Errorf("could not write DATA: changed size from %v to %v", dataLength, writtenLength)
 	}
 
 	tw.Flush()

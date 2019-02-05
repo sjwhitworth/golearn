@@ -72,7 +72,7 @@ func GetClass(from DataGrid, row int) string {
 	// Fetch and convert the class value
 	classAttrSpec, err := from.GetAttribute(classAttr)
 	if err != nil {
-		panic(fmt.Errorf("Can't resolve class Attribute %s", err))
+		panic(fmt.Errorf("can't resolve class Attribute %s", err))
 	}
 
 	classVal := from.Get(classAttrSpec, row)
@@ -102,7 +102,7 @@ func SetClass(at UpdatableDataGrid, row int, class string) {
 	// Fetch and convert the class value
 	classAttrSpec, err := at.GetAttribute(classAttr)
 	if err != nil {
-		panic(fmt.Errorf("Can't resolve class Attribute %s", err))
+		panic(fmt.Errorf("can't resolve class Attribute %s", err))
 	}
 
 	classBytes := classAttr.GetSysValFromString(class)
@@ -127,10 +127,10 @@ func GetClassDistributionByBinaryFloatValue(inst FixedDataGrid) []int {
 	// Get the class variable
 	attrs := inst.AllClassAttributes()
 	if len(attrs) != 1 {
-		panic(fmt.Errorf("Wrong number of class variables (has %d, should be 1)", len(attrs)))
+		panic(fmt.Errorf("wrong number of class variables (has %d, should be 1)", len(attrs)))
 	}
 	if _, ok := attrs[0].(*FloatAttribute); !ok {
-		panic(fmt.Errorf("Class Attribute must be FloatAttribute (is %s)", attrs[0]))
+		panic(fmt.Errorf("class Attribute must be FloatAttribute (is %s)", attrs[0]))
 	}
 
 	// Get the number of class values
@@ -162,10 +162,10 @@ func GetClassDistributionByCategoricalValue(inst FixedDataGrid) []int {
 	// Get the class variable
 	attrs := inst.AllClassAttributes()
 	if len(attrs) != 1 {
-		panic(fmt.Errorf("Wrong number of class variables (has %d, should be 1)", len(attrs)))
+		panic(fmt.Errorf("wrong number of class variables (has %d, should be 1)", len(attrs)))
 	}
 	if classAttr, ok = attrs[0].(*CategoricalAttribute); !ok {
-		panic(fmt.Errorf("Class Attribute must be a CategoricalAttribute (is %s)", attrs[0]))
+		panic(fmt.Errorf("class Attribute must be a CategoricalAttribute (is %s)", attrs[0]))
 	}
 
 	// Get the number of class values

@@ -99,7 +99,7 @@ func (m *MultiLinearSVC) Save(filePath string) error {
 	}
 	err = m.SaveWithPrefix(serializer, "")
 	if err != nil {
-		return fmt.Errorf("Unable to Save(): %v", err)
+		return fmt.Errorf("unable to Save(): %v", err)
 	}
 	serializer.Close()
 	return err
@@ -114,12 +114,12 @@ func (m *MultiLinearSVC) SaveWithPrefix(serializer *base.ClassifierSerializer, p
 	// Write out the linear parameters
 	err := serializer.WriteJSONForKey(p("params"), m.parameters)
 	if err != nil {
-		return fmt.Errorf("Unable to marshal parameters: %v", err)
+		return fmt.Errorf("unable to marshal parameters: %v", err)
 	}
 	// Write out the weights
 	err = serializer.WriteJSONForKey(p("weights"), m.weights)
 	if err != nil {
-		return fmt.Errorf("Unable to write weights: %v", err)
+		return fmt.Errorf("unable to write weights: %v", err)
 	}
 
 	// Serialize the model
@@ -156,12 +156,12 @@ func (m *MultiLinearSVC) LoadWithPrefix(reader *base.ClassifierDeserializer, pre
 	}
 	err := reader.GetJSONForKey(p("params"), &m.parameters)
 	if err != nil {
-		return fmt.Errorf("Can't load parameters: %v", err)
+		return fmt.Errorf("can't load parameters: %v", err)
 	}
 
 	err = reader.GetJSONForKey(p("weights"), &m.weights)
 	if err != nil {
-		return fmt.Errorf("Can't load parameters: %v", err)
+		return fmt.Errorf("can't load parameters: %v", err)
 	}
 
 	m.initializeOneVsAllModel()

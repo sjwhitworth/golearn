@@ -36,7 +36,7 @@ func (f *FloatAttribute) UnmarshalJSON(data []byte) error {
 		f.Precision = int(precision.(float64))
 		return nil
 	}
-	return fmt.Errorf("Precision must be specified")
+	return fmt.Errorf("precision must be specified")
 }
 
 // NewFloatAttribute returns a new FloatAttribute with a default

@@ -31,7 +31,7 @@ func (ref ClusterMap) Invert() (map[int]int, error) {
 	for c := range ref {
 		for _, p := range ref[c] {
 			if _, ok := ret[p]; ok {
-				return nil, fmt.Errorf("Not a valid cluster map (points appear in more than one cluster)")
+				return nil, fmt.Errorf("not a valid cluster map (points appear in more than one cluster)")
 			} else {
 				ret[p] = c
 			}
@@ -98,7 +98,7 @@ func (ref ClusterMap) Equals(other ClusterMap) (bool, error) {
 	for cOld := range other {
 		cNew := clusterIdMap[cOld]
 		if !arraysEqual(ref[cNew], other[cOld]) {
-			return false, fmt.Errorf("Re-labelled cluster %d => %d doesn't contain the same points (%d, %d)", cOld, cNew, ref[cNew], other[cOld])
+			return false, fmt.Errorf("re-labelled cluster %d => %d doesn't contain the same points (%d, %d)", cOld, cNew, ref[cNew], other[cOld])
 		}
 		newMap[cNew] = other[cOld]
 	}

@@ -98,7 +98,7 @@ func (m *OneVsAllModel) Predict(what base.FixedDataGrid) (base.FixedDataGrid, er
 	specs := make([]base.AttributeSpec, m.maxClassVal+1)
 
 	if int(m.maxClassVal) > len(m.filters) || (m.maxClassVal == 0 && len(m.filters) == 0) {
-		return nil, base.WrapError(fmt.Errorf("Internal error: m.Filter len = %d, maxClassVal = %d", len(m.filters), m.maxClassVal))
+		return nil, base.WrapError(fmt.Errorf("internal error: m.Filter len = %d, maxClassVal = %d", len(m.filters), m.maxClassVal))
 	}
 
 	for i := uint64(0); i <= m.maxClassVal; i++ {
@@ -331,7 +331,7 @@ func (m *OneVsAllModel) generateAttributes(from base.FixedDataGrid) map[base.Att
 	attrs := from.AllAttributes()
 	classAttrs := from.AllClassAttributes()
 	if len(classAttrs) != 1 {
-		panic(fmt.Errorf("Only 1 class Attribute is supported, had %d", len(classAttrs)))
+		panic(fmt.Errorf("only 1 class Attribute is supported, had %d", len(classAttrs)))
 	}
 	ret := make(map[base.Attribute]base.Attribute)
 	for _, a := range attrs {
@@ -356,7 +356,7 @@ type oneVsAllFilter struct {
 }
 
 func (f *oneVsAllFilter) AddAttribute(a base.Attribute) error {
-	return fmt.Errorf("Not supported")
+	return fmt.Errorf("not supported")
 }
 
 func (f *oneVsAllFilter) GetAttributesAfterFiltering() []base.FilteredAttribute {
@@ -385,5 +385,5 @@ func (f *oneVsAllFilter) Transform(old, to base.Attribute, seq []byte) []byte {
 }
 
 func (f *oneVsAllFilter) Train() error {
-	return fmt.Errorf("Unsupported")
+	return fmt.Errorf("unsupported")
 }

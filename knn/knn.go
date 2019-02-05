@@ -382,10 +382,10 @@ func (KNN *KNNClassifier) LoadWithPrefix(reader *base.ClassifierDeserializer, pr
 	}
 
 	if clsMetadata.ClassifierName != "KNN" {
-		return fmt.Errorf("This file doesn't contain a KNN classifier")
+		return fmt.Errorf("this file doesn't contain a KNN classifier")
 	}
 	if clsMetadata.ClassifierVersion != "1.0" {
-		return fmt.Errorf("Can't understand this file format")
+		return fmt.Errorf("can't understand this file format")
 	}
 
 	metadata := clsMetadata.ClassifierMetadata

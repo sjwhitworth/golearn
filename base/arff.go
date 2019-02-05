@@ -153,7 +153,7 @@ func ParseARFFGetAttributes(filepath string) []Attribute {
 						cats = strings.Split(fields[2], ",")
 					}
 					if len(cats) == 0 {
-						panic(fmt.Errorf("Empty categorical field on line '%s'", line))
+						panic(fmt.Errorf("empty categorical field on line '%s'", line))
 					}
 					cats[0] = cats[0][1:]                                            // Remove leading '{'
 					cats[len(cats)-1] = cats[len(cats)-1][:len(cats[len(cats)-1])-1] // Remove trailing '}'
@@ -169,10 +169,10 @@ func ParseARFFGetAttributes(filepath string) []Attribute {
 						attr.GetSysValFromString(v)
 					}
 				} else {
-					panic(fmt.Errorf("Missing categorical bracket on line '%s'", line))
+					panic(fmt.Errorf("missing categorical bracket on line '%s'", line))
 				}
 			} else {
-				panic(fmt.Errorf("Unsupported Attribute type %s on line '%s'", fields[2], line))
+				panic(fmt.Errorf("unsupported Attribute type %s on line '%s'", fields[2], line))
 			}
 		}
 
@@ -204,7 +204,7 @@ func ParseDenseARFFBuildInstancesFromReader(r io.Reader, attrs []Attribute, u Up
 			if _, ok := r.(runtime.Error); ok {
 				panic(err)
 			}
-			err = fmt.Errorf("Error at line %d (error %s)", rowCounter, r.(error))
+			err = fmt.Errorf("error at line %d (error %s)", rowCounter, r.(error))
 		}
 	}()
 
@@ -230,7 +230,7 @@ func ParseDenseARFFBuildInstancesFromReader(r io.Reader, attrs []Attribute, u Up
 					v = strings.TrimSpace(v)
 					if a, ok := specs[i].attr.(*CategoricalAttribute); ok {
 						if val := a.GetSysVal(v); val == nil {
-							panic(fmt.Errorf("Unexpected class on line '%s'", line))
+							panic(fmt.Errorf("unexpected class on line '%s'", line))
 						}
 					}
 					u.Set(specs[i], rowCounter, specs[i].attr.GetSysValFromString(v))
