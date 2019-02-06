@@ -99,7 +99,7 @@ func DeserializeInstancesFromTarReader(tr *FunctionalTarReader, prefix string) (
 		return nil, WrapError(fmt.Errorf("unable to read DIMS: %v", err))
 	}
 	if len(sizeBytes) < 16 {
-		return nil, WrapError(fmt.Errorf("dIMS: must be 16 bytes"))
+		return nil, WrapError(fmt.Errorf("DIMS: must be 16 bytes"))
 	}
 	attrCount := int(UnpackBytesToU64(sizeBytes[0:8]))
 	rowCount := int(UnpackBytesToU64(sizeBytes[8:]))
@@ -150,7 +150,7 @@ func DeserializeInstancesFromTarReader(tr *FunctionalTarReader, prefix string) (
 	for {
 		hdr, err := reader.Next()
 		if err == io.EOF {
-			return nil, WrapError(fmt.Errorf("dATA section missing"))
+			return nil, WrapError(fmt.Errorf("DATA section missing"))
 		} else if err != nil {
 			return nil, WrapError(fmt.Errorf("error seeking to DATA section: %s", err))
 		}

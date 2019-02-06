@@ -166,7 +166,7 @@ func ReadSerializedClassifierStub(filePath string) (*ClassifierDeserializer, err
 
 	// Check that we can understand this archive
 	if metadata.FormatVersion != 1 {
-		return nil, fmt.Errorf("mETADATA: wrong format_version for this version of golearn")
+		return nil, fmt.Errorf("METADATA: wrong format_version for this version of golearn")
 	}
 
 	return ret, nil
@@ -418,7 +418,7 @@ func CreateSerializedClassifierStub(filePath string, metadata ClassifierMetadata
 	//
 	err = ret.WriteMetadataAtPrefix("", metadata)
 	if err != nil {
-		return nil, fmt.Errorf("jSON marshal error: %s", err)
+		return nil, fmt.Errorf("JSON marshal error: %s", err)
 	}
 
 	return &ret, nil
