@@ -27,7 +27,6 @@ func (e *Euclidean) Distance(vectorX *mat.Dense, vectorY *mat.Dense) float64 {
 	subVector := mat.NewDense(1, 1, nil)
 	subVector.Reset()
 	subVector.Sub(vectorX, vectorY)
-
 	result := e.InnerProduct(subVector, subVector)
 
 	return math.Sqrt(result)
