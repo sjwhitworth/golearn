@@ -9,9 +9,9 @@ import (
 	"unsafe"
 )
 
-type dist _Ctype_struct_dist
+type dist C.struct_dist
 
-type distanceRecs []_Ctype_struct_dist
+type distanceRecs []C.struct_dist
 
 func (d distanceRecs) Len() int           { return len(d) }
 func (d distanceRecs) Swap(i, j int)      { d[i], d[j] = d[j], d[i] }
@@ -53,7 +53,7 @@ func (KNN *KNNClassifier) optimisedEuclideanPredict(d *base.DenseInstances) base
 	_, predRows := d.Size()
 	_, trainRows := tr.Size()
 	// Crete the distance vector
-	distanceVec := distanceRecs(make([]_Ctype_struct_dist, trainRows))
+	distanceVec := distanceRecs(make([]C.struct_dist, trainRows))
 	// Additional datastructures
 	voteVec := make([]int, KNN.NearestNeighbours)
 	maxMap := make(map[string]int)
