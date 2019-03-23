@@ -28,7 +28,7 @@ func (p *PolyKernel) InnerProduct(vectorX *mat.Dense, vectorY *mat.Dense) float6
 
 // Distance computes distance under the polynomial kernel (maybe not needed?)
 func (p *PolyKernel) Distance(vectorX *mat.Dense, vectorY *mat.Dense) float64 {
-	subVector := mat.NewDense(0, 0, nil)
+	subVector := new(mat.Dense)
 	subVector.Sub(vectorX, vectorY)
 	result := p.InnerProduct(subVector, subVector)
 

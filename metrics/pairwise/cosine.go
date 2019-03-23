@@ -14,7 +14,7 @@ func NewCosine() *Cosine {
 
 // Dot computes dot value of vectorX and vectorY.
 func (c *Cosine) Dot(vectorX *mat.Dense, vectorY *mat.Dense) float64 {
-	subVector := mat.NewDense(0, 0, nil)
+	subVector := new(mat.Dense)
 	subVector.MulElem(vectorX, vectorY)
 	result := mat.Sum(subVector)
 
