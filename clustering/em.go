@@ -26,7 +26,7 @@ type ExpectationMaximization struct {
 
 type Params struct {
 	Means *mat.Dense
-	Covs  []mat.Symmetric
+	Covs  []*mat.SymDense
 }
 
 // Number of Gaussians to fit in the mixture
@@ -131,27 +131,25 @@ func maximization(X *mat.Dense, y mat.Vector, p Params, n_comps int) Params {
 	// Initialize the new parameters
 	var p_new Params
 	p_new.Means = mat.NewDense(n_comps, n_feats, nil)
-	p_new.Covs = make([]mat.Symmetric, n_comps)
+	p_new.Covs = make([]*mat.SymDense, n_comps)
 
-	//Update the parameters
+	// Update the parameters
 	for k := 0; k < n_comps; k++ {
 		X_yk := where(X, y, k)
 		n_obs, _ := X_yk.Dims()
-		var covs_k mat.Symmetric
+		covs_k_reg := mat.NewSymDense(n_feats, nil)
 
 		if n_obs <= 1 {
 			p_new.Means.SetRow(k, p.Means.RawRowView(k))
-			covs_k = p.Covs[k]
+			covs_k_reg = p.Covs[k]
 		} else if n_obs < n_feats {
 			p_new.Means.SetRow(k, means(X_yk))
-			covs_k = shrunkCovariance(X_yk)
+			covs_k_reg = shrunkCovariance(X_yk)
 		} else {
 			p_new.Means.SetRow(k, means(X_yk))
-			covs_k = stat.CovarianceMatrix(nil, X_yk, nil)
+			stat.CovarianceMatrix(covs_k_reg, X_yk, nil)
 		}
-		reg := mat.NewSymDense(n_feats, symVals(n_feats, 0.000001))
-		covs_k_reg := mat.NewSymDense(n_feats, nil)
-		covs_k_reg.AddSym(covs_k, reg)
+
 		p_new.Covs[k] = covs_k_reg
 	}
 
@@ -228,8 +226,8 @@ func initMeans(X *mat.Dense, n_comps, n_feats int) *mat.Dense {
 }
 
 // Creates a n_comps array of n_feats x n_feats mat.Symmetrics
-func initCovariance(n_comps, n_feats int) []mat.Symmetric {
-	var result []mat.Symmetric
+func initCovariance(n_comps, n_feats int) []*mat.SymDense {
+	var result []*mat.SymDense
 	floats := identity(n_feats)
 	for k := 0; k < n_comps; k++ {
 		matrix := mat.NewSymDense(n_feats, floats)
