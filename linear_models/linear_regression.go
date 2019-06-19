@@ -87,7 +87,7 @@ func (lr *LinearRegression) Fit(inst base.FixedDataGrid) error {
 	qr.RTo(&reg)
 
 	var transposed, qty mat.Dense
-	transposed.Clone(q.T())
+	transposed.CloneFrom(q.T())
 	qty.Mul(&transposed, observed)
 
 	regressionCoefficients := make([]float64, n)
