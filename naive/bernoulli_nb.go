@@ -56,6 +56,10 @@ type BernoulliNBClassifier struct {
 	fitOn base.FixedDataGrid
 }
 
+func (nb *BernoulliNBClassifier) String() string {
+	return "BernoulliNBBClassifier"
+}
+
 func (nb *BernoulliNBClassifier) GetMetadata() base.ClassifierMetadataV1 {
 	return base.ClassifierMetadataV1{
 		FormatVersion:      1,
