@@ -56,6 +56,10 @@ type BernoulliNBClassifier struct {
 	fitOn base.FixedDataGrid
 }
 
+func (nb *BernoulliNBClassifier) String() string {
+	return "BernoulliNBBClassifier"
+}
+
 func (nb *BernoulliNBClassifier) GetMetadata() base.ClassifierMetadataV1 {
 	return base.ClassifierMetadataV1{
 		FormatVersion:      1,
@@ -182,7 +186,7 @@ func NewBernoulliNBClassifier() *BernoulliNBClassifier {
 
 // Fill data matrix with Bernoulli Naive Bayes model. All values
 // necessary for calculating prior probability and p(f_i)
-func (nb *BernoulliNBClassifier) Fit(X base.FixedDataGrid) {
+func (nb *BernoulliNBClassifier) Fit(X base.FixedDataGrid) error {
 
 	// Check that all Attributes are binary
 	classAttrs := X.AllClassAttributes()
@@ -190,14 +194,14 @@ func (nb *BernoulliNBClassifier) Fit(X base.FixedDataGrid) {
 	featAttrs := base.AttributeDifference(allAttrs, classAttrs)
 	for i := range featAttrs {
 		if _, ok := featAttrs[i].(*base.BinaryAttribute); !ok {
-			panic(fmt.Sprintf("%v: Should be BinaryAttribute", featAttrs[i]))
+			return fmt.Errorf("%v: Should be BinaryAttribute", featAttrs[i])
 		}
 	}
 	featAttrSpecs := base.ResolveAttributes(X, featAttrs)
 
 	// Check that only one classAttribute is defined
 	if len(classAttrs) != 1 {
-		panic("Only one class Attribute can be used")
+		return fmt.Errorf("Only one class Attribute can be used")
 	}
 
 	// Number of features and instances in this training set
@@ -258,6 +262,7 @@ func (nb *BernoulliNBClassifier) Fit(X base.FixedDataGrid) {
 	}
 
 	nb.fitOn = base.NewStructuralCopy(X)
+	return nil
 }
 
 // Use trained model to predict test vector's class. The following
