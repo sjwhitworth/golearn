@@ -3,7 +3,7 @@ package pairwise
 import (
 	"math"
 
-	"github.com/gonum/matrix"
+	matrix "gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/mat"
 )
 
