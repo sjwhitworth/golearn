@@ -122,6 +122,7 @@ func ReadSerializedClassifierStub(filePath string) (*ClassifierDeserializer, err
 	if err != nil {
 		return nil, DescribeError("Can't open file", err)
 	}
+	defer f.Close()
 
 	gzr, err := gzip.NewReader(f)
 	if err != nil {
