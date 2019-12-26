@@ -135,6 +135,7 @@ func TestBaggedModelRandomForestSerialization(t *testing.T) {
 
 					Convey("Saving the model should be fine...", func() {
 						f, err := ioutil.TempFile(os.TempDir(), "rf")
+						So(err, ShouldBeNil)
 						defer func() {
 							f.Close()
 						}()

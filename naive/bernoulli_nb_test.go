@@ -46,6 +46,7 @@ func TestSerialize(t *testing.T) {
 
 		Convey("Saving the classifer should work...", func() {
 			f, err := ioutil.TempFile(os.TempDir(), "nb")
+			So(err, ShouldBeNil)
 			defer func() {
 				f.Close()
 			}()

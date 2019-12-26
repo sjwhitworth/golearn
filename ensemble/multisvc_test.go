@@ -19,6 +19,7 @@ func TestMultiSVMUnweighted(t *testing.T) {
 
 		Convey("Predictions should work...", func() {
 			predictions, err := m.Predict(Y)
+			So(err, ShouldEqual, nil)
 			cf, err := evaluation.GetConfusionMatrix(Y, predictions)
 			So(err, ShouldEqual, nil)
 			So(evaluation.GetAccuracy(cf), ShouldBeGreaterThan, 0.70)
@@ -66,6 +67,7 @@ func TestMultiSVMWeighted(t *testing.T) {
 
 		Convey("Predictions should work...", func() {
 			predictions, err := m.Predict(Y)
+			So(err, ShouldEqual, nil)
 			cf, err := evaluation.GetConfusionMatrix(Y, predictions)
 			So(err, ShouldEqual, nil)
 			So(evaluation.GetAccuracy(cf), ShouldBeGreaterThan, 0.60)

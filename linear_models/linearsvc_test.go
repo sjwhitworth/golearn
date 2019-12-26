@@ -60,6 +60,7 @@ func TestLinearSVC(t *testing.T) {
 				So(err, ShouldBeNil)
 
 				inst, err := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+				So(err, ShouldBeNil)
 				inst.RemoveClassAttribute(inst.AllAttributes()[4])
 				inst.AddClassAttribute(inst.AllAttributes()[1])
 

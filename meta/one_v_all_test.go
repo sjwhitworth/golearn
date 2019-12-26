@@ -52,6 +52,7 @@ func TestOneVsAllModel(t *testing.T) {
 			predictions, err := m.Predict(Y)
 			So(err, ShouldEqual, nil)
 			f, err := ioutil.TempFile(os.TempDir(), "tmpCls")
+			So(err, ShouldBeNil)
 			defer func() {
 				f.Close()
 			}()
