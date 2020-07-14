@@ -8,7 +8,6 @@ package linear_models
 import "C"
 import (
 	"fmt"
-	"unsafe"
 	"runtime"
 )
 
@@ -36,7 +35,7 @@ func (p *Parameter) Free() {
 
 // Model encapsulates a trained libsvm model.
 type Model struct {
-	c_model unsafe.Pointer
+	c_model *C.struct_model
 }
 
 // Free releases resources associated with a trained libsvm model.
@@ -112,12 +111,12 @@ func Export(model *Model, filePath string) error {
 }
 
 func Load(model *Model, filePath string) error {
-	model.c_model = unsafe.Pointer(C.load_model(C.CString(filePath)))
+	model.c_model = C.load_model(C.CString(filePath))
 	if model.c_model == nil {
 		return fmt.Errorf("Something went wrong")
 	}
 	return nil
-	
+
 }
 
 // Predict takes a row of float values corresponding to a particular
