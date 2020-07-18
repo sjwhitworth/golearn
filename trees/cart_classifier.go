@@ -449,7 +449,7 @@ func cevaluateFromNode(tree CNode, xTest [][]float64, yTest []int64) float64 {
 	return accuracy
 }
 
-// Helper function to convert base.FixedDataGrid into required format. Called in Fit
+// Helper function to convert base.FixedDataGrid into required format. Called in Fit, Predict
 func classifierConvertInstancesToProblemVec(X base.FixedDataGrid) [][]float64 {
 	// Allocate problem array
 	_, rows := X.Size()
@@ -474,7 +474,7 @@ func classifierConvertInstancesToProblemVec(X base.FixedDataGrid) [][]float64 {
 	return problemVec
 }
 
-// Helper function to convert base.FixedDataGrid into required format. Called in Fit
+// Helper function to convert base.FixedDataGrid into required format. Called in Fit, Predict
 func classifierConvertInstancesToLabelVec(X base.FixedDataGrid) []int64 {
 	// Get the class Attributes
 	classAttrs := X.AllClassAttributes()

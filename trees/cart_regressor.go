@@ -11,7 +11,7 @@ import (
 
 // The "r" prefix to all function names indicates that they were tailored to support regression.
 
-// See cart_classifier for details on functions.
+// RNode - Node struct for Decision Tree Regressor
 type RNode struct {
 	Left      *RNode
 	Right     *RNode
@@ -22,6 +22,7 @@ type RNode struct {
 	Use_not   bool
 }
 
+// RTree - Tree struct for Decision Tree Regressor
 type RTree struct {
 	RootNode    *RNode
 	criterion   string
@@ -29,6 +30,7 @@ type RTree struct {
 	triedSplits [][]float64
 }
 
+// Calculate Mean Absolute Error for a constant prediction
 func meanAbsoluteError(y []float64, yBar float64) float64 {
 	error := 0.0
 	for _, target := range y {
@@ -38,6 +40,7 @@ func meanAbsoluteError(y []float64, yBar float64) float64 {
 	return error
 }
 
+// Find average
 func average(y []float64) float64 {
 	mean := 0.0
 	for _, value := range y {
@@ -47,26 +50,30 @@ func average(y []float64) float64 {
 	return mean
 }
 
+// Turn Mean Absolute Error into impurity function for decision trees.
 func maeImpurity(y []float64) (float64, float64) {
 	yHat := average(y)
 	return meanAbsoluteError(y, yHat), yHat
 }
 
+// Calculate Mean Squared Error for constant prediction
 func meanSquaredError(y []float64, yBar float64) float64 {
 	error := 0.0
 	for _, target := range y {
-		item_error := target - yBar
-		error += math.Pow(item_error, 2)
+		itemError := target - yBar
+		error += math.Pow(itemError, 2)
 	}
 	error /= float64(len(y))
 	return error
 }
 
+// Convert mean squared error into impurity function for decision trees
 func mseImpurity(y []float64) (float64, float64) {
 	yHat := average(y)
 	return meanSquaredError(y, yHat), yHat
 }
 
+// Split the data based on threshold and feature for testing information gain
 func rtestSplit(data [][]float64, feature int64, y []float64, threshold float64) ([][]float64, [][]float64, []float64, []float64) {
 	var left [][]float64
 	var lefty []float64
@@ -87,6 +94,7 @@ func rtestSplit(data [][]float64, feature int64, y []float64, threshold float64)
 	return left, right, lefty, righty
 }
 
+// Helper function for finding unique values
 func rstringInSlice(a float64, list []float64) bool {
 	for _, b := range list {
 		if b == a {
@@ -96,6 +104,7 @@ func rstringInSlice(a float64, list []float64) bool {
 	return false
 }
 
+// Return only unique values of a feature
 func rfindUnique(data []float64) []float64 {
 	var unique []float64
 	for i := range data {
@@ -106,6 +115,7 @@ func rfindUnique(data []float64) []float64 {
 	return unique
 }
 
+// Extract out a single feature from data
 func rgetFeature(data [][]float64, feature int64) []float64 {
 	var featureVals []float64
 	for i := range data {
@@ -114,6 +124,7 @@ func rgetFeature(data [][]float64, feature int64) []float64 {
 	return featureVals
 }
 
+// Interface for creating new Decision Tree Regressor - cals rbestSplit()
 func NewDecisionTreeRegressor(criterion string, maxDepth int64) *RTree {
 	var tree RTree
 	tree.maxDepth = maxDepth
@@ -121,6 +132,7 @@ func NewDecisionTreeRegressor(criterion string, maxDepth int64) *RTree {
 	return &tree
 }
 
+// Validate that the split being tested has not been done before.
 func rvalidate(triedSplits [][]float64, feature int64, threshold float64) bool {
 	for i := range triedSplits {
 		split := triedSplits[i]
@@ -154,6 +166,7 @@ func rNewSlice(n []float64) *rSlice {
 	return s
 }
 
+// Re order data based on a feature for optimizing code
 func rreOrderData(featureVal []float64, data [][]float64, y []float64) ([][]float64, []float64) {
 	s := rNewSlice(featureVal)
 	sort.Sort(s)
@@ -169,9 +182,9 @@ func rreOrderData(featureVal []float64, data [][]float64, y []float64) ([][]floa
 	}
 
 	return dataSorted, ySorted
-
 }
 
+// Update the left and right data based on change in threshold
 func rupdateSplit(left [][]float64, lefty []float64, right [][]float64, righty []float64, feature int64, threshold float64) ([][]float64, []float64, [][]float64, []float64) {
 
 	for right[0][feature] < threshold {
@@ -182,14 +195,6 @@ func rupdateSplit(left [][]float64, lefty []float64, right [][]float64, righty [
 	}
 
 	return left, lefty, right, righty
-}
-
-func sum(y []int64) int64 {
-	var sum_ int64 = 0
-	for i := range y {
-		sum_ += y[i]
-	}
-	return sum_
 }
 
 // Extra Method for creating simple to use interface. Many params are either redundant for user but are needed only for recursive logic.
@@ -203,7 +208,7 @@ func (tree *RTree) Fit(X base.FixedDataGrid) {
 	tree.RootNode = &emptyNode
 }
 
-// Essentially the Fit Method
+// Essentially the Fit Method - Impelements recursive logic
 func rbestSplit(tree RTree, data [][]float64, y []float64, upperNode RNode, criterion string, maxDepth int64, depth int64) RNode {
 
 	depth++
@@ -328,11 +333,13 @@ func rbestSplit(tree RTree, data [][]float64, y []float64, upperNode RNode, crit
 	return upperNode
 }
 
+// Print Tree for Visualtion - calls printTreeFromNode()
 func (tree *RTree) PrintTree() {
 	rootNode := *tree.RootNode
 	printTreeFromNode(rootNode, "")
 }
 
+// Use tree's root node to print out entire tree
 func printTreeFromNode(tree RNode, spacing string) float64 {
 
 	fmt.Print(spacing + "Feature ")
@@ -364,6 +371,7 @@ func printTreeFromNode(tree RNode, spacing string) float64 {
 	return 0.0
 }
 
+// Predict a single data point
 func predictSingle(tree RNode, instance []float64) float64 {
 	if instance[tree.Feature] < tree.Threshold {
 		if tree.Left == nil {
@@ -380,12 +388,14 @@ func predictSingle(tree RNode, instance []float64) float64 {
 	}
 }
 
+// Predict method for multiple data points. Calls predictFromNode()
 func (tree *RTree) Predict(X_test base.FixedDataGrid) []float64 {
 	root := *tree.RootNode
 	test := regressorConvertInstancesToProblemVec(X_test)
 	return predictFromNode(root, test)
 }
 
+// Use tree's root node to print out entire tree
 func predictFromNode(tree RNode, test [][]float64) []float64 {
 	var preds []float64
 	for i := range test {
@@ -395,7 +405,7 @@ func predictFromNode(tree RNode, test [][]float64) []float64 {
 	return preds
 }
 
-// Helper function to convert base.FixedDataGrid into required format. Called in Fit
+// Helper function to convert base.FixedDataGrid into required format. Called in Fit, Predict
 func regressorConvertInstancesToProblemVec(X base.FixedDataGrid) [][]float64 {
 	// Allocate problem array
 	_, rows := X.Size()
@@ -420,7 +430,7 @@ func regressorConvertInstancesToProblemVec(X base.FixedDataGrid) [][]float64 {
 	return problemVec
 }
 
-// Helper function to convert base.FixedDataGrid into required format. Called in Fit
+// Helper function to convert base.FixedDataGrid into required format. Called in Fit, Predict
 func regressorConvertInstancesToLabelVec(X base.FixedDataGrid) []float64 {
 	// Get the class Attributes
 	classAttrs := X.AllClassAttributes()
