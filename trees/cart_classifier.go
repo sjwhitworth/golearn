@@ -9,6 +9,8 @@ import (
 	"github.com/sjwhitworth/golearn/base"
 )
 
+// The "c" prefix to function names indicates that they were tailored for classification
+
 // CNode is Node struct for Decision Tree Classifier
 type CNode struct {
 	Left       *CNode
