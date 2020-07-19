@@ -11,7 +11,7 @@ struct parameter *CreateCParameter();
 void FreeCParameter(struct parameter*);
 // Allocates memory outside of golang for describing feature
 // vectors.
-int AllocateFeatureNodesForProblem(struct problem*, int, int);
+int RiffleFeatures(struct problem *p, int num_offsets, int* row_offsets, struct feature_node *features);
 int AllocateLabelsForProblem(struct problem *, int);
 void AssignLabelForProblem(struct problem *, int, double);
 struct feature_node *GetFeatureNodeForIndex(struct problem *, int, int);

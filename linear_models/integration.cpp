@@ -29,9 +29,7 @@ struct model *CreateCModel() {
 /* CreateCParameter allocates a new struct parameter outside of
  * Golang's garbage collection.*/
 struct parameter *CreateCParameter() {
-    auto ret = new parameter();
-    *ret = {};
-    return ret;
+    return reinterpret_cast<struct parameter*>(calloc(1, sizeof(struct parameter)));
 }
 
 /* Free's a previously allocated problem and all its data */
@@ -41,14 +39,6 @@ void FreeCProblem(struct problem *p) {
         p->y = nullptr;
     }
     if (p->x != nullptr) {
-        // l is the total count of rows in the problem
-        // n is the number of values in each row
-        for (int i = 0; i < p->l; i++) {
-            if (p->x[i] != nullptr) {
-                free(p->x[i]);
-                p->x[i] = nullptr;
-            }
-        }
         free(p->x);
         p->x = nullptr;
     }
@@ -63,13 +53,10 @@ void FreeCModel(struct model *m) {
 
 /* free's a parameter via libsvm */
 void FreeCParameter(struct parameter *p) {
-    if (p->weight_label != nullptr) {
-        free(p->weight_label);
+    if (p == nullptr) {
+        return;
     }
-    if (p->weight != nullptr) {
-        free(p->weight);
-    }
-    delete p;
+    free(p);
 }
 
 /* Allocates a vector of doubles for storing target values
@@ -85,33 +72,20 @@ void AssignLabelForProblem(struct problem *p, int i, double d) {
     p->y[i] = d;
 }
 
-/* Returns a feature node for a particular row and column. */
-struct feature_node *GetFeatureNodeForIndex(struct problem *p, int i, int j) {
-    return &(p->x[i][j]);
-}
+/* Allocates a buffer of input rows and inserts the per-row values */
+int RiffleFeatures(struct problem *p, int num_offsets, int* row_offsets, struct feature_node *features) {
 
-/* Allocates a buffer of input rows and the values to fill them. */
-int AllocateFeatureNodesForProblem(struct problem *p, 
-        int numSamples, int numValues) {
-
-    numValues++; // Extend for terminating element
-    p->x = reinterpret_cast<struct feature_node **>(
-        calloc(numSamples, sizeof(struct feature_node *))
+    // Allocate space for the feature node buffer.
+    p->x = reinterpret_cast<struct feature_node**>(
+        calloc(num_offsets, sizeof(struct feature_node *))
     );
     if (p->x == nullptr) {
         return -1;
     }
 
-    for (int i = 0; i < numSamples; i++) {
-        p->x[i] = reinterpret_cast<struct feature_node *>(
-            calloc(numValues, sizeof(struct feature_node))
-        );
-        if (p->x[i] == nullptr) {
-            return -1;
-        }
-        // Write the special terminating element, which signals
-        // to libsvm that there's no more data available on this row.
-        p->x[i][numValues-1].index = -1;
+    for (int i = 0; i < num_offsets; i++) {
+        int offset = row_offsets[i];
+        p->x[i] = features + offset;
     }
     return 0;
 }

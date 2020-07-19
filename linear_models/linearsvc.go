@@ -5,10 +5,10 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sjwhitworth/golearn/base"
 	"io/ioutil"
 	"os"
-	"unsafe"
+
+	"github.com/sjwhitworth/golearn/base"
 )
 
 // LinearSVCParams represnts all available LinearSVC options.
@@ -153,6 +153,7 @@ func (lr *LinearSVC) Fit(X base.FixedDataGrid) error {
 	var weightClasses []C.int
 
 	// Creates the class weighting
+	fmt.Println("Generating class weights...")
 	if lr.Param.ClassWeights == nil {
 		if lr.Param.WeightClassesAutomatically {
 			weightVec = generateClassWeightVectorFromDist(X)
@@ -169,17 +170,20 @@ func (lr *LinearSVC) Fit(X base.FixedDataGrid) error {
 	}
 
 	// Convert the problem
+	fmt.Println("Converting instances...")
 	problemVec := convertInstancesToProblemVec(X)
 	labelVec := convertInstancesToLabelVec(X)
 
 	// Train
+	fmt.Println("Training...")
 	prob := NewProblem(problemVec, labelVec, 0)
 	lr.param.c_param.nr_weight = C.int(len(weightVec))
 	lr.param.c_param.weight_label = &(weightClasses[0])
-	lr.param.c_param.weight = (*C.double)(unsafe.Pointer(&weightVec[0]))
+	lr.param.c_param.weight = (*C.double)(&weightVec[0])
 
 	//	lr.param.weights = (*C.double)unsafe.Pointer(&(weightVec[0]));
 	lr.model = Train(prob, lr.param)
+	fmt.Println("Training completed")
 	return nil
 }
 

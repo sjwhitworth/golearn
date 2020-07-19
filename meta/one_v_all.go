@@ -2,6 +2,7 @@ package meta
 
 import (
 	"fmt"
+
 	"github.com/sjwhitworth/golearn/base"
 )
 
@@ -46,7 +47,6 @@ func (m *OneVsAllModel) Fit(using base.FixedDataGrid) {
 		}
 	}
 	attrs := m.generateAttributes(using)
-
 	// Find the highest stored value
 	val := uint64(0)
 	classVals := classAttr.GetValues()
@@ -60,6 +60,7 @@ func (m *OneVsAllModel) Fit(using base.FixedDataGrid) {
 		panic("Must have more than one class!")
 	}
 	m.maxClassVal = val
+	fmt.Println("Found maximum rows")
 
 	// If we're reloading, we may just be fitting to the structure
 	_, srcRows := using.Size()
@@ -152,9 +153,6 @@ func (m *OneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, pref
 		return base.DescribeError("Can't load INSTANCE_STRUCTURE", err)
 	}
 	m.Fit(fitOn)
-	/*if err != nil {
-		base.DescribeError("Could not fit reloaded classifier to the structure", err)
-	}*/
 
 	// Reload the filters
 	numFiltersU64, err := reader.GetU64ForKey(reader.Prefix(prefix, "FILTER_COUNT"))
@@ -229,7 +227,7 @@ func (m *OneVsAllModel) LoadWithPrefix(reader *base.ClassifierDeserializer, pref
 	for i, c := range classVals {
 		cls := m.NewClassifierFunction(c)
 		clsPrefix := pI("CLASSIFIERS", i)
-
+		fmt.Println("Loading classifier...")
 		err = cls.LoadWithPrefix(reader, clsPrefix)
 		if err != nil {
 			return base.FormatError(err, "Could not reload classifier at: %s", clsPrefix)
@@ -264,7 +262,7 @@ func (m *OneVsAllModel) SaveWithPrefix(writer *base.ClassifierSerializer, prefix
 	}
 
 	// Save the instances
-	err := writer.WriteInstancesForKey(writer.Prefix(prefix, "INSTANCE_STRUCTURE"), m.fitOn, false)
+	err := writer.WriteInstancesForKey(writer.Prefix(prefix, "INSTANCE_STRUCTURE"), base.NewStructuralCopy(m.fitOn), false)
 	if err != nil {
 		return base.DescribeError("Unable to write INSTANCE_STRUCTURE", err)
 	}

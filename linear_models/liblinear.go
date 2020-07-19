@@ -14,7 +14,8 @@ import (
 // Problem wraps a libsvm problem struct which describes a classification/
 // regression problem. No externally-accessible fields.
 type Problem struct {
-	c_prob *C.struct_problem
+	c_prob       *C.struct_problem
+	featureNodes []C.struct_feature_node
 }
 
 // Free releases resources associated with a libsvm problem.
@@ -76,7 +77,7 @@ func NewParameter(solver_type int, C float64, eps float64) *Parameter {
 // regression/classification problem. It requires an array of float values
 // and an array of y values.
 func NewProblem(X [][]float64, y []float64, bias float64) *Problem {
-	prob := &Problem{C.CreateCProblem()}
+	prob := &Problem{C.CreateCProblem(), nil}
 	runtime.SetFinalizer(prob, (*Problem).Free)
 	prob.c_prob.l = C.int(len(X))
 	prob.c_prob.n = C.int(len(X[0]) + 1)
@@ -160,30 +161,44 @@ func convert_vector(x []float64, bias float64) *C.struct_feature_node {
 // convert_features is an internal function used for converting
 // dense 2D arrays of float values into the sparse format libsvm accepts.
 func convert_features(prob *Problem, X [][]float64, bias float64) {
-	n_samples := len(X)
-	n_elements := 0
+	rowCount := len(X)
 
-	for i := 0; i < n_samples; i++ {
+	// This structure remembers the start and end elements for each row.
+	// We push them back into a global list of C.struct_feature_nodes, then
+	// riffle it in C using their indices to form the **C.struct_feature_nodes
+	// input. Go retains ownership of struct_feature_nodes, C has ownership of
+	// the enclosing **C.struct_feature_nodes feature.
+	rowOffsets := make([]C.int, 0)
+	featureNodes := make([]C.struct_feature_node, 0)
+
+	// First pass, just counting through each row and counting the number of elements we find.
+	for i := 0; i < rowCount; i++ {
+		rowOffsets = append(rowOffsets, C.int(len(featureNodes))) // Push back the starting element of this row
+		if bias != 0.0 {                                          // Allocate space for a bias node
+			featureNodes = append(featureNodes, C.struct_feature_node{
+				C.int(0), C.double(bias),
+			})
+		}
 		for j := 0; j < len(X[i]); j++ {
 			if X[i][j] != 0.0 {
-				n_elements++
+				// For every non-zero thing in the data grid, allocate a feature node.
+				featureNodes = append(featureNodes, C.struct_feature_node{
+					C.int(j + 1), C.double(X[i][j]),
+				})
 			}
-			n_elements++ // For bias
 		}
+		// Finally, add a terminating element which tells libsvm that there's nothing
+		// left on this row
+		featureNodes = append(featureNodes, C.struct_feature_node{
+			C.int(-1), C.double(0),
+		})
 	}
-	C.AllocateFeatureNodesForProblem(prob.c_prob, C.int(n_elements), C.int(n_samples))
 
-	for i := 0; i < n_samples; i++ {
-		for j := 0; j < len(X[i]); j++ {
-			x_space := C.GetFeatureNodeForIndex(prob.c_prob, C.int(i), C.int(j))
-			if X[i][j] != 0.0 {
-				x_space.index = C.int(j + 1)
-				x_space.value = C.double(X[i][j])
-			}
-			if bias > 0 {
-				x_space.index = C.int(0)
-				x_space.value = C.double(bias)
-			}
-		}
+	// Transform [feature_node, feature_node, feature_node, ...] list into
+	// [*feature_node(1), *feature_node(m), ...] through the C integration bridge.
+	// C owns that particular memory.
+	// int RiffleFeatures(struct problem *p, int num_offsets, int* row_offsets, struct feature_node *features) {
+	if C.RiffleFeatures(prob.c_prob, C.int(len(featureNodes)), &rowOffsets[0], &featureNodes[0]) != 0 {
+		panic("RiffledFeatures could not allocate memory")
 	}
 }

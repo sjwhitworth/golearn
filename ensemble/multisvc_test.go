@@ -1,11 +1,12 @@
 package ensemble
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
 	. "github.com/smartystreets/goconvey/convey"
-	"io/ioutil"
-	"testing"
 )
 
 func TestMultiSVMUnweighted(t *testing.T) {
@@ -14,40 +15,43 @@ func TestMultiSVMUnweighted(t *testing.T) {
 		So(err, ShouldBeNil)
 		X, Y := base.InstancesTrainTestSplit(inst, 0.4)
 
-		m := NewMultiLinearSVC("l1", "l2", true, 1.0, 1e-4, nil)
-		m.Fit(X)
-
-		Convey("Predictions should work...", func() {
-			predictions, err := m.Predict(Y)
-			So(err, ShouldEqual, nil)
-			cf, err := evaluation.GetConfusionMatrix(Y, predictions)
-			So(err, ShouldEqual, nil)
-			So(evaluation.GetAccuracy(cf), ShouldBeGreaterThan, 0.70)
-		})
-
-		Convey("Saving should work...", func() {
-			f, err := ioutil.TempFile("", "tree")
-			So(err, ShouldBeNil)
-			err = m.Save(f.Name())
+		Convey("Fitting should work...", func() {
+			m := NewMultiLinearSVC("l1", "l2", true, 1.0, 1e-4, nil)
+			err := m.Fit(X)
 			So(err, ShouldBeNil)
 
-			Convey("Loading should work...", func() {
-				mLoaded := NewMultiLinearSVC("l1", "l2", true, 1.00, 1e-8, nil)
-				err := mLoaded.Load(f.Name())
+			Convey("Predictions should work...", func() {
+				predictions, err := m.Predict(Y)
+				So(err, ShouldEqual, nil)
+				cf, err := evaluation.GetConfusionMatrix(Y, predictions)
+				So(err, ShouldEqual, nil)
+				So(evaluation.GetAccuracy(cf), ShouldBeGreaterThan, 0.70)
+			})
+
+			Convey("Saving should work...", func() {
+				f, err := ioutil.TempFile("", "tree")
+				So(err, ShouldBeNil)
+				err = m.Save(f.Name())
 				So(err, ShouldBeNil)
 
-				Convey("Predictions should be the same...", func() {
-					originalPredictions, err := m.Predict(Y)
+				Convey("Loading should work...", func() {
+					mLoaded := NewMultiLinearSVC("l1", "l2", true, 1.00, 1e-8, nil)
+					err := mLoaded.Load(f.Name())
 					So(err, ShouldBeNil)
-					newPredictions, err := mLoaded.Predict(Y)
-					So(err, ShouldBeNil)
-					So(base.InstancesAreEqual(originalPredictions, newPredictions), ShouldBeTrue)
+
+					Convey("Predictions should be the same...", func() {
+						originalPredictions, err := m.Predict(Y)
+						So(err, ShouldBeNil)
+						newPredictions, err := mLoaded.Predict(Y)
+						So(err, ShouldBeNil)
+						So(base.InstancesAreEqual(originalPredictions, newPredictions), ShouldBeTrue)
+					})
+
 				})
 
 			})
 
 		})
-
 	})
 }
 
