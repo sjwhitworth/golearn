@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/sjwhitworth/golearn/base"
@@ -23,8 +24,8 @@ type CNode struct {
 	maxDepth   int64
 }
 
-// CTree: Tree struct for Decision Tree Classifier
-type CTree struct {
+// CARTDecisionTreeClassifier: Tree struct for Decision Tree Classifier
+type CARTDecisionTreeClassifier struct {
 	RootNode    *CNode
 	criterion   string
 	maxDepth    int64
@@ -135,8 +136,8 @@ func cgetFeature(data [][]float64, feature int64) []float64 {
 }
 
 // Function to Create New Decision Tree Classifier
-func NewDecisionTreeClassifier(criterion string, maxDepth int64, labels []int64) *CTree {
-	var tree CTree
+func NewDecisionTreeClassifier(criterion string, maxDepth int64, labels []int64) *CARTDecisionTreeClassifier {
+	var tree CARTDecisionTreeClassifier
 	tree.criterion = strings.ToLower(criterion)
 	tree.maxDepth = maxDepth
 	tree.labels = labels
@@ -210,7 +211,7 @@ func cupdateSplit(left [][]float64, lefty []int64, right [][]float64, righty []i
 }
 
 // Fit - Method visible to user to train tree
-func (tree *CTree) Fit(X base.FixedDataGrid) {
+func (tree *CARTDecisionTreeClassifier) Fit(X base.FixedDataGrid) {
 	var emptyNode CNode
 
 	data := classifierConvertInstancesToProblemVec(X)
@@ -221,7 +222,7 @@ func (tree *CTree) Fit(X base.FixedDataGrid) {
 }
 
 // Iterativly find and record the best split - recursive function
-func cbestSplit(tree CTree, data [][]float64, y []int64, labels []int64, upperNode CNode, criterion string, maxDepth int64, depth int64) CNode {
+func cbestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []int64, labels []int64, upperNode CNode, criterion string, maxDepth int64, depth int64) CNode {
 
 	// Ensure that we have not reached maxDepth. maxDepth =-1 means split until nodes are pure
 	depth++
@@ -358,41 +359,43 @@ func cbestSplit(tree CTree, data [][]float64, y []int64, labels []int64, upperNo
 }
 
 // PrintTree : this function prints out entire tree for visualization - visible to user
-func (tree *CTree) PrintTree() {
+func (tree *CARTDecisionTreeClassifier) String() string {
 	rootNode := *tree.RootNode
-	cprintTreeFromNode(rootNode, "")
+	return cprintTreeFromNode(rootNode, "")
 }
 
-// Tree struct has root node. That is used to print tree - invisible to user but called from PrintTree
-func cprintTreeFromNode(tree CNode, spacing string) float64 {
-
-	fmt.Print(spacing + "Feature ")
-	fmt.Print(tree.Feature)
-	fmt.Print(" < ")
-	fmt.Println(tree.Threshold)
+func cprintTreeFromNode(tree CNode, spacing string) string {
+	returnString := ""
+	returnString += spacing + "Feature "
+	returnString += strconv.FormatInt(tree.Feature, 10)
+	returnString += " < "
+	returnString += fmt.Sprintf("%.3f", tree.Threshold)
+	returnString += "\n"
 
 	if tree.Left == nil {
-		fmt.Println(spacing + "---> True")
-		fmt.Print("  " + spacing + "PREDICT    ")
-		fmt.Println(tree.LeftLabel)
+		returnString += spacing + "---> True" + "\n"
+		returnString += "  " + spacing + "PREDICT    "
+		returnString += strconv.FormatInt(tree.LeftLabel, 10) + "\n"
+
 	}
 	if tree.Right == nil {
-		fmt.Println(spacing + "---> FALSE")
-		fmt.Print("  " + spacing + "PREDICT    ")
-		fmt.Println(tree.RightLabel)
+
+		returnString += spacing + "---> False" + "\n"
+		returnString += "  " + spacing + "PREDICT    "
+		returnString += strconv.FormatInt(tree.RightLabel, 10) + "\n"
 	}
 
 	if tree.Left != nil {
-		fmt.Println(spacing + "---> True")
-		cprintTreeFromNode(*tree.Left, spacing+"  ")
+		returnString += spacing + "---> True" + "\n"
+		returnString += cprintTreeFromNode(*tree.Left, spacing+"  ")
 	}
 
 	if tree.Right != nil {
-		fmt.Println(spacing + "---> False")
-		cprintTreeFromNode(*tree.Right, spacing+"  ")
+		returnString += spacing + "---> False" + "\n"
+		returnString += cprintTreeFromNode(*tree.Right, spacing+"  ")
 	}
 
-	return 0.0
+	return returnString
 }
 
 // Predict a single data point by traversing the entire tree
@@ -413,7 +416,7 @@ func cpredictSingle(tree CNode, instance []float64) int64 {
 }
 
 // Predict is visible to user. Given test data, they receive predictions for every datapoint.
-func (tree *CTree) Predict(X_test base.FixedDataGrid) []int64 {
+func (tree *CARTDecisionTreeClassifier) Predict(X_test base.FixedDataGrid) []int64 {
 	root := *tree.RootNode
 	test := classifierConvertInstancesToProblemVec(X_test)
 	return cpredictFromNode(root, test)
@@ -430,7 +433,7 @@ func cpredictFromNode(tree CNode, test [][]float64) []int64 {
 }
 
 // Given Test data and label, return the accuracy of the classifier. Data has to be in float slice format before feeding.
-func (tree *CTree) Evaluate(test base.FixedDataGrid) float64 {
+func (tree *CARTDecisionTreeClassifier) Evaluate(test base.FixedDataGrid) float64 {
 	rootNode := *tree.RootNode
 	xTest := classifierConvertInstancesToProblemVec(test)
 	yTest := classifierConvertInstancesToLabelVec(test)
