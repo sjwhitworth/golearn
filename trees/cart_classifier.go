@@ -432,7 +432,7 @@ func cpredictFromNode(tree CNode, test [][]float64) []int64 {
 	return preds
 }
 
-// Given Test data and label, return the accuracy of the classifier. Data has to be in float slice format before feeding.
+// Given Test data and label, return the accuracy of the classifier.
 func (tree *CARTDecisionTreeClassifier) Evaluate(test base.FixedDataGrid) float64 {
 	rootNode := *tree.RootNode
 	xTest := classifierConvertInstancesToProblemVec(test)
