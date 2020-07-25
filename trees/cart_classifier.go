@@ -157,31 +157,9 @@ func cvalidate(triedSplits [][]float64, feature int64, threshold float64) bool {
 	return true
 }
 
-// Helper struct for re-rdering data
-type cSlice struct {
-	sort.Float64Slice
-	Idx []int
-}
-
-// Helper function for re-ordering data
-func (s cSlice) cSwap(i, j int) {
-	s.Float64Slice.Swap(i, j)
-	s.Idx[i], s.Idx[j] = s.Idx[j], s.Idx[i]
-}
-
-// Final Helper Function for re-ordering data
-func cNewSlice(n []float64) *cSlice {
-	s := &cSlice{Float64Slice: sort.Float64Slice(n), Idx: make([]int, len(n))}
-
-	for i := range s.Idx {
-		s.Idx[i] = i
-	}
-	return s
-}
-
 // Reorder the data by feature being considered. Optimizes code by reducing the number of times we have to loop over data for splitting
 func creOrderData(featureVal []float64, data [][]float64, y []int64) ([][]float64, []int64) {
-	s := cNewSlice(featureVal)
+	s := NewSlice(featureVal)
 	sort.Sort(s)
 
 	indexes := s.Idx

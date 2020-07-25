@@ -145,31 +145,9 @@ func rvalidate(triedSplits [][]float64, feature int64, threshold float64) bool {
 	return true
 }
 
-// Helper struct for re-rdering data
-type rSlice struct {
-	sort.Float64Slice
-	Idx []int
-}
-
-// Helper function for re-ordering data
-func (s rSlice) rSwap(i, j int) {
-	s.Float64Slice.Swap(i, j)
-	s.Idx[i], s.Idx[j] = s.Idx[j], s.Idx[i]
-}
-
-// Final Helper Function for re-ordering data
-func rNewSlice(n []float64) *rSlice {
-	s := &rSlice{Float64Slice: sort.Float64Slice(n), Idx: make([]int, len(n))}
-
-	for i := range s.Idx {
-		s.Idx[i] = i
-	}
-	return s
-}
-
 // Re order data based on a feature for optimizing code
 func rreOrderData(featureVal []float64, data [][]float64, y []float64) ([][]float64, []float64) {
-	s := rNewSlice(featureVal)
+	s := NewSlice(featureVal)
 	sort.Sort(s)
 
 	indexes := s.Idx
