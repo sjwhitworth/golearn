@@ -13,9 +13,9 @@ import (
 // The "c" prefix to function names indicates that they were tailored for classification
 
 // CNode is Node struct for Decision Tree Classifier
-type CNode struct {
-	Left       *CNode
-	Right      *CNode
+type classifierNode struct {
+	Left       *classifierNode
+	Right      *classifierNode
 	Threshold  float64
 	Feature    int64
 	LeftLabel  int64
@@ -26,7 +26,7 @@ type CNode struct {
 
 // CARTDecisionTreeClassifier: Tree struct for Decision Tree Classifier
 type CARTDecisionTreeClassifier struct {
-	RootNode    *CNode
+	RootNode    *classifierNode
 	criterion   string
 	maxDepth    int64
 	labels      []int64
@@ -85,7 +85,7 @@ func entropy(y []int64, labels []int64) (float64, int64) {
 }
 
 // Split the data into left node and right node based on feature and threshold - only needed for fresh nodes
-func ctestSplit(data [][]float64, feature int64, y []int64, threshold float64) ([][]float64, [][]float64, []int64, []int64) {
+func classifierCreateSplit(data [][]float64, feature int64, y []int64, threshold float64) ([][]float64, [][]float64, []int64, []int64) {
 	var left [][]float64
 	var right [][]float64
 	var lefty []int64
@@ -106,7 +106,7 @@ func ctestSplit(data [][]float64, feature int64, y []int64, threshold float64) (
 }
 
 // Helper Function to check if data point is unique or not
-func cstringInSlice(a float64, list []float64) bool {
+func classifierStringInSlice(a float64, list []float64) bool {
 	for _, b := range list {
 		if b == a {
 			return true
@@ -116,10 +116,10 @@ func cstringInSlice(a float64, list []float64) bool {
 }
 
 // Isolate only unique values. Needed for splitting data.
-func cfindUnique(data []float64) []float64 {
+func classifierFindUnique(data []float64) []float64 {
 	var unique []float64
 	for i := range data {
-		if !cstringInSlice(data[i], unique) {
+		if !classifierStringInSlice(data[i], unique) {
 			unique = append(unique, data[i])
 		}
 	}
@@ -127,7 +127,7 @@ func cfindUnique(data []float64) []float64 {
 }
 
 // Isolate only the feature being considered for splitting
-func cgetFeature(data [][]float64, feature int64) []float64 {
+func classifierGetFeature(data [][]float64, feature int64) []float64 {
 	var featureVals []float64
 	for i := range data {
 		featureVals = append(featureVals, data[i][feature])
@@ -146,7 +146,7 @@ func NewDecisionTreeClassifier(criterion string, maxDepth int64, labels []int64)
 }
 
 // Make sure that split being considered has not been done before
-func cvalidate(triedSplits [][]float64, feature int64, threshold float64) bool {
+func classifierValidate(triedSplits [][]float64, feature int64, threshold float64) bool {
 	for i := range triedSplits {
 		split := triedSplits[i]
 		featureTried, thresholdTried := split[0], split[1]
@@ -158,7 +158,7 @@ func cvalidate(triedSplits [][]float64, feature int64, threshold float64) bool {
 }
 
 // Reorder the data by feature being considered. Optimizes code by reducing the number of times we have to loop over data for splitting
-func creOrderData(featureVal []float64, data [][]float64, y []int64) ([][]float64, []int64) {
+func classifierReOrderData(featureVal []float64, data [][]float64, y []int64) ([][]float64, []int64) {
 	s := NewSlice(featureVal)
 	sort.Sort(s)
 
@@ -176,7 +176,7 @@ func creOrderData(featureVal []float64, data [][]float64, y []int64) ([][]float6
 }
 
 // Change data in Left Node and Right Node based on change in threshold
-func cupdateSplit(left [][]float64, lefty []int64, right [][]float64, righty []int64, feature int64, threshold float64) ([][]float64, []int64, [][]float64, []int64) {
+func classifierUpdateSplit(left [][]float64, lefty []int64, right [][]float64, righty []int64, feature int64, threshold float64) ([][]float64, []int64, [][]float64, []int64) {
 
 	for right[0][feature] < threshold {
 		left = append(left, right[0])
@@ -190,17 +190,17 @@ func cupdateSplit(left [][]float64, lefty []int64, right [][]float64, righty []i
 
 // Fit - Method visible to user to train tree
 func (tree *CARTDecisionTreeClassifier) Fit(X base.FixedDataGrid) {
-	var emptyNode CNode
+	var emptyNode classifierNode
 
 	data := classifierConvertInstancesToProblemVec(X)
 	y := classifierConvertInstancesToLabelVec(X)
-	emptyNode = cbestSplit(*tree, data, y, tree.labels, emptyNode, tree.criterion, tree.maxDepth, 0)
+	emptyNode = classifierBestSplit(*tree, data, y, tree.labels, emptyNode, tree.criterion, tree.maxDepth, 0)
 
 	tree.RootNode = &emptyNode
 }
 
 // Iterativly find and record the best split - recursive function
-func cbestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []int64, labels []int64, upperNode CNode, criterion string, maxDepth int64, depth int64) CNode {
+func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []int64, labels []int64, upperNode classifierNode, criterion string, maxDepth int64, depth int64) classifierNode {
 
 	// Ensure that we have not reached maxDepth. maxDepth =-1 means split until nodes are pure
 	depth++
@@ -236,16 +236,16 @@ func cbestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []int64, la
 
 	upperNode.Use_not = true
 
-	var leftN CNode
-	var rightN CNode
+	var leftN classifierNode
+	var rightN classifierNode
 	// Iterate over all features
 	for i := 0; i < numFeatures; i++ {
-		featureVal := cgetFeature(data, int64(i))
-		unique := cfindUnique(featureVal)
+		featureVal := classifierGetFeature(data, int64(i))
+		unique := classifierFindUnique(featureVal)
 		sort.Float64s(unique)
 		numUnique := len(unique)
 
-		sortData, sortY := creOrderData(featureVal, data, y)
+		sortData, sortY := classifierReOrderData(featureVal, data, y)
 
 		firstTime := true
 
@@ -256,14 +256,14 @@ func cbestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []int64, la
 			if j != (numUnique - 1) {
 				threshold := (unique[j] + unique[j+1]) / 2
 				// Ensure that same split has not been made before
-				if cvalidate(tree.triedSplits, int64(i), threshold) {
+				if classifierValidate(tree.triedSplits, int64(i), threshold) {
 					// We need to split data from fresh when considering new feature for the first time.
 					// Otherwise, we need to update the split by moving data points from left to right.
 					if firstTime {
-						left, right, lefty, righty = ctestSplit(sortData, int64(i), sortY, threshold)
+						left, right, lefty, righty = classifierCreateSplit(sortData, int64(i), sortY, threshold)
 						firstTime = false
 					} else {
-						left, lefty, right, righty = cupdateSplit(left, lefty, right, righty, int64(i), threshold)
+						left, lefty, right, righty = classifierUpdateSplit(left, lefty, right, righty, int64(i), threshold)
 					}
 
 					var leftGini float64
@@ -314,7 +314,7 @@ func cbestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []int64, la
 		if bestLeftGini > 0 {
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
 			// Recursive splitting logic
-			leftN = cbestSplit(tree, bestLeft, bestLefty, labels, leftN, criterion, maxDepth, depth)
+			leftN = classifierBestSplit(tree, bestLeft, bestLefty, labels, leftN, criterion, maxDepth, depth)
 			if leftN.Use_not == true {
 				upperNode.Left = &leftN
 			}
@@ -324,7 +324,7 @@ func cbestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []int64, la
 		if bestRightGini > 0 {
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
 			// Recursive splitting logic
-			rightN = cbestSplit(tree, bestRight, bestRighty, labels, rightN, criterion, maxDepth, depth)
+			rightN = classifierBestSplit(tree, bestRight, bestRighty, labels, rightN, criterion, maxDepth, depth)
 			if rightN.Use_not == true {
 				upperNode.Right = &rightN
 			}
@@ -339,10 +339,10 @@ func cbestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []int64, la
 // PrintTree : this function prints out entire tree for visualization - visible to user
 func (tree *CARTDecisionTreeClassifier) String() string {
 	rootNode := *tree.RootNode
-	return cprintTreeFromNode(rootNode, "")
+	return classifierPrintTreeFromNode(rootNode, "")
 }
 
-func cprintTreeFromNode(tree CNode, spacing string) string {
+func classifierPrintTreeFromNode(tree classifierNode, spacing string) string {
 	returnString := ""
 	returnString += spacing + "Feature "
 	returnString += strconv.FormatInt(tree.Feature, 10)
@@ -365,30 +365,30 @@ func cprintTreeFromNode(tree CNode, spacing string) string {
 
 	if tree.Left != nil {
 		returnString += spacing + "---> True" + "\n"
-		returnString += cprintTreeFromNode(*tree.Left, spacing+"  ")
+		returnString += classifierPrintTreeFromNode(*tree.Left, spacing+"  ")
 	}
 
 	if tree.Right != nil {
 		returnString += spacing + "---> False" + "\n"
-		returnString += cprintTreeFromNode(*tree.Right, spacing+"  ")
+		returnString += classifierPrintTreeFromNode(*tree.Right, spacing+"  ")
 	}
 
 	return returnString
 }
 
 // Predict a single data point by traversing the entire tree
-func cpredictSingle(tree CNode, instance []float64) int64 {
+func classifierPredictSingle(tree classifierNode, instance []float64) int64 {
 	if instance[tree.Feature] < tree.Threshold {
 		if tree.Left == nil {
 			return tree.LeftLabel
 		} else {
-			return cpredictSingle(*tree.Left, instance)
+			return classifierPredictSingle(*tree.Left, instance)
 		}
 	} else {
 		if tree.Right == nil {
 			return tree.RightLabel
 		} else {
-			return cpredictSingle(*tree.Right, instance)
+			return classifierPredictSingle(*tree.Right, instance)
 		}
 	}
 }
@@ -397,14 +397,14 @@ func cpredictSingle(tree CNode, instance []float64) int64 {
 func (tree *CARTDecisionTreeClassifier) Predict(X_test base.FixedDataGrid) []int64 {
 	root := *tree.RootNode
 	test := classifierConvertInstancesToProblemVec(X_test)
-	return cpredictFromNode(root, test)
+	return classifierPredictFromNode(root, test)
 }
 
 // This function uses the rootnode from Predict. It is invisible to user, but called from predict method.
-func cpredictFromNode(tree CNode, test [][]float64) []int64 {
+func classifierPredictFromNode(tree classifierNode, test [][]float64) []int64 {
 	var preds []int64
 	for i := range test {
-		iPred := cpredictSingle(tree, test[i])
+		iPred := classifierPredictSingle(tree, test[i])
 		preds = append(preds, iPred)
 	}
 	return preds
@@ -415,11 +415,11 @@ func (tree *CARTDecisionTreeClassifier) Evaluate(test base.FixedDataGrid) float6
 	rootNode := *tree.RootNode
 	xTest := classifierConvertInstancesToProblemVec(test)
 	yTest := classifierConvertInstancesToLabelVec(test)
-	return cevaluateFromNode(rootNode, xTest, yTest)
+	return classifierEvaluateFromNode(rootNode, xTest, yTest)
 }
 
-func cevaluateFromNode(tree CNode, xTest [][]float64, yTest []int64) float64 {
-	preds := cpredictFromNode(tree, xTest)
+func classifierEvaluateFromNode(tree classifierNode, xTest [][]float64, yTest []int64) float64 {
+	preds := classifierPredictFromNode(tree, xTest)
 	accuracy := 0.0
 	for i := range preds {
 		if preds[i] == yTest[i] {

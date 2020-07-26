@@ -13,9 +13,9 @@ import (
 // The "r" prefix to all function names indicates that they were tailored to support regression.
 
 // RNode - Node struct for Decision Tree Regressor
-type RNode struct {
-	Left      *RNode
-	Right     *RNode
+type regressorNode struct {
+	Left      *regressorNode
+	Right     *regressorNode
 	Threshold float64
 	Feature   int64
 	LeftPred  float64
@@ -25,20 +25,10 @@ type RNode struct {
 
 // CARTDecisionTreeRegressor - Tree struct for Decision Tree Regressor
 type CARTDecisionTreeRegressor struct {
-	RootNode    *RNode
+	RootNode    *regressorNode
 	criterion   string
 	maxDepth    int64
 	triedSplits [][]float64
-}
-
-// Calculate Mean Absolute Error for a constant prediction
-func meanAbsoluteError(y []float64, yBar float64) float64 {
-	error := 0.0
-	for _, target := range y {
-		error += math.Abs(target - yBar)
-	}
-	error /= float64(len(y))
-	return error
 }
 
 // Find average
@@ -49,6 +39,16 @@ func average(y []float64) float64 {
 	}
 	mean /= float64(len(y))
 	return mean
+}
+
+// Calculate Mean Absolute Error for a constant prediction
+func meanAbsoluteError(y []float64, yBar float64) float64 {
+	error := 0.0
+	for _, target := range y {
+		error += math.Abs(target - yBar)
+	}
+	error /= float64(len(y))
+	return error
 }
 
 // Turn Mean Absolute Error into impurity function for decision trees.
@@ -75,7 +75,7 @@ func mseImpurity(y []float64) (float64, float64) {
 }
 
 // Split the data based on threshold and feature for testing information gain
-func rtestSplit(data [][]float64, feature int64, y []float64, threshold float64) ([][]float64, [][]float64, []float64, []float64) {
+func regressorCreateSplit(data [][]float64, feature int64, y []float64, threshold float64) ([][]float64, [][]float64, []float64, []float64) {
 	var left [][]float64
 	var lefty []float64
 	var right [][]float64
@@ -96,7 +96,7 @@ func rtestSplit(data [][]float64, feature int64, y []float64, threshold float64)
 }
 
 // Helper function for finding unique values
-func rstringInSlice(a float64, list []float64) bool {
+func regressorStringInSlice(a float64, list []float64) bool {
 	for _, b := range list {
 		if b == a {
 			return true
@@ -106,10 +106,10 @@ func rstringInSlice(a float64, list []float64) bool {
 }
 
 // Return only unique values of a feature
-func rfindUnique(data []float64) []float64 {
+func regressorFindUnique(data []float64) []float64 {
 	var unique []float64
 	for i := range data {
-		if !rstringInSlice(data[i], unique) {
+		if !regressorStringInSlice(data[i], unique) {
 			unique = append(unique, data[i])
 		}
 	}
@@ -117,7 +117,7 @@ func rfindUnique(data []float64) []float64 {
 }
 
 // Extract out a single feature from data
-func rgetFeature(data [][]float64, feature int64) []float64 {
+func regressorGetFeature(data [][]float64, feature int64) []float64 {
 	var featureVals []float64
 	for i := range data {
 		featureVals = append(featureVals, data[i][feature])
@@ -134,7 +134,7 @@ func NewDecisionTreeRegressor(criterion string, maxDepth int64) *CARTDecisionTre
 }
 
 // Validate that the split being tested has not been done before.
-func rvalidate(triedSplits [][]float64, feature int64, threshold float64) bool {
+func regressorValidate(triedSplits [][]float64, feature int64, threshold float64) bool {
 	for i := range triedSplits {
 		split := triedSplits[i]
 		featureTried, thresholdTried := split[0], split[1]
@@ -146,7 +146,7 @@ func rvalidate(triedSplits [][]float64, feature int64, threshold float64) bool {
 }
 
 // Re order data based on a feature for optimizing code
-func rreOrderData(featureVal []float64, data [][]float64, y []float64) ([][]float64, []float64) {
+func regressorReOrderData(featureVal []float64, data [][]float64, y []float64) ([][]float64, []float64) {
 	s := NewSlice(featureVal)
 	sort.Sort(s)
 
@@ -164,7 +164,7 @@ func rreOrderData(featureVal []float64, data [][]float64, y []float64) ([][]floa
 }
 
 // Update the left and right data based on change in threshold
-func rupdateSplit(left [][]float64, lefty []float64, right [][]float64, righty []float64, feature int64, threshold float64) ([][]float64, []float64, [][]float64, []float64) {
+func regressorUpdateSplit(left [][]float64, lefty []float64, right [][]float64, righty []float64, feature int64, threshold float64) ([][]float64, []float64, [][]float64, []float64) {
 
 	for right[0][feature] < threshold {
 		left = append(left, right[0])
@@ -178,17 +178,17 @@ func rupdateSplit(left [][]float64, lefty []float64, right [][]float64, righty [
 
 // Extra Method for creating simple to use interface. Many params are either redundant for user but are needed only for recursive logic.
 func (tree *CARTDecisionTreeRegressor) Fit(X base.FixedDataGrid) {
-	var emptyNode RNode
+	var emptyNode regressorNode
 	data := regressorConvertInstancesToProblemVec(X)
 	y := regressorConvertInstancesToLabelVec(X)
 
-	emptyNode = rbestSplit(*tree, data, y, emptyNode, tree.criterion, tree.maxDepth, 0)
+	emptyNode = regressorBestSplit(*tree, data, y, emptyNode, tree.criterion, tree.maxDepth, 0)
 
 	tree.RootNode = &emptyNode
 }
 
 // Essentially the Fit Method - Impelements recursive logic
-func rbestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []float64, upperNode RNode, criterion string, maxDepth int64, depth int64) RNode {
+func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []float64, upperNode regressorNode, criterion string, maxDepth int64, depth int64) regressorNode {
 
 	depth++
 
@@ -220,16 +220,16 @@ func rbestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []float64, u
 
 	upperNode.Use_not = true
 
-	var leftN RNode
-	var rightN RNode
+	var leftN regressorNode
+	var rightN regressorNode
 	// Iterate over all features
 	for i := 0; i < numFeatures; i++ {
-		featureVal := rgetFeature(data, int64(i))
-		unique := rfindUnique(featureVal)
+		featureVal := regressorGetFeature(data, int64(i))
+		unique := regressorFindUnique(featureVal)
 		sort.Float64s(unique)
 		numUnique := len(unique)
 
-		sortData, sortY := rreOrderData(featureVal, data, y)
+		sortData, sortY := regressorReOrderData(featureVal, data, y)
 
 		firstTime := true
 
@@ -239,12 +239,12 @@ func rbestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []float64, u
 		for j := range unique {
 			if j != (numUnique - 1) {
 				threshold := (unique[j] + unique[j+1]) / 2
-				if rvalidate(tree.triedSplits, int64(i), threshold) {
+				if regressorValidate(tree.triedSplits, int64(i), threshold) {
 					if firstTime {
-						left, right, lefty, righty = rtestSplit(sortData, int64(i), sortY, threshold)
+						left, right, lefty, righty = regressorCreateSplit(sortData, int64(i), sortY, threshold)
 						firstTime = false
 					} else {
-						left, lefty, right, righty = rupdateSplit(left, lefty, right, righty, int64(i), threshold)
+						left, lefty, right, righty = regressorUpdateSplit(left, lefty, right, righty, int64(i), threshold)
 					}
 
 					var leftLoss float64
@@ -292,7 +292,7 @@ func rbestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []float64, u
 
 		if bestLeftLoss > 0 {
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
-			leftN = rbestSplit(tree, bestLeft, bestLefty, leftN, criterion, maxDepth, depth)
+			leftN = regressorBestSplit(tree, bestLeft, bestLefty, leftN, criterion, maxDepth, depth)
 			if leftN.Use_not == true {
 				upperNode.Left = &leftN
 			}
@@ -300,7 +300,7 @@ func rbestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []float64, u
 		}
 		if bestRightLoss > 0 {
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
-			rightN = rbestSplit(tree, bestRight, bestRighty, rightN, criterion, maxDepth, depth)
+			rightN = regressorBestSplit(tree, bestRight, bestRighty, rightN, criterion, maxDepth, depth)
 			if rightN.Use_not == true {
 				upperNode.Right = &rightN
 			}
@@ -315,10 +315,10 @@ func rbestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []float64, u
 // Print Tree for Visualtion - calls printTreeFromNode()
 func (tree *CARTDecisionTreeRegressor) String() string {
 	rootNode := *tree.RootNode
-	return rprintTreeFromNode(rootNode, "")
+	return regressorPrintTreeFromNode(rootNode, "")
 }
 
-func rprintTreeFromNode(tree RNode, spacing string) string {
+func regressorPrintTreeFromNode(tree regressorNode, spacing string) string {
 	returnString := ""
 	returnString += spacing + "Feature "
 	returnString += strconv.FormatInt(tree.Feature, 10)
@@ -341,31 +341,31 @@ func rprintTreeFromNode(tree RNode, spacing string) string {
 	if tree.Left != nil {
 		// fmt.Println(spacing + "---> True")
 		returnString += spacing + "---> True" + "\n"
-		returnString += rprintTreeFromNode(*tree.Left, spacing+"  ")
+		returnString += regressorPrintTreeFromNode(*tree.Left, spacing+"  ")
 	}
 
 	if tree.Right != nil {
 		// fmt.Println(spacing + "---> False")
 		returnString += spacing + "---> False" + "\n"
-		returnString += rprintTreeFromNode(*tree.Right, spacing+"  ")
+		returnString += regressorPrintTreeFromNode(*tree.Right, spacing+"  ")
 	}
 
 	return returnString
 }
 
 // Predict a single data point
-func rpredictSingle(tree RNode, instance []float64) float64 {
+func regressorPredictSingle(tree regressorNode, instance []float64) float64 {
 	if instance[tree.Feature] < tree.Threshold {
 		if tree.Left == nil {
 			return tree.LeftPred
 		} else {
-			return rpredictSingle(*tree.Left, instance)
+			return regressorPredictSingle(*tree.Left, instance)
 		}
 	} else {
 		if tree.Right == nil {
 			return tree.RightPred
 		} else {
-			return rpredictSingle(*tree.Right, instance)
+			return regressorPredictSingle(*tree.Right, instance)
 		}
 	}
 }
@@ -374,14 +374,14 @@ func rpredictSingle(tree RNode, instance []float64) float64 {
 func (tree *CARTDecisionTreeRegressor) Predict(X_test base.FixedDataGrid) []float64 {
 	root := *tree.RootNode
 	test := regressorConvertInstancesToProblemVec(X_test)
-	return rpredictFromNode(root, test)
+	return regressorPredictFromNode(root, test)
 }
 
 // Use tree's root node to print out entire tree
-func rpredictFromNode(tree RNode, test [][]float64) []float64 {
+func regressorPredictFromNode(tree regressorNode, test [][]float64) []float64 {
 	var preds []float64
 	for i := range test {
-		i_pred := rpredictSingle(tree, test[i])
+		i_pred := regressorPredictSingle(tree, test[i])
 		preds = append(preds, i_pred)
 	}
 	return preds
