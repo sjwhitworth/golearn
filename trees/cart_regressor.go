@@ -10,9 +10,14 @@ import (
 	"github.com/sjwhitworth/golearn/base"
 )
 
-// The "r" prefix to all function names indicates that they were tailored to support regression.
+const (
+	MAE string = "mae"
+	MSE string = "mse"
+)
 
 // RNode - Node struct for Decision Tree Regressor
+// It holds the information for each split
+// Which feature to use, threshold, left prediction and right prediction
 type regressorNode struct {
 	Left      *regressorNode
 	Right     *regressorNode
@@ -24,6 +29,8 @@ type regressorNode struct {
 }
 
 // CARTDecisionTreeRegressor - Tree struct for Decision Tree Regressor
+// It contains the rootNode, as well as the hyperparameters chosen by user.
+// Also keeps track of splits used at tree level.
 type CARTDecisionTreeRegressor struct {
 	RootNode    *regressorNode
 	criterion   string
@@ -74,7 +81,7 @@ func mseImpurity(y []float64) (float64, float64) {
 	return meanSquaredError(y, yHat), yHat
 }
 
-// Split the data based on threshold and feature for testing information gain
+// Split the data into left and right based on trehsold and feature.
 func regressorCreateSplit(data [][]float64, feature int64, y []float64, threshold float64) ([][]float64, [][]float64, []float64, []float64) {
 	var left [][]float64
 	var lefty []float64
@@ -95,7 +102,8 @@ func regressorCreateSplit(data [][]float64, feature int64, y []float64, threshol
 	return left, right, lefty, righty
 }
 
-// Helper function for finding unique values
+// Helper function for finding unique values.
+// Used for isolating unique values in a feature.
 func regressorStringInSlice(a float64, list []float64) bool {
 	for _, b := range list {
 		if b == a {
@@ -105,7 +113,8 @@ func regressorStringInSlice(a float64, list []float64) bool {
 	return false
 }
 
-// Return only unique values of a feature
+// Isolate only unique values.
+// This way we can only try unique splits.
 func regressorFindUnique(data []float64) []float64 {
 	var unique []float64
 	for i := range data {
@@ -116,7 +125,8 @@ func regressorFindUnique(data []float64) []float64 {
 	return unique
 }
 
-// Extract out a single feature from data
+// Extract out a single feature from data.
+// Reduces complexity in managing splits and sorting
 func regressorGetFeature(data [][]float64, feature int64) []float64 {
 	var featureVals []float64
 	for i := range data {
@@ -125,7 +135,7 @@ func regressorGetFeature(data [][]float64, feature int64) []float64 {
 	return featureVals
 }
 
-// Interface for creating new Decision Tree Regressor - cals rbestSplit()
+// Interface for creating new Decision Tree Regressor
 func NewDecisionTreeRegressor(criterion string, maxDepth int64) *CARTDecisionTreeRegressor {
 	var tree CARTDecisionTreeRegressor
 	tree.maxDepth = maxDepth
@@ -134,6 +144,7 @@ func NewDecisionTreeRegressor(criterion string, maxDepth int64) *CARTDecisionTre
 }
 
 // Validate that the split being tested has not been done before.
+// This prevents redundant splits from hapenning.
 func regressorValidate(triedSplits [][]float64, feature int64, threshold float64) bool {
 	for i := range triedSplits {
 		split := triedSplits[i]
@@ -146,6 +157,7 @@ func regressorValidate(triedSplits [][]float64, feature int64, threshold float64
 }
 
 // Re order data based on a feature for optimizing code
+// Helps in updating splits without reiterating entire dataset
 func regressorReOrderData(featureVal []float64, data [][]float64, y []float64) ([][]float64, []float64) {
 	s := NewSlice(featureVal)
 	sort.Sort(s)
@@ -176,7 +188,8 @@ func regressorUpdateSplit(left [][]float64, lefty []float64, right [][]float64, 
 	return left, lefty, right, righty
 }
 
-// Extra Method for creating simple to use interface. Many params are either redundant for user but are needed only for recursive logic.
+// Fit - Build the tree using the data
+// Creates empty root node and builds tree by calling regressorBestSplit
 func (tree *CARTDecisionTreeRegressor) Fit(X base.FixedDataGrid) {
 	var emptyNode regressorNode
 	data := regressorConvertInstancesToProblemVec(X)
@@ -187,7 +200,8 @@ func (tree *CARTDecisionTreeRegressor) Fit(X base.FixedDataGrid) {
 	tree.RootNode = &emptyNode
 }
 
-// Essentially the Fit Method - Impelements recursive logic
+// Builds the tree by iteratively finding the best split.
+// Recursive function - stops if maxDepth is reached or nodes are pure
 func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []float64, upperNode regressorNode, criterion string, maxDepth int64, depth int64) regressorNode {
 
 	depth++
@@ -200,10 +214,12 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 	var bestLoss float64
 	var origLoss float64
 
-	if criterion == "mae" {
+	if criterion == MAE {
 		origLoss, upperNode.LeftPred = maeImpurity(y)
-	} else {
+	} else if criterion == MSE {
 		origLoss, upperNode.LeftPred = mseImpurity(y)
+	} else {
+		panic("Invalid impurity function, choose from MAE or MSE")
 	}
 
 	bestLoss = origLoss
@@ -252,10 +268,10 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 					var leftPred float64
 					var rightPred float64
 
-					if criterion == "mae" {
+					if criterion == MAE {
 						leftLoss, leftPred = maeImpurity(lefty)
 						rightLoss, rightPred = maeImpurity(righty)
-					} else {
+					} else if criterion == MSE {
 						leftLoss, leftPred = mseImpurity(lefty)
 						rightLoss, rightPred = mseImpurity(righty)
 					}
@@ -312,12 +328,13 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 	return upperNode
 }
 
-// Print Tree for Visualtion - calls printTreeFromNode()
+// Print Tree for Visualtion - calls regressorPrintTreeFromNode()
 func (tree *CARTDecisionTreeRegressor) String() string {
 	rootNode := *tree.RootNode
 	return regressorPrintTreeFromNode(rootNode, "")
 }
 
+// Recursively explore the entire tree and print out all details such as threshold, feature, prediction
 func regressorPrintTreeFromNode(tree regressorNode, spacing string) string {
 	returnString := ""
 	returnString += spacing + "Feature "
@@ -353,7 +370,8 @@ func regressorPrintTreeFromNode(tree regressorNode, spacing string) string {
 	return returnString
 }
 
-// Predict a single data point
+// Predict a single data point by navigating to rootNodes.
+// Uses a recursive logic
 func regressorPredictSingle(tree regressorNode, instance []float64) float64 {
 	if instance[tree.Feature] < tree.Threshold {
 		if tree.Left == nil {
@@ -370,14 +388,16 @@ func regressorPredictSingle(tree regressorNode, instance []float64) float64 {
 	}
 }
 
-// Predict method for multiple data points. Calls predictFromNode()
+// Predict method for multiple data points.
+// First converts input data into usable format, and then calls regressorPredictFromNode
 func (tree *CARTDecisionTreeRegressor) Predict(X_test base.FixedDataGrid) []float64 {
 	root := *tree.RootNode
 	test := regressorConvertInstancesToProblemVec(X_test)
 	return regressorPredictFromNode(root, test)
 }
 
-// Use tree's root node to print out entire tree
+// Use tree's root node to print out entire tree.
+// Iterates over all data points and calls regressorPredictSingle to predict individual datapoints.
 func regressorPredictFromNode(tree regressorNode, test [][]float64) []float64 {
 	var preds []float64
 	for i := range test {
