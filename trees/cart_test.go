@@ -38,10 +38,10 @@ func TestRegressor(t *testing.T) {
 		So(len(righty), ShouldEqual, 2)
 
 		// Is isolating unique values working properly
-		So(len(classifierFindUnique([]float64{10, 1, 1})), ShouldEqual, 2)
+		So(len(findUnique([]float64{10, 1, 1})), ShouldEqual, 2)
 
 		// is data reordered correctly
-		orderedData, orderedY := classifierReOrderData(classifierGetFeature(classifierData, 1), classifierData, classifiery)
+		orderedData, orderedY := classifierReOrderData(getFeature(classifierData, 1), classifierData, classifiery)
 		fmt.Println(orderedData)
 		fmt.Println(orderedY)
 		So(orderedData[1][1], ShouldEqual, 3.0)
@@ -85,11 +85,8 @@ func TestRegressor(t *testing.T) {
 		So(len(rightData), ShouldEqual, 2)
 		So(len(righty), ShouldEqual, 2)
 
-		// Is isolating unique values working properly
-		So(len(regressorFindUnique([]float64{10, 1, 1})), ShouldEqual, 2)
-
 		// is data reordered correctly
-		regressorOrderedData, regressorOrderedY := regressorReOrderData(regressorGetFeature(data, 1), data, y)
+		regressorOrderedData, regressorOrderedY := regressorReOrderData(getFeature(data, 1), data, y)
 
 		So(regressorOrderedData[1][1], ShouldEqual, 3.0)
 		So(regressorOrderedY[0], ShouldEqual, 2)

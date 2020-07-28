@@ -81,6 +81,16 @@ func mseImpurity(y []float64) (float64, float64) {
 	return meanSquaredError(y, yHat), yHat
 }
 
+func calculateRegressionLoss(y []float64, criterion string) (float64, float64) {
+	if criterion == MAE {
+		return maeImpurity(y)
+	} else if criterion == MSE {
+		return mseImpurity(y)
+	} else {
+		panic("Invalid impurity function, choose from MAE or MSE")
+	}
+}
+
 // Split the data into left and right based on trehsold and feature.
 func regressorCreateSplit(data [][]float64, feature int64, y []float64, threshold float64) ([][]float64, [][]float64, []float64, []float64) {
 	var left [][]float64
@@ -102,58 +112,12 @@ func regressorCreateSplit(data [][]float64, feature int64, y []float64, threshol
 	return left, right, lefty, righty
 }
 
-// Helper function for finding unique values.
-// Used for isolating unique values in a feature.
-func regressorStringInSlice(a float64, list []float64) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-// Isolate only unique values.
-// This way we can only try unique splits.
-func regressorFindUnique(data []float64) []float64 {
-	var unique []float64
-	for i := range data {
-		if !regressorStringInSlice(data[i], unique) {
-			unique = append(unique, data[i])
-		}
-	}
-	return unique
-}
-
-// Extract out a single feature from data.
-// Reduces complexity in managing splits and sorting
-func regressorGetFeature(data [][]float64, feature int64) []float64 {
-	var featureVals []float64
-	for i := range data {
-		featureVals = append(featureVals, data[i][feature])
-	}
-	return featureVals
-}
-
 // Interface for creating new Decision Tree Regressor
 func NewDecisionTreeRegressor(criterion string, maxDepth int64) *CARTDecisionTreeRegressor {
 	var tree CARTDecisionTreeRegressor
 	tree.maxDepth = maxDepth
 	tree.criterion = strings.ToLower(criterion)
 	return &tree
-}
-
-// Validate that the split being tested has not been done before.
-// This prevents redundant splits from hapenning.
-func regressorValidate(triedSplits [][]float64, feature int64, threshold float64) bool {
-	for i := range triedSplits {
-		split := triedSplits[i]
-		featureTried, thresholdTried := split[0], split[1]
-		if int64(featureTried) == feature && thresholdTried == threshold {
-			return false
-		}
-	}
-	return true
 }
 
 // Re order data based on a feature for optimizing code
@@ -204,6 +168,7 @@ func (tree *CARTDecisionTreeRegressor) Fit(X base.FixedDataGrid) {
 // Recursive function - stops if maxDepth is reached or nodes are pure
 func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []float64, upperNode regressorNode, criterion string, maxDepth int64, depth int64) regressorNode {
 
+	// Ensure that we have not reached maxDepth. maxDepth =-1 means split until nodes are pure
 	depth++
 
 	if depth > maxDepth && maxDepth != -1 {
@@ -211,39 +176,27 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 	}
 
 	numFeatures := len(data[0])
-	var bestLoss float64
-	var origLoss float64
+	var bestLoss, origLoss float64
 
-	if criterion == MAE {
-		origLoss, upperNode.LeftPred = maeImpurity(y)
-	} else if criterion == MSE {
-		origLoss, upperNode.LeftPred = mseImpurity(y)
-	} else {
-		panic("Invalid impurity function, choose from MAE or MSE")
-	}
+	origLoss, upperNode.LeftPred = calculateRegressionLoss(y, criterion)
 
 	bestLoss = origLoss
 
-	bestLeft := data
-	bestRight := data
-	bestLefty := y
-	bestRighty := y
+	bestLeft, bestRight, bestLefty, bestRighty := data, data, y, y
 
 	numData := len(data)
 
-	bestLeftLoss := bestLoss
-	bestRightLoss := bestLoss
+	bestLeftLoss, bestRightLoss := bestLoss, bestLoss
 
 	upperNode.Use_not = true
 
-	var leftN regressorNode
-	var rightN regressorNode
+	var leftN, rightN regressorNode
 	// Iterate over all features
 	for i := 0; i < numFeatures; i++ {
-		featureVal := regressorGetFeature(data, int64(i))
-		unique := regressorFindUnique(featureVal)
+
+		featureVal := getFeature(data, int64(i))
+		unique := findUnique(featureVal)
 		sort.Float64s(unique)
-		numUnique := len(unique)
 
 		sortData, sortY := regressorReOrderData(featureVal, data, y)
 
@@ -252,49 +205,36 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 		var left, right [][]float64
 		var lefty, righty []float64
 
-		for j := range unique {
-			if j != (numUnique - 1) {
-				threshold := (unique[j] + unique[j+1]) / 2
-				if regressorValidate(tree.triedSplits, int64(i), threshold) {
-					if firstTime {
-						left, right, lefty, righty = regressorCreateSplit(sortData, int64(i), sortY, threshold)
-						firstTime = false
-					} else {
-						left, lefty, right, righty = regressorUpdateSplit(left, lefty, right, righty, int64(i), threshold)
-					}
-
-					var leftLoss float64
-					var rightLoss float64
-					var leftPred float64
-					var rightPred float64
-
-					if criterion == MAE {
-						leftLoss, leftPred = maeImpurity(lefty)
-						rightLoss, rightPred = maeImpurity(righty)
-					} else if criterion == MSE {
-						leftLoss, leftPred = mseImpurity(lefty)
-						rightLoss, rightPred = mseImpurity(righty)
-					}
-
-					subLoss := (leftLoss * float64(len(left)) / float64(numData)) + (rightLoss * float64(len(right)) / float64(numData))
-
-					if subLoss < bestLoss {
-						bestLoss = subLoss
-						bestLeft = left
-						bestRight = right
-						bestLefty = lefty
-						bestRighty = righty
-						upperNode.Threshold = threshold
-						upperNode.Feature = int64(i)
-
-						upperNode.LeftPred = leftPred
-						upperNode.RightPred = rightPred
-
-						bestLeftLoss = leftLoss
-						bestRightLoss = rightLoss
-					}
+		for j := 0; j < len(unique)-1; j++ {
+			threshold := (unique[j] + unique[j+1]) / 2
+			if validate(tree.triedSplits, int64(i), threshold) {
+				if firstTime {
+					left, right, lefty, righty = regressorCreateSplit(sortData, int64(i), sortY, threshold)
+					firstTime = false
+				} else {
+					left, lefty, right, righty = regressorUpdateSplit(left, lefty, right, righty, int64(i), threshold)
 				}
 
+				var leftLoss, rightLoss float64
+				var leftPred, rightPred float64
+
+				leftLoss, leftPred = calculateRegressionLoss(lefty, criterion)
+				rightLoss, rightPred = calculateRegressionLoss(righty, criterion)
+
+				subLoss := (leftLoss * float64(len(left)) / float64(numData)) + (rightLoss * float64(len(right)) / float64(numData))
+
+				if subLoss < bestLoss {
+					bestLoss = subLoss
+
+					bestLeft, bestRight = left, right
+					bestLefty, bestRighty = lefty, righty
+
+					upperNode.Threshold, upperNode.Feature = threshold, int64(i)
+
+					upperNode.LeftPred, upperNode.RightPred = leftPred, rightPred
+
+					bestLeftLoss, bestRightLoss = leftLoss, rightLoss
+				}
 			}
 		}
 	}
@@ -312,19 +252,16 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 			if leftN.Use_not == true {
 				upperNode.Left = &leftN
 			}
-
 		}
+
 		if bestRightLoss > 0 {
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
 			rightN = regressorBestSplit(tree, bestRight, bestRighty, rightN, criterion, maxDepth, depth)
 			if rightN.Use_not == true {
 				upperNode.Right = &rightN
 			}
-
 		}
-
 	}
-
 	return upperNode
 }
 
@@ -349,20 +286,17 @@ func regressorPrintTreeFromNode(tree regressorNode, spacing string) string {
 		returnString += fmt.Sprintf("%.3f", tree.LeftPred) + "\n"
 	}
 	if tree.Right == nil {
-
 		returnString += spacing + "---> False" + "\n"
 		returnString += "  " + spacing + "PREDICT    "
 		returnString += fmt.Sprintf("%.3f", tree.RightPred) + "\n"
 	}
 
 	if tree.Left != nil {
-		// fmt.Println(spacing + "---> True")
 		returnString += spacing + "---> True" + "\n"
 		returnString += regressorPrintTreeFromNode(*tree.Left, spacing+"  ")
 	}
 
 	if tree.Right != nil {
-		// fmt.Println(spacing + "---> False")
 		returnString += spacing + "---> False" + "\n"
 		returnString += regressorPrintTreeFromNode(*tree.Right, spacing+"  ")
 	}

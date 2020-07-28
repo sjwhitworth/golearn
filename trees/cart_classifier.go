@@ -90,6 +90,16 @@ func entropy(y []int64, labels []int64) (float64, int64) {
 	return entropy, maxLabel
 }
 
+func calculateClassificationLoss(y []int64, labels []int64, criterion string) (float64, int64) {
+	if criterion == GINI {
+		return giniImpurity(y, labels)
+	} else if criterion == ENTROPY {
+		return entropy(y, labels)
+	} else {
+		panic("Invalid impurity function, choose from GINI or ENTROPY")
+	}
+}
+
 // Split the data into left node and right node based on feature and threshold
 func classifierCreateSplit(data [][]float64, feature int64, y []int64, threshold float64) ([][]float64, [][]float64, []int64, []int64) {
 	var left [][]float64
@@ -111,37 +121,6 @@ func classifierCreateSplit(data [][]float64, feature int64, y []int64, threshold
 	return left, right, lefty, righty
 }
 
-// Helper Function to check if data point is unique or not.
-// We will use this to isolate unique values of a feature
-func classifierStringInSlice(a float64, list []float64) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-// Isolate only unique values. This way, we can try only unique splits and not redundant ones.
-func classifierFindUnique(data []float64) []float64 {
-	var unique []float64
-	for i := range data {
-		if !classifierStringInSlice(data[i], unique) {
-			unique = append(unique, data[i])
-		}
-	}
-	return unique
-}
-
-// Isolate only the feature being considered for splitting. Reduces the complexity in managing splits.
-func classifierGetFeature(data [][]float64, feature int64) []float64 {
-	var featureVals []float64
-	for i := range data {
-		featureVals = append(featureVals, data[i][feature])
-	}
-	return featureVals
-}
-
 // Function to Create New Decision Tree Classifier.
 // It assigns all of the hyperparameters by user into the tree attributes.
 func NewDecisionTreeClassifier(criterion string, maxDepth int64, labels []int64) *CARTDecisionTreeClassifier {
@@ -151,19 +130,6 @@ func NewDecisionTreeClassifier(criterion string, maxDepth int64, labels []int64)
 	tree.labels = labels
 
 	return &tree
-}
-
-// Make sure that split being considered has not been done before.
-// Else we will unnecessarily try splits that won't improve Impurity.
-func classifierValidate(triedSplits [][]float64, feature int64, threshold float64) bool {
-	for i := range triedSplits {
-		split := triedSplits[i]
-		featureTried, thresholdTried := split[0], split[1]
-		if int64(featureTried) == feature && thresholdTried == threshold {
-			return false
-		}
-	}
-	return true
 }
 
 // Reorder the data by feature being considered. Optimizes code by reducing the number of times we have to loop over data for splitting
@@ -202,7 +168,7 @@ func classifierUpdateSplit(left [][]float64, lefty []int64, right [][]float64, r
 func (tree *CARTDecisionTreeClassifier) Fit(X base.FixedDataGrid) {
 	var emptyNode classifierNode
 
-	data := classifierConvertInstancesToProblemVec(X)
+	data := convertInstancesToProblemVec(X)
 	y := classifierConvertInstancesToLabelVec(X)
 	emptyNode = classifierBestSplit(*tree, data, y, tree.labels, emptyNode, tree.criterion, tree.maxDepth, 0)
 
@@ -221,40 +187,29 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 	}
 
 	numFeatures := len(data[0])
-	var bestGini float64
-	var origGini float64
+	var bestGini, origGini float64
 
 	// Calculate loss based on Criterion Specified by user
-	if criterion == GINI {
-		origGini, upperNode.LeftLabel = giniImpurity(y, labels)
-	} else if criterion == ENTROPY {
-		origGini, upperNode.LeftLabel = entropy(y, labels)
-	} else {
-		panic("Invalid impurity function, choose from GINI or ENTROPY")
-	}
+	origGini, upperNode.LeftLabel = calculateClassificationLoss(y, labels, criterion)
 
 	bestGini = origGini
 
-	bestLeft := data
-	bestRight := data
-	bestLefty := y
-	bestRighty := y
+	bestLeft, bestRight, bestLefty, bestRighty := data, data, y, y
 
 	numData := len(data)
 
-	bestLeftGini := bestGini
-	bestRightGini := bestGini
+	bestLeftGini, bestRightGini := bestGini, bestGini
 
 	upperNode.Use_not = true
 
-	var leftN classifierNode
-	var rightN classifierNode
+	var leftN, rightN classifierNode
+
 	// Iterate over all features
 	for i := 0; i < numFeatures; i++ {
-		featureVal := classifierGetFeature(data, int64(i))
-		unique := classifierFindUnique(featureVal)
+
+		featureVal := getFeature(data, int64(i))
+		unique := findUnique(featureVal)
 		sort.Float64s(unique)
-		numUnique := len(unique)
 
 		sortData, sortY := classifierReOrderData(featureVal, data, y)
 
@@ -263,53 +218,43 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 		var left, right [][]float64
 		var lefty, righty []int64
 		// Iterate over all possible thresholds for that feature
-		for j := range unique {
-			if j != (numUnique - 1) {
-				threshold := (unique[j] + unique[j+1]) / 2
-				// Ensure that same split has not been made before
-				if classifierValidate(tree.triedSplits, int64(i), threshold) {
-					// We need to split data from fresh when considering new feature for the first time.
-					// Otherwise, we need to update the split by moving data points from left to right.
-					if firstTime {
-						left, right, lefty, righty = classifierCreateSplit(sortData, int64(i), sortY, threshold)
-						firstTime = false
-					} else {
-						left, lefty, right, righty = classifierUpdateSplit(left, lefty, right, righty, int64(i), threshold)
-					}
+		for j := 0; j < len(unique)-1; j++ {
 
-					var leftGini float64
-					var rightGini float64
-					var leftLabels int64
-					var rightLabels int64
-
-					if criterion == GINI {
-						leftGini, leftLabels = giniImpurity(lefty, labels)
-						rightGini, rightLabels = giniImpurity(righty, labels)
-					} else if criterion == ENTROPY {
-						leftGini, leftLabels = entropy(lefty, labels)
-						rightGini, rightLabels = entropy(righty, labels)
-					}
-					// Calculate weighted gini impurity of child nodes
-					subGini := (leftGini * float64(len(left)) / float64(numData)) + (rightGini * float64(len(right)) / float64(numData))
-
-					// If we find a split that reduces impurity
-					if subGini < bestGini {
-						bestGini = subGini
-						bestLeft = left
-						bestRight = right
-						bestLefty = lefty
-						bestRighty = righty
-						upperNode.Threshold = threshold
-						upperNode.Feature = int64(i)
-
-						upperNode.LeftLabel = leftLabels
-						upperNode.RightLabel = rightLabels
-
-						bestLeftGini = leftGini
-						bestRightGini = rightGini
-					}
+			threshold := (unique[j] + unique[j+1]) / 2
+			// Ensure that same split has not been made before
+			if validate(tree.triedSplits, int64(i), threshold) {
+				// We need to split data from fresh when considering new feature for the first time.
+				// Otherwise, we need to update the split by moving data points from left to right.
+				if firstTime {
+					left, right, lefty, righty = classifierCreateSplit(sortData, int64(i), sortY, threshold)
+					firstTime = false
+				} else {
+					left, lefty, right, righty = classifierUpdateSplit(left, lefty, right, righty, int64(i), threshold)
 				}
 
+				var leftGini, rightGini float64
+				var leftLabels, rightLabels int64
+
+				leftGini, leftLabels = calculateClassificationLoss(lefty, labels, criterion)
+				rightGini, rightLabels = calculateClassificationLoss(righty, labels, criterion)
+
+				// Calculate weighted gini impurity of child nodes
+				subGini := (leftGini * float64(len(left)) / float64(numData)) + (rightGini * float64(len(right)) / float64(numData))
+
+				// If we find a split that reduces impurity
+				if subGini < bestGini {
+					bestGini = subGini
+
+					bestLeft, bestRight = left, right
+
+					bestLefty, bestRighty = lefty, righty
+
+					upperNode.Threshold, upperNode.Feature = threshold, int64(i)
+
+					upperNode.LeftLabel, upperNode.RightLabel = leftLabels, rightLabels
+
+					bestLeftGini, bestRightGini = leftGini, rightGini
+				}
 			}
 		}
 	}
@@ -366,10 +311,8 @@ func classifierPrintTreeFromNode(tree classifierNode, spacing string) string {
 		returnString += spacing + "---> True" + "\n"
 		returnString += "  " + spacing + "PREDICT    "
 		returnString += strconv.FormatInt(tree.LeftLabel, 10) + "\n"
-
 	}
 	if tree.Right == nil {
-
 		returnString += spacing + "---> False" + "\n"
 		returnString += "  " + spacing + "PREDICT    "
 		returnString += strconv.FormatInt(tree.RightLabel, 10) + "\n"
@@ -409,7 +352,7 @@ func classifierPredictSingle(tree classifierNode, instance []float64) int64 {
 // Given test data, return predictions for every datapoint. calls classifierPredictFromNode
 func (tree *CARTDecisionTreeClassifier) Predict(X_test base.FixedDataGrid) []int64 {
 	root := *tree.RootNode
-	test := classifierConvertInstancesToProblemVec(X_test)
+	test := convertInstancesToProblemVec(X_test)
 	return classifierPredictFromNode(root, test)
 }
 
@@ -429,7 +372,7 @@ func classifierPredictFromNode(tree classifierNode, test [][]float64) []int64 {
 // Calls classifierEvaluateFromNode
 func (tree *CARTDecisionTreeClassifier) Evaluate(test base.FixedDataGrid) float64 {
 	rootNode := *tree.RootNode
-	xTest := classifierConvertInstancesToProblemVec(test)
+	xTest := convertInstancesToProblemVec(test)
 	yTest := classifierConvertInstancesToLabelVec(test)
 	return classifierEvaluateFromNode(rootNode, xTest, yTest)
 }
@@ -445,31 +388,6 @@ func classifierEvaluateFromNode(tree classifierNode, xTest [][]float64, yTest []
 	}
 	accuracy /= float64(len(yTest))
 	return accuracy
-}
-
-// Helper function to convert base.FixedDataGrid into required format. Called in Fit, Predict
-func classifierConvertInstancesToProblemVec(X base.FixedDataGrid) [][]float64 {
-	// Allocate problem array
-	_, rows := X.Size()
-	problemVec := make([][]float64, rows)
-
-	// Retrieve numeric non-class Attributes
-	numericAttrs := base.NonClassFloatAttributes(X)
-	numericAttrSpecs := base.ResolveAttributes(X, numericAttrs)
-
-	// Convert each row
-	X.MapOverRows(numericAttrSpecs, func(row [][]byte, rowNo int) (bool, error) {
-		// Allocate a new row
-		probRow := make([]float64, len(numericAttrSpecs))
-		// Read out the row
-		for i, _ := range numericAttrSpecs {
-			probRow[i] = base.UnpackBytesToFloat(row[i])
-		}
-		// Add the row
-		problemVec[rowNo] = probRow
-		return true, nil
-	})
-	return problemVec
 }
 
 // Helper function to convert base.FixedDataGrid into required format. Called in Fit, Predict
