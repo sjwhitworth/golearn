@@ -19,13 +19,13 @@ const (
 // It holds the information for each split
 // Which feature to use, threshold, left prediction and right prediction
 type regressorNode struct {
-	Left      *regressorNode
-	Right     *regressorNode
-	Threshold float64
-	Feature   int64
-	LeftPred  float64
-	RightPred float64
-	Use_not   bool
+	Left         *regressorNode
+	Right        *regressorNode
+	Threshold    float64
+	Feature      int64
+	LeftPred     float64
+	RightPred    float64
+	isNodeNeeded bool
 }
 
 // CARTDecisionTreeRegressor - Tree struct for Decision Tree Regressor
@@ -188,7 +188,7 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 
 	bestLeftLoss, bestRightLoss := bestLoss, bestLoss
 
-	upperNode.Use_not = true
+	upperNode.isNodeNeeded = true
 
 	var leftN, rightN regressorNode
 	// Iterate over all features
@@ -240,7 +240,7 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 	}
 
 	if bestLoss == origLoss {
-		upperNode.Use_not = false
+		upperNode.isNodeNeeded = false
 		return upperNode
 	}
 
@@ -249,7 +249,7 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 		if bestLeftLoss > 0 {
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
 			leftN = regressorBestSplit(tree, bestLeft, bestLefty, leftN, criterion, maxDepth, depth)
-			if leftN.Use_not == true {
+			if leftN.isNodeNeeded == true {
 				upperNode.Left = &leftN
 			}
 		}
@@ -257,7 +257,7 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 		if bestRightLoss > 0 {
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
 			rightN = regressorBestSplit(tree, bestRight, bestRighty, rightN, criterion, maxDepth, depth)
-			if rightN.Use_not == true {
+			if rightN.isNodeNeeded == true {
 				upperNode.Right = &rightN
 			}
 		}

@@ -18,14 +18,13 @@ const (
 // CNode is Node struct for Decision Tree Classifier.
 // It holds the information for each split (which feature to use, what threshold, and which label to assign for each side of the split)
 type classifierNode struct {
-	Left       *classifierNode
-	Right      *classifierNode
-	Threshold  float64
-	Feature    int64
-	LeftLabel  int64
-	RightLabel int64
-	Use_not    bool
-	maxDepth   int64
+	Left         *classifierNode
+	Right        *classifierNode
+	Threshold    float64
+	Feature      int64
+	LeftLabel    int64
+	RightLabel   int64
+	isNodeNeeded bool
 }
 
 // CARTDecisionTreeClassifier: Tree struct for Decision Tree Classifier
@@ -163,7 +162,7 @@ func classifierUpdateSplit(left [][]float64, lefty []int64, right [][]float64, r
 	return left, lefty, right, righty
 }
 
-// Fit - Creates an Emppty Root Node
+// Fit - Creates an Emppty Root Node2
 // Trains the tree by calling recursive function classifierBestSplit
 func (tree *CARTDecisionTreeClassifier) Fit(X base.FixedDataGrid) {
 	var emptyNode classifierNode
@@ -200,7 +199,7 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 
 	bestLeftGini, bestRightGini := bestGini, bestGini
 
-	upperNode.Use_not = true
+	upperNode.isNodeNeeded = true
 
 	var leftN, rightN classifierNode
 
@@ -260,7 +259,7 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 	}
 	// If no split was found, we don't want to use this node, so we will flag it
 	if bestGini == origGini {
-		upperNode.Use_not = false
+		upperNode.isNodeNeeded = false
 		return upperNode
 	}
 	// Until nodes are not pure
@@ -271,7 +270,7 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
 			// Recursive splitting logic
 			leftN = classifierBestSplit(tree, bestLeft, bestLefty, labels, leftN, criterion, maxDepth, depth)
-			if leftN.Use_not == true {
+			if leftN.isNodeNeeded == true {
 				upperNode.Left = &leftN
 			}
 
@@ -281,7 +280,7 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
 			// Recursive splitting logic
 			rightN = classifierBestSplit(tree, bestRight, bestRighty, labels, rightN, criterion, maxDepth, depth)
-			if rightN.Use_not == true {
+			if rightN.isNodeNeeded == true {
 				upperNode.Right = &rightN
 			}
 
