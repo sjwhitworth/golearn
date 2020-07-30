@@ -39,7 +39,7 @@ type CARTDecisionTreeClassifier struct {
 }
 
 // Calculate Gini Impurity of Target Labels
-func giniImpurity(y []int64, labels []int64) (float64, int64) {
+func computeGiniImpurityAndModeLabel(y []int64, labels []int64) (float64, int64) {
 	nInstances := len(y)
 	gini := 0.0
 	maxLabelCount := 0
@@ -62,7 +62,7 @@ func giniImpurity(y []int64, labels []int64) (float64, int64) {
 }
 
 // Calculate Entropy loss of Target Labels
-func entropy(y []int64, labels []int64) (float64, int64) {
+func computeEntropyAndModeLabel(y []int64, labels []int64) (float64, int64) {
 	nInstances := len(y)
 	entropy := 0.0
 	maxLabelCount := 0
@@ -91,9 +91,9 @@ func entropy(y []int64, labels []int64) (float64, int64) {
 
 func calculateClassificationLoss(y []int64, labels []int64, criterion string) (float64, int64) {
 	if criterion == GINI {
-		return giniImpurity(y, labels)
+		return computeGiniImpurityAndModeLabel(y, labels)
 	} else if criterion == ENTROPY {
-		return entropy(y, labels)
+		return computeEntropyAndModeLabel(y, labels)
 	} else {
 		panic("Invalid impurity function, choose from GINI or ENTROPY")
 	}

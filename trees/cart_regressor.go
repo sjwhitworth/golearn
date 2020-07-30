@@ -59,7 +59,7 @@ func meanAbsoluteError(y []float64, yBar float64) float64 {
 }
 
 // Turn Mean Absolute Error into impurity function for decision trees.
-func maeImpurity(y []float64) (float64, float64) {
+func computeMaeImpurityAndAverage(y []float64) (float64, float64) {
 	yHat := average(y)
 	return meanAbsoluteError(y, yHat), yHat
 }
@@ -76,16 +76,16 @@ func meanSquaredError(y []float64, yBar float64) float64 {
 }
 
 // Convert mean squared error into impurity function for decision trees
-func mseImpurity(y []float64) (float64, float64) {
+func computeMseImpurityAndAverage(y []float64) (float64, float64) {
 	yHat := average(y)
 	return meanSquaredError(y, yHat), yHat
 }
 
 func calculateRegressionLoss(y []float64, criterion string) (float64, float64) {
 	if criterion == MAE {
-		return maeImpurity(y)
+		return computeMaeImpurityAndAverage(y)
 	} else if criterion == MSE {
-		return mseImpurity(y)
+		return computeMseImpurityAndAverage(y)
 	} else {
 		panic("Invalid impurity function, choose from MAE or MSE")
 	}
