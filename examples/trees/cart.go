@@ -9,6 +9,22 @@ import (
 )
 
 func main() {
+	/* Performance of CART Algorithm:
+
+		Training Time for Titanic Dataset ≈ 713 µs
+		Prediction Time for Titanic Datset ≈ 133 µs
+
+		Sklearn:
+		Training Time for Titanic Dataset ≈ 8.8 µs
+		Prediction Time for Titanic Datset ≈ 7.87 µs
+
+		This implementation and sci-kit learn produce the exact same tree for the exact same dataset.
+		Predictions on the same test set also yield the exact same accuracy.
+
+		This implementation is optimized to prevent redundant iterations over the dataset, but it is not completely optimized. Also, sklearn makes use of numpy to access column easily, whereas here a complete iteration is required.
+	 	In terms of Hyperparameters, this implmentation gives you the ability to choose the impurity function and the maxDepth.
+		Many of the other hyperparameters used in sklearn are not here, but pruning and impurity is included.
+	*/
 
 	// Load Titanic Data For classification
 	classificationData, err := base.ParseCSVToInstances("../datasets/titanic.csv", false)
