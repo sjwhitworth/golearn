@@ -1,6 +1,7 @@
 package trees
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -89,13 +90,15 @@ func computeEntropyAndModeLabel(y []int64, labels []int64) (float64, int64) {
 	return entropy, maxLabel
 }
 
-func calculateClassificationLoss(y []int64, labels []int64, criterion string) (float64, int64) {
+func calculateClassificationLoss(y []int64, labels []int64, criterion string) (float64, int64, error) {
 	if criterion == GINI {
-		return computeGiniImpurityAndModeLabel(y, labels)
+		loss, modeLabel := computeGiniImpurityAndModeLabel(y, labels)
+		return loss, modeLabel, nil
 	} else if criterion == ENTROPY {
-		return computeEntropyAndModeLabel(y, labels)
+		loss, modeLabel := computeEntropyAndModeLabel(y, labels)
+		return loss, modeLabel, nil
 	} else {
-		panic("Invalid impurity function, choose from GINI or ENTROPY")
+		return 0, 0, errors.New("Invalid impurity function, choose from GINI or ENTROPY")
 	}
 }
 
@@ -164,32 +167,44 @@ func classifierUpdateSplit(left [][]float64, lefty []int64, right [][]float64, r
 
 // Fit - Creates an Emppty Root Node2
 // Trains the tree by calling recursive function classifierBestSplit
-func (tree *CARTDecisionTreeClassifier) Fit(X base.FixedDataGrid) {
+func (tree *CARTDecisionTreeClassifier) Fit(X base.FixedDataGrid) error {
 	var emptyNode classifierNode
+	var err error
 
 	data := convertInstancesToProblemVec(X)
-	y := classifierConvertInstancesToLabelVec(X)
-	emptyNode = classifierBestSplit(*tree, data, y, tree.labels, emptyNode, tree.criterion, tree.maxDepth, 0)
+	y, err := classifierConvertInstancesToLabelVec(X)
+	if err != nil {
+		return err
+	}
 
+	emptyNode, err = classifierBestSplit(*tree, data, y, tree.labels, emptyNode, tree.criterion, tree.maxDepth, 0)
+
+	if err != nil {
+		return err
+	}
 	tree.RootNode = &emptyNode
+	return nil
 }
 
 // Iterativly find and record the best split
 // Stop If depth reaches maxDepth or nodes are pure
-func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []int64, labels []int64, upperNode classifierNode, criterion string, maxDepth int64, depth int64) classifierNode {
+func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []int64, labels []int64, upperNode classifierNode, criterion string, maxDepth int64, depth int64) (classifierNode, error) {
 
 	// Ensure that we have not reached maxDepth. maxDepth =-1 means split until nodes are pure
 	depth++
 
 	if maxDepth != -1 && depth > maxDepth {
-		return upperNode
+		return upperNode, nil
 	}
 
 	numFeatures := len(data[0])
 	var bestGini, origGini float64
-
+	var err error
 	// Calculate loss based on Criterion Specified by user
-	origGini, upperNode.LeftLabel = calculateClassificationLoss(y, labels, criterion)
+	origGini, upperNode.LeftLabel, err = calculateClassificationLoss(y, labels, criterion)
+	if err != nil {
+		return upperNode, err
+	}
 
 	bestGini = origGini
 
@@ -234,8 +249,8 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 				var leftGini, rightGini float64
 				var leftLabels, rightLabels int64
 
-				leftGini, leftLabels = calculateClassificationLoss(lefty, labels, criterion)
-				rightGini, rightLabels = calculateClassificationLoss(righty, labels, criterion)
+				leftGini, leftLabels, _ = calculateClassificationLoss(lefty, labels, criterion)
+				rightGini, rightLabels, _ = calculateClassificationLoss(righty, labels, criterion)
 
 				// Calculate weighted gini impurity of child nodes
 				subGini := (leftGini * float64(len(left)) / float64(numData)) + (rightGini * float64(len(right)) / float64(numData))
@@ -260,7 +275,7 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 	// If no split was found, we don't want to use this node, so we will flag it
 	if bestGini == origGini {
 		upperNode.isNodeNeeded = false
-		return upperNode
+		return upperNode, nil
 	}
 	// Until nodes are not pure
 	if bestGini > 0 {
@@ -269,7 +284,10 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 		if bestLeftGini > 0 {
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
 			// Recursive splitting logic
-			leftN = classifierBestSplit(tree, bestLeft, bestLefty, labels, leftN, criterion, maxDepth, depth)
+			leftN, err = classifierBestSplit(tree, bestLeft, bestLefty, labels, leftN, criterion, maxDepth, depth)
+			if err != nil {
+				return upperNode, err
+			}
 			if leftN.isNodeNeeded == true {
 				upperNode.Left = &leftN
 			}
@@ -279,7 +297,10 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 		if bestRightGini > 0 {
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
 			// Recursive splitting logic
-			rightN = classifierBestSplit(tree, bestRight, bestRighty, labels, rightN, criterion, maxDepth, depth)
+			rightN, err = classifierBestSplit(tree, bestRight, bestRighty, labels, rightN, criterion, maxDepth, depth)
+			if err != nil {
+				return upperNode, err
+			}
 			if rightN.isNodeNeeded == true {
 				upperNode.Right = &rightN
 			}
@@ -288,7 +309,7 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 
 	}
 	// Return the node - contains all information regarding feature and threshold.
-	return upperNode
+	return upperNode, nil
 }
 
 // String : this function prints out entire tree for visualization.
@@ -369,11 +390,14 @@ func classifierPredictFromNode(tree classifierNode, test [][]float64) []int64 {
 // Given Test data and label, return the accuracy of the classifier.
 // First it retreives predictions from the data, then compares for accuracy.
 // Calls classifierEvaluateFromNode
-func (tree *CARTDecisionTreeClassifier) Evaluate(test base.FixedDataGrid) float64 {
+func (tree *CARTDecisionTreeClassifier) Evaluate(test base.FixedDataGrid) (float64, error) {
 	rootNode := *tree.RootNode
 	xTest := convertInstancesToProblemVec(test)
-	yTest := classifierConvertInstancesToLabelVec(test)
-	return classifierEvaluateFromNode(rootNode, xTest, yTest)
+	yTest, err := classifierConvertInstancesToLabelVec(test)
+	if err != nil {
+		return 0, err
+	}
+	return classifierEvaluateFromNode(rootNode, xTest, yTest), nil
 }
 
 // Retrieve predictions and then calculate accuracy.
@@ -390,20 +414,21 @@ func classifierEvaluateFromNode(tree classifierNode, xTest [][]float64, yTest []
 }
 
 // Helper function to convert base.FixedDataGrid into required format. Called in Fit, Predict
-func classifierConvertInstancesToLabelVec(X base.FixedDataGrid) []int64 {
+func classifierConvertInstancesToLabelVec(X base.FixedDataGrid) ([]int64, error) {
 	// Get the class Attributes
 	classAttrs := X.AllClassAttributes()
 	// Only support 1 class Attribute
 	if len(classAttrs) != 1 {
-		panic(fmt.Sprintf("%d ClassAttributes (1 expected)", len(classAttrs)))
+		return []int64{0}, errors.New(fmt.Sprintf("%d ClassAttributes (1 expected)", len(classAttrs)))
+
 	}
 	// ClassAttribute must be numeric
 	if _, ok := classAttrs[0].(*base.FloatAttribute); !ok {
-		panic(fmt.Sprintf("%s: ClassAttribute must be a FloatAttribute", classAttrs[0]))
+		return []int64{0}, errors.New(fmt.Sprintf("%s: ClassAttribute must be a FloatAttribute", classAttrs[0]))
 	}
 	// Allocate return structure
 	_, rows := X.Size()
-	// labelVec := make([]float64, rows)
+
 	labelVec := make([]int64, rows)
 	// Resolve class Attribute specification
 	classAttrSpecs := base.ResolveAttributes(X, classAttrs)
@@ -411,5 +436,5 @@ func classifierConvertInstancesToLabelVec(X base.FixedDataGrid) []int64 {
 		labelVec[rowNo] = int64(base.UnpackBytesToFloat(row[0]))
 		return true, nil
 	})
-	return labelVec
+	return labelVec, nil
 }

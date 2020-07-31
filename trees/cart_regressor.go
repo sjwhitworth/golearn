@@ -1,6 +1,7 @@
 package trees
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -81,11 +82,13 @@ func computeMseImpurityAndAverage(y []float64) (float64, float64) {
 	return meanSquaredError(y, yHat), yHat
 }
 
-func calculateRegressionLoss(y []float64, criterion string) (float64, float64) {
+func calculateRegressionLoss(y []float64, criterion string) (float64, float64, error) {
 	if criterion == MAE {
-		return computeMaeImpurityAndAverage(y)
+		loss, avg := computeMaeImpurityAndAverage(y)
+		return loss, avg, nil
 	} else if criterion == MSE {
-		return computeMseImpurityAndAverage(y)
+		loss, avg := computeMseImpurityAndAverage(y)
+		return loss, avg, nil
 	} else {
 		panic("Invalid impurity function, choose from MAE or MSE")
 	}
@@ -154,31 +157,42 @@ func regressorUpdateSplit(left [][]float64, lefty []float64, right [][]float64, 
 
 // Fit - Build the tree using the data
 // Creates empty root node and builds tree by calling regressorBestSplit
-func (tree *CARTDecisionTreeRegressor) Fit(X base.FixedDataGrid) {
+func (tree *CARTDecisionTreeRegressor) Fit(X base.FixedDataGrid) error {
 	var emptyNode regressorNode
+	var err error
+
 	data := regressorConvertInstancesToProblemVec(X)
-	y := regressorConvertInstancesToLabelVec(X)
+	y, err := regressorConvertInstancesToLabelVec(X)
+	if err != nil {
+		return err
+	}
 
-	emptyNode = regressorBestSplit(*tree, data, y, emptyNode, tree.criterion, tree.maxDepth, 0)
-
+	emptyNode, err = regressorBestSplit(*tree, data, y, emptyNode, tree.criterion, tree.maxDepth, 0)
+	if err != nil {
+		return err
+	}
 	tree.RootNode = &emptyNode
+	return nil
 }
 
 // Builds the tree by iteratively finding the best split.
 // Recursive function - stops if maxDepth is reached or nodes are pure
-func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []float64, upperNode regressorNode, criterion string, maxDepth int64, depth int64) regressorNode {
+func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []float64, upperNode regressorNode, criterion string, maxDepth int64, depth int64) (regressorNode, error) {
 
 	// Ensure that we have not reached maxDepth. maxDepth =-1 means split until nodes are pure
 	depth++
 
 	if depth > maxDepth && maxDepth != -1 {
-		return upperNode
+		return upperNode, nil
 	}
 
 	numFeatures := len(data[0])
 	var bestLoss, origLoss float64
-
-	origLoss, upperNode.LeftPred = calculateRegressionLoss(y, criterion)
+	var err error
+	origLoss, upperNode.LeftPred, err = calculateRegressionLoss(y, criterion)
+	if err != nil {
+		return upperNode, err
+	}
 
 	bestLoss = origLoss
 
@@ -218,8 +232,8 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 				var leftLoss, rightLoss float64
 				var leftPred, rightPred float64
 
-				leftLoss, leftPred = calculateRegressionLoss(lefty, criterion)
-				rightLoss, rightPred = calculateRegressionLoss(righty, criterion)
+				leftLoss, leftPred, _ = calculateRegressionLoss(lefty, criterion)
+				rightLoss, rightPred, _ = calculateRegressionLoss(righty, criterion)
 
 				subLoss := (leftLoss * float64(len(left)) / float64(numData)) + (rightLoss * float64(len(right)) / float64(numData))
 
@@ -241,14 +255,17 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 
 	if bestLoss == origLoss {
 		upperNode.isNodeNeeded = false
-		return upperNode
+		return upperNode, nil
 	}
 
 	if bestLoss > 0 {
 
 		if bestLeftLoss > 0 {
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
-			leftN = regressorBestSplit(tree, bestLeft, bestLefty, leftN, criterion, maxDepth, depth)
+			leftN, err = regressorBestSplit(tree, bestLeft, bestLefty, leftN, criterion, maxDepth, depth)
+			if err != nil {
+				return upperNode, err
+			}
 			if leftN.isNodeNeeded == true {
 				upperNode.Left = &leftN
 			}
@@ -256,13 +273,16 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 
 		if bestRightLoss > 0 {
 			tree.triedSplits = append(tree.triedSplits, []float64{float64(upperNode.Feature), upperNode.Threshold})
-			rightN = regressorBestSplit(tree, bestRight, bestRighty, rightN, criterion, maxDepth, depth)
+			rightN, err = regressorBestSplit(tree, bestRight, bestRighty, rightN, criterion, maxDepth, depth)
+			if err != nil {
+				return upperNode, err
+			}
 			if rightN.isNodeNeeded == true {
 				upperNode.Right = &rightN
 			}
 		}
 	}
-	return upperNode
+	return upperNode, nil
 }
 
 // Print Tree for Visualtion - calls regressorPrintTreeFromNode()
@@ -367,20 +387,20 @@ func regressorConvertInstancesToProblemVec(X base.FixedDataGrid) [][]float64 {
 }
 
 // Helper function to convert base.FixedDataGrid into required format. Called in Fit, Predict
-func regressorConvertInstancesToLabelVec(X base.FixedDataGrid) []float64 {
+func regressorConvertInstancesToLabelVec(X base.FixedDataGrid) ([]float64, error) {
 	// Get the class Attributes
 	classAttrs := X.AllClassAttributes()
 	// Only support 1 class Attribute
 	if len(classAttrs) != 1 {
-		panic(fmt.Sprintf("%d ClassAttributes (1 expected)", len(classAttrs)))
+		return []float64{0}, errors.New(fmt.Sprintf("%d ClassAttributes (1 expected)", len(classAttrs)))
 	}
 	// ClassAttribute must be numeric
 	if _, ok := classAttrs[0].(*base.FloatAttribute); !ok {
-		panic(fmt.Sprintf("%s: ClassAttribute must be a FloatAttribute", classAttrs[0]))
+		return []float64{0}, errors.New(fmt.Sprintf("%s: ClassAttribute must be a FloatAttribute", classAttrs[0]))
 	}
 	// Allocate return structure
 	_, rows := X.Size()
-	// labelVec := make([]float64, rows)
+
 	labelVec := make([]float64, rows)
 	// Resolve class Attribute specification
 	classAttrSpecs := base.ResolveAttributes(X, classAttrs)
@@ -388,5 +408,5 @@ func regressorConvertInstancesToLabelVec(X base.FixedDataGrid) []float64 {
 		labelVec[rowNo] = base.UnpackBytesToFloat(row[0])
 		return true, nil
 	})
-	return labelVec
+	return labelVec, nil
 }

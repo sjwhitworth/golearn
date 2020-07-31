@@ -13,12 +13,12 @@ func TestRegressor(t *testing.T) {
 		// For Classification Trees:
 
 		// Is Gini being calculated correctly
-		gini, giniMaxLabel := giniImpurity([]int64{1, 0, 0, 1}, []int64{0, 1})
+		gini, giniMaxLabel := computeGiniImpurityAndModeLabel([]int64{1, 0, 0, 1}, []int64{0, 1})
 		So(gini, ShouldEqual, 0.5)
 		So(giniMaxLabel, ShouldNotBeNil)
 
 		// Is Entropy being calculated correctly
-		entropy, entropyMaxLabel := entropy([]int64{1, 0, 0, 1}, []int64{0, 1})
+		entropy, entropyMaxLabel := computeEntropyAndModeLabel([]int64{1, 0, 0, 1}, []int64{0, 1})
 		So(entropy, ShouldEqual, 1.0)
 		So(entropyMaxLabel, ShouldNotBeNil)
 
@@ -61,12 +61,12 @@ func TestRegressor(t *testing.T) {
 		// For Regression Trees
 
 		// Is MAE being calculated correctly
-		mae, maeMaxLabel := maeImpurity([]float64{1, 3, 5})
+		mae, maeMaxLabel := computeMaeImpurityAndAverage([]float64{1, 3, 5})
 		So(mae, ShouldEqual, (4.0 / 3.0))
 		So(maeMaxLabel, ShouldNotBeNil)
 
 		// Is Entropy being calculated correctly
-		mse, mseMaxLabel := mseImpurity([]float64{1, 3, 5})
+		mse, mseMaxLabel := computeMseImpurityAndAverage([]float64{1, 3, 5})
 		So(mse, ShouldEqual, (8.0 / 3.0))
 		So(mseMaxLabel, ShouldNotBeNil)
 
