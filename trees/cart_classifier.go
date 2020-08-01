@@ -155,16 +155,16 @@ func classifierReOrderData(featureVal []float64, data [][]float64, y []int64) ([
 }
 
 // Update the left and right side of the split based on the threshold.
-func classifierUpdateSplit(left [][]float64, lefty []int64, right [][]float64, righty []int64, feature int64, threshold float64) ([][]float64, []int64, [][]float64, []int64) {
+func classifierUpdateSplit(left [][]float64, leftY []int64, right [][]float64, rightY []int64, feature int64, threshold float64) ([][]float64, []int64, [][]float64, []int64) {
 
 	for right[0][feature] < threshold {
 		left = append(left, right[0])
 		right = right[1:]
-		lefty = append(lefty, righty[0])
-		righty = righty[1:]
+		leftY = append(leftY, rightY[0])
+		rightY = rightY[1:]
 	}
 
-	return left, lefty, right, righty
+	return left, leftY, right, rightY
 }
 
 // Fit - Creates an Emppty Root Node2
@@ -232,7 +232,7 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 		firstTime := true
 
 		var left, right [][]float64
-		var lefty, righty []int64
+		var leftY, rightY []int64
 		// Iterate over all possible thresholds for that feature
 		for j := 0; j < len(unique)-1; j++ {
 
@@ -242,17 +242,17 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 				// We need to split data from fresh when considering new feature for the first time.
 				// Otherwise, we need to update the split by moving data points from left to right.
 				if firstTime {
-					left, right, lefty, righty = classifierCreateSplit(sortData, int64(i), sortY, threshold)
+					left, right, leftY, rightY = classifierCreateSplit(sortData, int64(i), sortY, threshold)
 					firstTime = false
 				} else {
-					left, lefty, right, righty = classifierUpdateSplit(left, lefty, right, righty, int64(i), threshold)
+					left, leftY, right, rightY = classifierUpdateSplit(left, leftY, right, rightY, int64(i), threshold)
 				}
 
 				var leftGini, rightGini float64
 				var leftLabels, rightLabels int64
 
-				leftGini, leftLabels, _ = calculateClassificationLoss(lefty, labels, criterion)
-				rightGini, rightLabels, _ = calculateClassificationLoss(righty, labels, criterion)
+				leftGini, leftLabels, _ = calculateClassificationLoss(leftY, labels, criterion)
+				rightGini, rightLabels, _ = calculateClassificationLoss(rightY, labels, criterion)
 
 				// Calculate weighted gini impurity of child nodes
 				subGini := (leftGini * float64(len(left)) / float64(numData)) + (rightGini * float64(len(right)) / float64(numData))
@@ -263,7 +263,7 @@ func classifierBestSplit(tree CARTDecisionTreeClassifier, data [][]float64, y []
 
 					bestLeft, bestRight = left, right
 
-					bestLefty, bestRighty = lefty, righty
+					bestLefty, bestRighty = leftY, rightY
 
 					upperNode.Threshold, upperNode.Feature = threshold, int64(i)
 

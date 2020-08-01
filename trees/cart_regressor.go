@@ -143,16 +143,16 @@ func regressorReOrderData(featureVal []float64, data [][]float64, y []float64) (
 }
 
 // Update the left and right data based on change in threshold
-func regressorUpdateSplit(left [][]float64, lefty []float64, right [][]float64, righty []float64, feature int64, threshold float64) ([][]float64, []float64, [][]float64, []float64) {
+func regressorUpdateSplit(left [][]float64, leftY []float64, right [][]float64, rightY []float64, feature int64, threshold float64) ([][]float64, []float64, [][]float64, []float64) {
 
 	for right[0][feature] < threshold {
 		left = append(left, right[0])
 		right = right[1:]
-		lefty = append(lefty, righty[0])
-		righty = righty[1:]
+		leftY = append(leftY, rightY[0])
+		rightY = rightY[1:]
 	}
 
-	return left, lefty, right, righty
+	return left, leftY, right, rightY
 }
 
 // Fit - Build the tree using the data
@@ -217,23 +217,23 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 		firstTime := true
 
 		var left, right [][]float64
-		var lefty, righty []float64
+		var leftY, rightY []float64
 
 		for j := 0; j < len(unique)-1; j++ {
 			threshold := (unique[j] + unique[j+1]) / 2
 			if validate(tree.triedSplits, int64(i), threshold) {
 				if firstTime {
-					left, right, lefty, righty = regressorCreateSplit(sortData, int64(i), sortY, threshold)
+					left, right, leftY, rightY = regressorCreateSplit(sortData, int64(i), sortY, threshold)
 					firstTime = false
 				} else {
-					left, lefty, right, righty = regressorUpdateSplit(left, lefty, right, righty, int64(i), threshold)
+					left, leftY, right, rightY = regressorUpdateSplit(left, leftY, right, rightY, int64(i), threshold)
 				}
 
 				var leftLoss, rightLoss float64
 				var leftPred, rightPred float64
 
-				leftLoss, leftPred, _ = calculateRegressionLoss(lefty, criterion)
-				rightLoss, rightPred, _ = calculateRegressionLoss(righty, criterion)
+				leftLoss, leftPred, _ = calculateRegressionLoss(leftY, criterion)
+				rightLoss, rightPred, _ = calculateRegressionLoss(rightY, criterion)
 
 				subLoss := (leftLoss * float64(len(left)) / float64(numData)) + (rightLoss * float64(len(right)) / float64(numData))
 
@@ -241,7 +241,7 @@ func regressorBestSplit(tree CARTDecisionTreeRegressor, data [][]float64, y []fl
 					bestLoss = subLoss
 
 					bestLeft, bestRight = left, right
-					bestLefty, bestRighty = lefty, righty
+					bestLefty, bestRighty = leftY, rightY
 
 					upperNode.Threshold, upperNode.Feature = threshold, int64(i)
 
