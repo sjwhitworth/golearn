@@ -11,12 +11,20 @@ import (
 func main() {
 	/* Performance of CART Algorithm:
 
-		Training Time for Titanic Dataset ≈ 713 µs
-		Prediction Time for Titanic Datset ≈ 133 µs
+		Training Time for Titanic Dataset ≈ 611 µs
+		Prediction Time for Titanic Datset ≈ 101 µs
+
+		Complexity Analysis:
+			1x Dataset --   x ms
+			2x Dataset --   1.7x ms
+			128x Dataset -- 74x ms
+
+			Complexity is sub linear
 
 		Sklearn:
 		Training Time for Titanic Dataset ≈ 8.8 µs
 		Prediction Time for Titanic Datset ≈ 7.87 µs
+
 
 		This implementation and sci-kit learn produce the exact same tree for the exact same dataset.
 		Predictions on the same test set also yield the exact same accuracy.
