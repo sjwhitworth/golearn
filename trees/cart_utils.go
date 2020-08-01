@@ -4,23 +4,14 @@ import (
 	"github.com/sjwhitworth/golearn/base"
 )
 
-// Helper Function to check if data point is unique or not.
-// We will use this to isolate unique values of a feature
-func stringInSlice(a float64, list []float64) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
 // Isolate only unique values. This way, we can try only unique splits and not redundant ones.
 func findUnique(data []float64) []float64 {
-	var unique []float64
-	for i := range data {
-		if !stringInSlice(data[i], unique) {
-			unique = append(unique, data[i])
+	keys := make(map[float64]bool)
+	unique := []float64{}
+	for _, entry := range data {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			unique = append(unique, entry)
 		}
 	}
 	return unique

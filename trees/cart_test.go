@@ -1,7 +1,6 @@
 package trees
 
 import (
-	"fmt"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -42,8 +41,7 @@ func TestRegressor(t *testing.T) {
 
 		// is data reordered correctly
 		orderedData, orderedY := classifierReOrderData(getFeature(classifierData, 1), classifierData, classifiery)
-		fmt.Println(orderedData)
-		fmt.Println(orderedY)
+
 		So(orderedData[1][1], ShouldEqual, 3.0)
 		So(orderedY[0], ShouldEqual, 1)
 
@@ -81,9 +79,9 @@ func TestRegressor(t *testing.T) {
 		leftData, rightData, leftY, rightY := regressorCreateSplit(data, 1, y, 5.0)
 
 		So(len(leftData), ShouldEqual, 2)
-		So(len(lefty), ShouldEqual, 2)
+		So(len(leftY), ShouldEqual, 2)
 		So(len(rightData), ShouldEqual, 2)
-		So(len(righty), ShouldEqual, 2)
+		So(len(rightY), ShouldEqual, 2)
 
 		// is data reordered correctly
 		regressorOrderedData, regressorOrderedY := regressorReOrderData(getFeature(data, 1), data, y)

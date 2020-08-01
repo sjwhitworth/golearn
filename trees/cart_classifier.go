@@ -39,25 +39,31 @@ type CARTDecisionTreeClassifier struct {
 	triedSplits [][]float64
 }
 
+// Convert a series of labels to frequency map for efficient impurity calculation
+func convertToMap(y []int64, labels []int64) map[int64]int {
+	labelCount := make(map[int64]int)
+	for _, label := range labels {
+		labelCount[label] = 0
+	}
+	for _, value := range y {
+		labelCount[value]++
+	}
+	return labelCount
+}
+
 // Calculate Gini Impurity of Target Labels
 func computeGiniImpurityAndModeLabel(y []int64, labels []int64) (float64, int64) {
 	nInstances := len(y)
 	gini := 0.0
-	maxLabelCount := 0
 	var maxLabel int64 = 0
-	for label := range labels {
-		numLabel := 0
-		for target := range y {
-			if y[target] == labels[label] {
-				numLabel++
-			}
+
+	labelCount := convertToMap(y, labels)
+	for _, label := range labels {
+		if labelCount[label] > labelCount[maxLabel] {
+			maxLabel = label
 		}
-		p := float64(numLabel) / float64(nInstances)
+		p := float64(labelCount[label]) / float64(nInstances)
 		gini += p * (1 - p)
-		if numLabel > maxLabelCount {
-			maxLabel = labels[label]
-			maxLabelCount = numLabel
-		}
 	}
 	return gini, maxLabel
 }
@@ -66,26 +72,19 @@ func computeGiniImpurityAndModeLabel(y []int64, labels []int64) (float64, int64)
 func computeEntropyAndModeLabel(y []int64, labels []int64) (float64, int64) {
 	nInstances := len(y)
 	entropy := 0.0
-	maxLabelCount := 0
 	var maxLabel int64 = 0
-	for label := range labels {
-		numLabel := 0
-		for target := range y {
-			if y[target] == labels[label] {
-				numLabel++
-			}
-		}
-		p := float64(numLabel) / float64(nInstances)
 
+	labelCount := convertToMap(y, labels)
+	for _, label := range labels {
+		if labelCount[label] > labelCount[maxLabel] {
+			maxLabel = label
+		}
+		p := float64(labelCount[label]) / float64(nInstances)
 		logP := math.Log2(p)
 		if p == 0 {
 			logP = 0
 		}
-		entropy += -p * logP
-		if numLabel > maxLabelCount {
-			maxLabel = labels[label]
-			maxLabelCount = numLabel
-		}
+		entropy += (-p * logP)
 	}
 	return entropy, maxLabel
 }

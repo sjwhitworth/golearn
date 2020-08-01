@@ -35,10 +35,13 @@ func main() {
 
 	// Create New Classification Tree
 	// Hyperparameters - loss function, max Depth (-1 will split until pure), list of unique labels
-	decTree = NewDecisionTreeClassifier("entropy", -1, []int64{0, 1})
+	decTree := NewDecisionTreeClassifier("entropy", -1, []int64{0, 1})
 
 	// Train Tree
-	decTree.Fit(trainData)
+	err = decTree.Fit(trainData)
+	if err != nil {
+		panic(err)
+	}
 	// Print out tree for visualization - shows splits and feature and predictions
 	fmt.Println(decTree.String())
 
@@ -62,7 +65,10 @@ func main() {
 	regTree := NewDecisionTreeRegressor("mse", -1)
 
 	// Train Tree
-	regTree.Fit(trainRegData)
+	err = regTree.Fit(trainRegData)
+	if err != nil {
+		panic(err)
+	}
 
 	// Print out tree for visualization
 	fmt.Println(regTree.String())
