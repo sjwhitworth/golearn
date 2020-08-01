@@ -90,6 +90,9 @@ func computeEntropyAndModeLabel(y []int64, labels []int64) (float64, int64) {
 }
 
 func calculateClassificationLoss(y []int64, labels []int64, criterion string) (float64, int64, error) {
+	if len(y) == 0 {
+		return 0, 0, errors.New("Need atleast 1 value to compute impurity")
+	}
 	if criterion == GINI {
 		loss, modeLabel := computeGiniImpurityAndModeLabel(y, labels)
 		return loss, modeLabel, nil
