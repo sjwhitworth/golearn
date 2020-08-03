@@ -167,7 +167,7 @@ func classifierUpdateSplit(left [][]float64, leftY []int64, right [][]float64, r
 	return left, leftY, right, rightY
 }
 
-// Fit - Creates an Emppty Root Node2
+// Fit - Creates an Empty Root Node
 // Trains the tree by calling recursive function classifierBestSplit
 func (tree *CARTDecisionTreeClassifier) Fit(X base.FixedDataGrid) error {
 	var emptyNode classifierNode
@@ -422,7 +422,6 @@ func classifierConvertInstancesToLabelVec(X base.FixedDataGrid) ([]int64, error)
 	// Only support 1 class Attribute
 	if len(classAttrs) != 1 {
 		return []int64{0}, errors.New(fmt.Sprintf("%d ClassAttributes (1 expected)", len(classAttrs)))
-
 	}
 	// ClassAttribute must be numeric
 	if _, ok := classAttrs[0].(*base.FloatAttribute); !ok {
