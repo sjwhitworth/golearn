@@ -7,7 +7,6 @@ import (
 
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/trees"
-
 )
 
 func main() {
@@ -45,7 +44,7 @@ func main() {
 
 	// Create New Classification Tree
 	// Hyperparameters - loss function, max Depth (-1 will split until pure), list of unique labels
-	decTree := NewDecisionTreeClassifier("entropy", -1, []int64{0, 1})
+	decTree := trees.NewDecisionTreeClassifier("entropy", -1, []int64{0, 1})
 
 	// Train Tree
 	err = decTree.Fit(trainData)
@@ -72,7 +71,7 @@ func main() {
 	trainRegData, testRegData := base.InstancesTrainTestSplit(regressionData, 0.5)
 
 	// Hyperparameters - Loss function, max Depth (-1 will split until pure)
-	regTree := NewDecisionTreeRegressor("mse", -1)
+	regTree := trees.NewDecisionTreeRegressor("mse", -1)
 
 	// Train Tree
 	err = regTree.Fit(trainRegData)
