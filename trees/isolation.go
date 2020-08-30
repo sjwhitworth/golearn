@@ -15,11 +15,13 @@ type IsolationForest struct {
 	trees    []regressorNode
 }
 
+// Select A random feature for splitting from the data.
 func selectFeature(data [][]float64) int64 {
 	rand.Seed(time.Now().UnixNano())
 	return int64(rand.Intn(len(data[0])))
 }
 
+// Find the minimum and maximum values of a feature. Used so that we can choose a random threshold.
 func minMax(feature int64, data [][]float64) (float64, float64) {
 
 	var min, max float64
@@ -38,6 +40,7 @@ func minMax(feature int64, data [][]float64) (float64, float64) {
 	return min, max
 }
 
+// Select a random threshold between the minimum and maximum of the feature.
 func selectValue(min, max float64) float64 {
 	rand.Seed(time.Now().UnixNano())
 	val := min + (rand.Float64() * (max - min))
@@ -49,6 +52,7 @@ func selectValue(min, max float64) float64 {
 	return val
 }
 
+// Split the data based on the threshold.
 func splitData(val float64, feature int64, data [][]float64) ([][]float64, [][]float64) {
 	var leftData, rightData [][]float64
 	for _, instance := range data {
@@ -61,6 +65,7 @@ func splitData(val float64, feature int64, data [][]float64) ([][]float64, [][]f
 	return leftData, rightData
 }
 
+// Make sure that the data can still be split (all datapoints are not duplicate)
 func checkData(data [][]float64) bool {
 	for _, instance := range data {
 		for i, val := range instance {
@@ -72,6 +77,7 @@ func checkData(data [][]float64) bool {
 	return false
 }
 
+// Recusrively build a tree by randomly choosing a feature to split until nodes are pure or max depth is reached.
 func buildTree(data [][]float64, upperNode regressorNode, depth int, maxDepth int) regressorNode {
 	depth++
 
@@ -113,6 +119,7 @@ func buildTree(data [][]float64, upperNode regressorNode, depth int, maxDepth in
 	return upperNode
 }
 
+// Get a random subset of the data. Helps making each tree in forest different.
 func getRandomData(data [][]float64, subSpace int) [][]float64 {
 	var randomData [][]float64
 	rand.Seed(time.Now().UnixNano())
@@ -122,6 +129,7 @@ func getRandomData(data [][]float64, subSpace int) [][]float64 {
 	return randomData
 }
 
+// Function to create a new isolation forest. nTrees is number of trees in Forest. Maxdepth is maximum depth of each tree. Subspace is number of data points to use per tree.
 func NewIsolationForest(nTrees int, maxDepth int, subSpace int) IsolationForest {
 	var iForest IsolationForest
 	iForest.nTrees = nTrees
@@ -130,6 +138,7 @@ func NewIsolationForest(nTrees int, maxDepth int, subSpace int) IsolationForest 
 	return iForest
 }
 
+// Fit the data based on hyperparameters and data.
 func (iForest *IsolationForest) Fit(X base.FixedDataGrid) {
 	data := preprocessData(X)
 	nTrees := iForest.nTrees
@@ -147,6 +156,7 @@ func (iForest *IsolationForest) Fit(X base.FixedDataGrid) {
 	iForest.trees = forest
 }
 
+// Calculate the path length to reach a leaf node for a datapoint. Outliers have smaller path lengths than standard data points.
 func pathLength(tree regressorNode, instance []float64, path float64) float64 {
 	path++
 
@@ -172,6 +182,7 @@ func pathLength(tree regressorNode, instance []float64, path float64) float64 {
 	return path
 }
 
+// Find the path length of a a datapoints from all trees in forest.
 func evaluateInstance(instance []float64, forest []regressorNode) []float64 {
 	var paths []float64
 	for _, tree := range forest {
@@ -180,10 +191,12 @@ func evaluateInstance(instance []float64, forest []regressorNode) []float64 {
 	return paths
 }
 
+// Helper function to calculate anomaly score.
 func cFactor(n int) float64 {
 	return 2.0*(math.Log(float64(n-1))+0.5772156649) - (float64(2.0*(n-1)) / float64(n))
 }
 
+// Anamoly Score - How anomalous is a data point. closer to 1 - higher chance of it being outlier. closer to 0 - low chance of it being outlier.
 func anomalyScore(instance []float64, forest []regressorNode, n int) float64 {
 	paths := evaluateInstance(instance, forest)
 	E := 0.0
@@ -194,6 +207,8 @@ func anomalyScore(instance []float64, forest []regressorNode, n int) float64 {
 	c := cFactor(n)
 	return math.Pow(2, (-1 * E / c))
 }
+
+// Return anamoly score for all datapoints.
 func (iForest *IsolationForest) Predict(X base.FixedDataGrid) []float64 {
 	data := preprocessData(X)
 
@@ -205,6 +220,7 @@ func (iForest *IsolationForest) Predict(X base.FixedDataGrid) []float64 {
 	return preds
 }
 
+// Extract data in the form of floats. Used in Fit and predict. Note that class labels are treated as normal data because Isolation Forest is unsupervised.
 func preprocessData(X base.FixedDataGrid) [][]float64 {
 	data := convertInstancesToProblemVec(X)
 	class, err := regressorConvertInstancesToLabelVec(X)
