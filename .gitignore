@@ -14,3 +14,6 @@
 
 # go test coverprofiles
 *.coverprofile
+
+#vim 
+*.sw*

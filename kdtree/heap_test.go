@@ -7,15 +7,25 @@ import (
 )
 
 func TestHeap(t *testing.T) {
-	h := newHeap()
-
 	Convey("Given a heap", t, func() {
+		h := newHeap()
 
 		Convey("When heap is empty", func() {
-			size := h.size()
 
 			Convey("The size should be 0", func() {
+				size := h.size()
 				So(size, ShouldEqual, 0)
+			})
+
+			Convey("The maximum node should be empty", func() {
+				max := h.maximum()
+				So(max.value, ShouldBeEmpty)
+				So(max.length, ShouldEqual, 0)
+				So(max.srcRowNo, ShouldEqual, 0)
+			})
+
+			Convey("Extrace Max should be fine", func() {
+				So(func() { h.extractMax() }, ShouldNotPanic)
 			})
 		})
 

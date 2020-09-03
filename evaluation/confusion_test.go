@@ -1,6 +1,7 @@
 package evaluation
 
 import (
+	"github.com/sjwhitworth/golearn/base"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -68,6 +69,39 @@ func TestMetrics(t *testing.T) {
 
 		Convey("Accuracy", func() {
 			So(GetAccuracy(confusionMat), ShouldAlmostEqual, 0.85, 0.1)
+		})
+
+		Convey("Get Summary", func() {
+			output := GetSummary(confusionMat)
+			So(output, ShouldStartWith, "Reference Class")
+			So(output, ShouldContainSubstring, "True Positives")
+			So(output, ShouldContainSubstring, "False Positives")
+			So(output, ShouldContainSubstring, "True Negatives")
+			So(output, ShouldContainSubstring, "Precision")
+			So(output, ShouldContainSubstring, "Recall")
+			So(output, ShouldContainSubstring, "F1 Score")
+			So(output, ShouldContainSubstring, "------")
+			So(output, ShouldContainSubstring, "Overall accuracy:")
+		})
+
+		Convey("Show Confusion Matrix", func() {
+			output := ShowConfusionMatrix(confusionMat)
+			So(output, ShouldStartWith, "Reference Class")
+			So(output, ShouldContainSubstring, "---------------")
+		})
+
+		Convey("Get Confusion Matrix", func() {
+			X, _ := base.ParseCSVToInstances("../examples/datasets/iris_headers.csv", true)
+			Y, _ := base.ParseCSVToInstances("../examples/datasets/exam.csv", true)
+			Convey("Nomarl ref and gen matrices", func() {
+				out, _ := GetConfusionMatrix(X, X)
+				ret := make(map[string]map[string]int)
+				So(out, ShouldHaveSameTypeAs, ret)
+			})
+			Convey("Row count mismatch", func() {
+				_, err := GetConfusionMatrix(X, Y)
+				So(err.Error(), ShouldStartWith, "Row count mismatch:")
+			})
 		})
 	})
 }

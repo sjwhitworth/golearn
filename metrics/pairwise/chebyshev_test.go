@@ -3,8 +3,8 @@ package pairwise
 import (
 	"testing"
 
-	"gonum.org/v1/gonum/mat"
 	. "github.com/smartystreets/goconvey/convey"
+	"gonum.org/v1/gonum/mat"
 )
 
 func TestChebyshev(t *testing.T) {
@@ -34,7 +34,7 @@ func TestChebyshev(t *testing.T) {
 		})
 
 		Convey("When calculating distance with different dimension matrices", func() {
-			vectorX.Clone(vectorX.T())
+			vectorX.CloneFrom(vectorX.T())
 			So(func() { chebyshev.Distance(vectorX, vectorY) }, ShouldPanic)
 		})
 

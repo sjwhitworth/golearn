@@ -14,7 +14,8 @@ func NewEuclidean() *Euclidean {
 
 // InnerProduct computes a Eucledian inner product.
 func (e *Euclidean) InnerProduct(vectorX *mat.Dense, vectorY *mat.Dense) float64 {
-	subVector := mat.NewDense(0, 0, nil)
+	subVector := mat.NewDense(1, 1, nil)
+	subVector.Reset()
 	subVector.MulElem(vectorX, vectorY)
 	result := mat.Sum(subVector)
 
@@ -23,9 +24,9 @@ func (e *Euclidean) InnerProduct(vectorX *mat.Dense, vectorY *mat.Dense) float64
 
 // Distance computes Euclidean distance (also known as L2 distance).
 func (e *Euclidean) Distance(vectorX *mat.Dense, vectorY *mat.Dense) float64 {
-	subVector := mat.NewDense(0, 0, nil)
+	subVector := mat.NewDense(1, 1, nil)
+	subVector.Reset()
 	subVector.Sub(vectorX, vectorY)
-
 	result := e.InnerProduct(subVector, subVector)
 
 	return math.Sqrt(result)

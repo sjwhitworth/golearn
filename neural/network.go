@@ -12,7 +12,7 @@ import (
 // NeuralFunction.
 type Network struct {
 	origWeights *mat.Dense
-	weights     *mat.Dense     // n * n
+	weights     *mat.Dense       // n * n
 	biases      []float64        // n for each neuron
 	funcs       []NeuralFunction // for each neuron
 	size        int
@@ -115,7 +115,7 @@ func (n *Network) Activate(with *mat.Dense, maxIterations int) {
 	}
 
 	tmp := new(mat.Dense)
-	tmp.Clone(with)
+	tmp.CloneFrom(with)
 
 	// Main loop
 	for i := 0; i < maxIterations; i++ {
@@ -197,7 +197,7 @@ func (n *Network) Error(outArg, errArg *mat.Dense, maxIterations int) *mat.Dense
 
 	// Transpose weights matrix
 	reverseWeights := mat.DenseCopyOf(n.weights)
-	reverseWeights.Clone(n.weights.T())
+	reverseWeights.CloneFrom(n.weights.T())
 
 	// We only need a certain number of passes
 	for i := 0; i < maxIterations; i++ {

@@ -3,8 +3,8 @@ package pairwise
 import (
 	"testing"
 
-	"gonum.org/v1/gonum/mat"
 	. "github.com/smartystreets/goconvey/convey"
+	"gonum.org/v1/gonum/mat"
 )
 
 func TestCranberrra(t *testing.T) {
@@ -43,7 +43,7 @@ func TestCranberrra(t *testing.T) {
 		})
 
 		Convey("When calculating distance with different dimension matrices", func() {
-			vectorX.Clone(vectorX.T())
+			vectorX.CloneFrom(vectorX.T())
 			So(func() { cranberra.Distance(vectorX, vectorY) }, ShouldPanic)
 		})
 

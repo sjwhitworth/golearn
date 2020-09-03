@@ -261,6 +261,9 @@ func (lr *LinearSVC) SaveWithPrefix(writer *base.ClassifierSerializer, prefix st
 	}
 
 	f, err := ioutil.TempFile(os.TempDir(), "liblinear")
+	if err != nil {
+		return err
+	}
 	defer func() {
 		f.Close()
 	}()

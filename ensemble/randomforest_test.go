@@ -82,6 +82,7 @@ func TestRandomForestSerialization(t *testing.T) {
 
 					Convey("Saving the model should work...", func() {
 						f, err := ioutil.TempFile(os.TempDir(), "rf")
+						So(err, ShouldBeNil)
 						err = rf.Save(f.Name())
 						defer func() {
 							f.Close()
