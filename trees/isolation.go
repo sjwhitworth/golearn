@@ -3,7 +3,6 @@ package trees
 import (
 	"math"
 	"math/rand"
-	"time"
 
 	"github.com/sjwhitworth/golearn/base"
 )
@@ -17,7 +16,6 @@ type IsolationForest struct {
 
 // Select A random feature for splitting from the data.
 func selectFeature(data [][]float64) int64 {
-	rand.Seed(time.Now().UnixNano())
 	return int64(rand.Intn(len(data[0])))
 }
 
@@ -42,7 +40,6 @@ func minMax(feature int64, data [][]float64) (float64, float64) {
 
 // Select a random threshold between the minimum and maximum of the feature.
 func selectValue(min, max float64) float64 {
-	rand.Seed(time.Now().UnixNano())
 	val := min + (rand.Float64() * (max - min))
 	if val == min {
 		val += 0.000001
@@ -122,7 +119,6 @@ func buildTree(data [][]float64, upperNode regressorNode, depth int, maxDepth in
 // Get a random subset of the data. Helps making each tree in forest different.
 func getRandomData(data [][]float64, subSpace int) [][]float64 {
 	var randomData [][]float64
-	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < subSpace; i++ {
 		randomData = append(randomData, data[rand.Intn(len(data))])
 	}
