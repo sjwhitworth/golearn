@@ -7,7 +7,6 @@ import (
 
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/trees"
-
 )
 
 func main() {
@@ -37,7 +36,7 @@ func main() {
 	*/
 
 	// Load Titanic Data For classification
-	classificationData, err := base.ParseCSVToInstances("../datasets/titanic.csv", false)
+	classificationData, err := base.ParseCSVToInstances("../../datasets/titanic.csv", false)
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +44,7 @@ func main() {
 
 	// Create New Classification Tree
 	// Hyperparameters - loss function, max Depth (-1 will split until pure), list of unique labels
-	decTree := NewDecisionTreeClassifier("entropy", -1, []int64{0, 1})
+	decTree := trees.NewDecisionTreeClassifier("entropy", -1, []int64{0, 1})
 
 	// Train Tree
 	err = decTree.Fit(trainData)
@@ -65,14 +64,14 @@ func main() {
 	fmt.Println(decTree.Evaluate(testData))
 
 	// Load House Price Data For Regression
-	regressionData, err := base.ParseCSVToInstances("../datasets/boston_house_prices.csv", false)
+	regressionData, err := base.ParseCSVToInstances("../../datasets/boston_house_prices.csv", false)
 	if err != nil {
 		panic(err)
 	}
 	trainRegData, testRegData := base.InstancesTrainTestSplit(regressionData, 0.5)
 
 	// Hyperparameters - Loss function, max Depth (-1 will split until pure)
-	regTree := NewDecisionTreeRegressor("mse", -1)
+	regTree := trees.NewDecisionTreeRegressor("mse", -1)
 
 	// Train Tree
 	err = regTree.Fit(trainRegData)

@@ -4,12 +4,13 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/ensemble"
 	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/filters"
 	"github.com/sjwhitworth/golearn/trees"
-	"math/rand"
 )
 
 func main() {
@@ -19,7 +20,7 @@ func main() {
 	rand.Seed(44111342)
 
 	// Load in the iris dataset
-	iris, err := base.ParseCSVToInstances("../datasets/iris_headers.csv", true)
+	iris, err := base.ParseCSVToInstances("../../datasets/iris_headers.csv", true)
 	if err != nil {
 		panic(err)
 	}
