@@ -16,7 +16,7 @@ func main() {
 
 	// Load data for outlier detection - includes gaussian distribution, and ten outliers at the end
 	// Dataset has 1000 normal datapoints, and 10 outliers at the ned
-	csvData, err := base.ParseCSVToInstances("../datasets/gaussian_outliers.csv", true)
+	csvData, err := base.ParseCSVToInstances("../../datasets/gaussian_outliers.csv", true)
 	if err != nil {
 		panic(err)
 	}

@@ -36,7 +36,7 @@ func main() {
 	*/
 
 	// Load Titanic Data For classification
-	classificationData, err := base.ParseCSVToInstances("../datasets/titanic.csv", false)
+	classificationData, err := base.ParseCSVToInstances("../../datasets/titanic.csv", false)
 	if err != nil {
 		panic(err)
 	}
