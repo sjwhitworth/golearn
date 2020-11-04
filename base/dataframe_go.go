@@ -11,7 +11,7 @@ import (
 )
 
 // ConvertDataFrameToInstances converts a DataFrame-go dataframe object to Golearn Fixed Data Grid. Allows for compabitibility between dataframe and golearn's ML models.
-// df is the dataframe Object. classAttrIndex is the index of the class Attribute in the data.
+// df is the dataframe Object. classAttrIndex is the index of the class Attribute in the data.i
 func ConvertDataFrameToInstances(df *dataframe.DataFrame, classAttrIndex int) base.FixedDataGrid {
 
 	// Creating Attributes based on Datafraem
@@ -49,22 +49,17 @@ func ConvertDataFrameToInstances(df *dataframe.DataFrame, classAttrIndex int) ba
 			col := df.Series[j]
 
 			var val string
-			str, ok := col.Value(i).(string)
-			val = str
-			if ok != true {
-				int_64, ok := col.Value(i).(int64)
-				val = strconv.FormatInt(int_64, 10)
-				if ok != true {
-					float_64, ok := col.Value(i).(float64)
-					val = fmt.Sprintf("%f", float_64)
-					if ok != true {
-						float_32, ok := col.Value(i).(float32)
-						if ok == true {
-							val = fmt.Sprintf("%f", float_32)
-						}
-					}
-				}
+			switch v := col.Value(i).(type) {
+			case string:
+				val = v
+			case int64:
+				val = strconv.FormatInt(v, 10)
+			case float64:
+				val = fmt.Sprintf("%f", v)
+			case float32:
+				val = fmt.Sprintf("%f", v)
 			}
+
 			newInst.Set(newSpecs[j], i, newSpecs[j].GetAttribute().GetSysValFromString(val))
 		}
 
