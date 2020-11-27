@@ -5,31 +5,31 @@ import (
 	"reflect"
 	"strconv"
 
-	dataframe "github.com/rocketlaunchr/dataframe-go"
+	"github.com/rocketlaunchr/dataframe-go"
 )
 
 // ConvertDataFrameToInstances converts a DataFrame-go dataframe object to Golearn Fixed Data Grid. Allows for compabitibility between dataframe and golearn's ML models.
 // df is the dataframe Object. classAttrIndex is the index of the class Attribute in the data.i
-func ConvertDataFrameToInstances(df *dataframe.DataFrame, classAttrIndex int) base.FixedDataGrid {
+func ConvertDataFrameToInstances(df *dataframe.DataFrame, classAttrIndex int) FixedDataGrid {
 
-	// Creating Attributes based on Datafraem
+	// Creating Attributes based on Dataframe
 	names := df.Names()
-	attrs := make([]base.Attribute, len(names))
+	attrs := make([]Attribute, len(names))
 
-	newInst := base.NewDenseInstances()
+	newInst := NewDenseInstances()
 
 	for i := range names {
 		col := df.Series[i]
 		if reflect.TypeOf(col.Value(0)).Kind() == reflect.String {
-			attrs[i] = new(base.CategoricalAttribute)
+			attrs[i] = new(CategoricalAttribute)
 			attrs[i].SetName(names[i])
 		} else {
-			attrs[i] = base.NewFloatAttribute(names[i])
+			attrs[i] = NewFloatAttribute(names[i])
 		}
 	}
 
 	// Add the attributes
-	newSpecs := make([]base.AttributeSpec, len(attrs))
+	newSpecs := make([]AttributeSpec, len(attrs))
 	for i, a := range attrs {
 
 		newSpecs[i] = newInst.AddAttribute(a)
@@ -60,7 +60,6 @@ func ConvertDataFrameToInstances(df *dataframe.DataFrame, classAttrIndex int) ba
 
 			newInst.Set(newSpecs[j], i, newSpecs[j].GetAttribute().GetSysValFromString(val))
 		}
-
 	}
 
 	return newInst
