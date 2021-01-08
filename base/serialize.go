@@ -49,6 +49,7 @@ func (f *FunctionalTarReader) GetNamedFile(name string) ([]byte, error) {
 			if err != nil {
 				return nil, WrapError(err)
 			}
+
 			if int64(len(ret)) != hdr.Size {
 				if int64(len(ret)) < hdr.Size {
 					log.Printf("Size mismatch, got %d byte(s) for %s, expected %d (err was %s)", len(ret), hdr.Name, hdr.Size, err)
@@ -56,10 +57,9 @@ func (f *FunctionalTarReader) GetNamedFile(name string) ([]byte, error) {
 					return nil, WrapError(fmt.Errorf("Size mismatch, expected %d byte(s) for %s, got %d", len(ret), hdr.Name, hdr.Size))
 				}
 			}
-			if err != nil {
-				return nil, err
-			}
+
 			returnCandidate = ret
+			break
 		}
 	}
 	if returnCandidate == nil {
