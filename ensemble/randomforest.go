@@ -3,6 +3,7 @@ package ensemble
 import (
 	"errors"
 	"fmt"
+
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/meta"
 	"github.com/sjwhitworth/golearn/trees"
@@ -95,5 +96,10 @@ func (f *RandomForest) Load(filePath string) error {
 
 func (f *RandomForest) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix string) error {
 	f.Model = new(meta.BaggedModel)
+	for i := 0; i < f.ForestSize; i++ {
+		tree := trees.NewID3DecisionTree(0.00)
+		f.Model.AddModel(tree)
+	}
+
 	return f.Model.LoadWithPrefix(reader, prefix)
 }

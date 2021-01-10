@@ -3,12 +3,13 @@ package ensemble
 import (
 	"testing"
 
+	"io/ioutil"
+	"os"
+
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
 	"github.com/sjwhitworth/golearn/filters"
 	. "github.com/smartystreets/goconvey/convey"
-	"io/ioutil"
-	"os"
 )
 
 func TestRandomForest(t *testing.T) {
@@ -92,6 +93,7 @@ func TestRandomForestSerialization(t *testing.T) {
 							newRf := NewRandomForest(10, 3)
 							err := newRf.Load(f.Name())
 							So(err, ShouldBeNil)
+							So(len(newRf.Model.Models), ShouldEqual, 10)
 							Convey("Predictions should be the same...", func() {
 								newPredictions, err := newRf.Predict(testData)
 								So(err, ShouldBeNil)
