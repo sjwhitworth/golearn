@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sort"
+
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/evaluation"
-	"sort"
 )
 
 // NodeType determines whether a DecisionTreeNode is a leaf or not.
@@ -587,5 +588,5 @@ func (t *ID3DecisionTree) Load(filePath string) error {
 
 func (t *ID3DecisionTree) LoadWithPrefix(reader *base.ClassifierDeserializer, prefix string) error {
 	t.Root = &DecisionTreeNode{}
-	return t.Root.LoadWithPrefix(reader, "")
+	return t.Root.LoadWithPrefix(reader, prefix)
 }

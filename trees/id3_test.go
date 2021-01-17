@@ -2,9 +2,10 @@ package trees
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/sjwhitworth/golearn/base"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestId3(t *testing.T) {
@@ -52,10 +53,15 @@ func TestId3(t *testing.T) {
 		_, err = id3tree.Predict(trainData)
 		So(err, ShouldBeNil)
 
+		// Test save and load model
 		err = id3tree.Save("tmp")
 		So(err, ShouldBeNil)
-		err = id3tree.Load("tmp")
-		So(err, ShouldNotBeNil) // temp
 
+		id3tree = NewID3DecisionTree(0.1)
+		err = id3tree.Load("tmp")
+		So(err, ShouldBeNil)
+
+		_, err = id3tree.Predict(trainData)
+		So(err, ShouldBeNil)
 	})
 }
