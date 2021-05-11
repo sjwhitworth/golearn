@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gonum/matrix"
 	"github.com/sjwhitworth/golearn/base"
 	"github.com/sjwhitworth/golearn/kdtree"
 	"github.com/sjwhitworth/golearn/metrics/pairwise"
@@ -430,7 +429,7 @@ func NewKnnRegressor(distfunc string) *KNNRegressor {
 
 func (KNN *KNNRegressor) Fit(values []float64, numbers []float64, rows int, cols int) {
 	if rows != len(values) {
-		panic(matrix.ErrShape)
+		panic(mat.ErrShape)
 	}
 
 	KNN.Data = mat.NewDense(rows, cols, numbers)
