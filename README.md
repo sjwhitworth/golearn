@@ -40,7 +40,7 @@ func main() {
 	// Load in a dataset, with headers. Header attributes will be stored.
 	// Think of instances as a Data Frame structure in R or Pandas.
 	// You can also create instances from scratch.
-	rawData, err := base.ParseCSVToInstances("datasets/iris.csv", false)
+	rawData, err := base.ParseCSVToInstances("datasets/iris.csv", true)
 	if err != nil {
 		panic(err)
 	}
