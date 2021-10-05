@@ -64,7 +64,7 @@ func main() {
 	fmt.Println(decTree.Evaluate(testData))
 
 	// Load House Price Data For Regression
-	regressionData, err := base.ParseCSVToInstances("../datasets/boston_house_prices.csv", false)
+	regressionData, err := base.ParseCSVToInstances("../../datasets/boston_house_prices.csv", false)
 	if err != nil {
 		panic(err)
 	}
