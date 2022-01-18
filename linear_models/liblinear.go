@@ -47,12 +47,16 @@ func NewProblem(X [][]float64, y []float64, bias float64) *Problem {
 	prob.c_prob.l = C.int(len(X))
 	prob.c_prob.n = C.int(len(X[0]) + 1)
 
-	prob.c_prob.x = convert_features(X, bias)
-	c_y := make([]C.double, len(y))
+
+	prob.c_prob.x = convert_features_optim(X, bias)
+
+	var c_y *C.double = C.mallocDouble(C.int(len(y)))
 	for i := 0; i < len(y); i++ {
-		c_y[i] = C.double(y[i])
+		tmp_next := uintptr(unsafe.Pointer(c_y)) + unsafe.Sizeof(*c_y) * uintptr(i)
+		tmp_next_p := (*C.double)(unsafe.Pointer(tmp_next))
+		*tmp_next_p = C.double(y[i])
 	}
-	prob.c_prob.y = &c_y[0]
+	prob.c_prob.y = c_y
 	prob.c_prob.bias = C.double(-1)
 
 	return &prob
@@ -150,6 +154,35 @@ func convert_features(X [][]float64, bias float64) **C.struct_feature_node {
 		x_space[cursor].index = C.int(-1)
 		cursor++
 	}
+
 	c_x = &x[0]
 	return c_x
+}
+
+
+func convert_features_optim(X [][]float64, bias float64) **C.struct_feature_node {
+	n_samples := len(X)
+	n_elements := 0
+	n_features := 0
+
+	if n_samples > 0 {
+		n_features = len(X[0])
+	}
+
+	var X_data *C.double = C.mallocDouble(C.int(n_samples * n_features))
+	for i := 0; i < n_samples; i++ {
+		for j := 0; j < len(X[i]); j++ {
+			if X[i][j] != 0.0 {
+				n_elements++
+			}
+			tmp := uintptr(unsafe.Pointer(X_data)) + unsafe.Sizeof(*X_data) * uintptr(i * len(X[i]) + j)
+			tmp_p := (*C.double)(unsafe.Pointer(tmp))
+			*tmp_p = C.double(X[i][j])
+			n_elements++ //for bias
+		}
+	}
+
+	var x **C.struct_feature_node = C.convert_features_helper(X_data,
+		C.int(n_samples), C.int(n_features), C.int(n_elements), C.double(bias))
+	return x
 }
