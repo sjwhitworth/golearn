@@ -30,11 +30,11 @@ const (
 	L2R_LR_DUAL         = C.L2R_LR_DUAL
 )
 
-func NewParameter(solver_type int, C float64, eps float64) *Parameter {
+func NewParameter(solver_type int, f float64, eps float64) *Parameter {
 	param := Parameter{}
 	param.c_param.solver_type = C.int(solver_type)
 	param.c_param.eps = C.double(eps)
-	param.c_param.C = C.double(C)
+	param.c_param.C = C.double(f)
 	param.c_param.nr_weight = C.int(0)
 	param.c_param.weight_label = nil
 	param.c_param.weight = nil

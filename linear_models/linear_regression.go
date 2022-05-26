@@ -6,6 +6,7 @@ import (
 	"github.com/sjwhitworth/golearn/base"
 
 	"fmt"
+
 	_ "github.com/gonum/blas"
 	"gonum.org/v1/gonum/mat"
 )
@@ -17,10 +18,10 @@ var (
 
 type LinearRegression struct {
 	fitted                 bool
-	disturbance            float64
-	regressionCoefficients []float64
-	attrs                  []base.Attribute
-	cls                    base.Attribute
+	Disturbance            float64
+	RegressionCoefficients []float64
+	Attrs                  []base.Attribute
+	Cls                    base.Attribute
 }
 
 func NewLinearRegression() *LinearRegression {
@@ -99,11 +100,11 @@ func (lr *LinearRegression) Fit(inst base.FixedDataGrid) error {
 		regressionCoefficients[i] /= reg.At(i, i)
 	}
 
-	lr.disturbance = regressionCoefficients[0]
-	lr.regressionCoefficients = regressionCoefficients[1:]
+	lr.Disturbance = regressionCoefficients[0]
+	lr.RegressionCoefficients = regressionCoefficients[1:]
 	lr.fitted = true
-	lr.attrs = attrs
-	lr.cls = classAttrs[0]
+	lr.Attrs = attrs
+	lr.Cls = classAttrs[0]
 	return nil
 }
 
@@ -113,16 +114,16 @@ func (lr *LinearRegression) Predict(X base.FixedDataGrid) (base.FixedDataGrid, e
 	}
 
 	ret := base.GeneratePredictionVector(X)
-	attrSpecs := base.ResolveAttributes(X, lr.attrs)
-	clsSpec, err := ret.GetAttribute(lr.cls)
+	attrSpecs := base.ResolveAttributes(X, lr.Attrs)
+	clsSpec, err := ret.GetAttribute(lr.Cls)
 	if err != nil {
 		return nil, err
 	}
 
 	X.MapOverRows(attrSpecs, func(row [][]byte, i int) (bool, error) {
-		var prediction float64 = lr.disturbance
+		var prediction float64 = lr.Disturbance
 		for j, r := range row {
-			prediction += base.UnpackBytesToFloat(r) * lr.regressionCoefficients[j]
+			prediction += base.UnpackBytesToFloat(r) * lr.RegressionCoefficients[j]
 		}
 
 		ret.Set(clsSpec, i, base.PackFloatToBytes(prediction))
