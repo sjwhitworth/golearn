@@ -12,6 +12,14 @@ var Sigmoid NeuralFunction = NeuralFunction{
 	func(v float64) float64 { return v * (1 - v) },
 }
 
+// TanhForward function does tanh(t) = \frac{1 - e^{-2t}}{1 + e^{-2t}}
+//
+// See https://en.wikipedia.org/wiki/Hyperbolic_functions
+var Tanh NeuralFunction = NeuralFunction{
+	func(v float64) float64 { return math.Tanh(v) },
+	func(v float64) float64 { return 1 - (v * v) },
+}
+
 // LinearFunction doesn't modify the value
 var Linear NeuralFunction = NeuralFunction{
 	func(v float64) float64 { return v },
