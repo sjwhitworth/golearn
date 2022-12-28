@@ -187,6 +187,11 @@ func ParseCSVBuildInstancesFromReader(r io.ReadSeeker, attrs []Attribute, hasHea
 			}
 		}
 		for i, v := range record {
+			// support missing values
+			if v == "" {
+				continue
+			}
+
 			u.Set(specs[i], rowCounter, specs[i].attr.GetSysValFromString(strings.TrimSpace(v)))
 		}
 		rowCounter++
