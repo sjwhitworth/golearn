@@ -2291,7 +2291,7 @@ static void train_one(const problem *prob, const parameter *param, double *w, do
 // Interface functions
 //
 model* train(const problem *prob, const parameter *param)
-{	
+{
 	int i,j;
 	int l = prob->l;
 	int n = prob->n;
@@ -2834,4 +2834,55 @@ void set_print_string_function(void (*print_func)(const char*))
 	else
 		liblinear_print_string = print_func;
 }
+
+double* mallocDouble(int size) {
+    return Malloc(double, (size_t)size);
+}
+
+feature_node* mallocSingleDimensionFeatureNode(int size) {
+    feature_node* f_node_s_p = (feature_node*)Malloc(feature_node, (size_t)size);
+    memset(f_node_s_p, 0, sizeof(feature_node) * (size_t)size);
+    return f_node_s_p;
+}
+
+feature_node** mallocDoubleDimensionFeatureNodePointer(int size) {
+    feature_node** f_node_d_p;
+    f_node_d_p = (feature_node**)Malloc(feature_node*, (size_t)size);
+    return f_node_d_p;
+}
+
+feature_node** convert_features_helper(double* data, int samples, int features, int elements, double bias) {
+
+	feature_node* x_space = mallocSingleDimensionFeatureNode(elements + samples);
+
+	int cursor = 0;
+
+	feature_node** x = mallocDoubleDimensionFeatureNodePointer(samples);
+
+	for (int i = 0; i < samples; i++) {
+
+		x[i] = &x_space[cursor];
+
+		for (int j = 0; j < features; j++) {
+
+			if (data[i * features +j] != 0.0) {
+                x_space[cursor].index = j + 1;
+                x_space[cursor].value = data[i * features +j];
+				cursor++;
+			}
+			if (bias > 0) {
+                x_space[cursor].index = 0;
+                x_space[cursor].value = bias;
+				cursor++;
+			}
+		}
+
+        x_space[cursor].index = -1;
+        x_space[cursor].value = 0.0;
+		cursor++;
+	}
+
+	return x;
+}
+
 

@@ -66,6 +66,11 @@ const char *check_parameter(const struct problem *prob, const struct parameter *
 int check_probability_model(const struct model *model);
 void set_print_string_function(void (*print_func) (const char*));
 
+double* mallocDouble(int size);
+struct feature_node* mallocSingleDimensionFeatureNode(int size);
+struct feature_node** mallocDoubleDimensionFeatureNodePointer(int size);
+struct feature_node** convert_features_helper(double* data, int samples, int features, int elements, double bias);
+
 #ifdef __cplusplus
 }
 #endif
