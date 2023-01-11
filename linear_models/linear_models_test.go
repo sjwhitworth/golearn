@@ -1,9 +1,10 @@
 package linear_models
 
 import (
+	"testing"
+
 	"github.com/sjwhitworth/golearn/base"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestLogisticRegression(t *testing.T) {
@@ -24,14 +25,14 @@ func TestLogisticRegression(t *testing.T) {
 			Z, err := lr.Predict(Y)
 			So(err, ShouldEqual, nil)
 			Convey("The result should be 1", func() {
-				So(Z.RowString(0), ShouldEqual, "1.0")
+				So(Z.RowString(0), ShouldEqual, "1")
 			})
 		})
 		Convey("When predicting the label of second vector", func() {
 			Z, err := lr.Predict(Y)
 			So(err, ShouldEqual, nil)
 			Convey("The result should be -1", func() {
-				So(Z.RowString(1), ShouldEqual, "-1.0")
+				So(Z.RowString(1), ShouldEqual, "0")
 			})
 		})
 	})

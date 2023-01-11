@@ -1,22 +1,47 @@
 package linear_models
 
 /*
-#include "linear.h"
+#include "integration.h"
+#cgo CFLAGS:
+#cgo CXXFLAGS: -std=c++11 -g -O0
+#cgo LDFLAGS: -g -llinear
 */
 import "C"
-import "fmt"
-import "unsafe"
+import (
+	"fmt"
+	"runtime"
+)
 
+// Problem wraps a libsvm problem struct which describes a classification/
+// regression problem. No externally-accessible fields.
 type Problem struct {
-	c_prob C.struct_problem
+	c_prob *C.struct_problem
 }
 
+// Free releases resources associated with a libsvm problem.
+func (p *Problem) Free() {
+	C.FreeCProblem(p.c_prob)
+}
+
+// Parameter encasulates all the possible libsvm training options.
+// TODO: make user control of these more extensive.
 type Parameter struct {
-	c_param C.struct_parameter
+	c_param *C.struct_parameter
 }
 
+// Free releases resources associated with a Parameter.
+func (p *Parameter) Free() {
+	C.FreeCParameter(p.c_param)
+}
+
+// Model encapsulates a trained libsvm model.
 type Model struct {
-	c_model unsafe.Pointer
+	c_model *C.struct_model
+}
+
+// Free releases resources associated with a trained libsvm model.
+func (m *Model) Free() {
+	C.FreeCModel(m.c_model)
 }
 
 const (
@@ -30,8 +55,14 @@ const (
 	L2R_LR_DUAL         = C.L2R_LR_DUAL
 )
 
+// NewParameter creates a libsvm parameter structure, which controls
+// various aspects of libsvm training.
+// For more information on what these parameters do, consult the
+// "`train` usage" section of
+// https://github.com/cjlin1/liblinear/blob/master/README
 func NewParameter(solver_type int, C float64, eps float64) *Parameter {
-	param := Parameter{}
+	param := &Parameter{C.CreateCParameter()}
+	runtime.SetFinalizer(param, (*Parameter).Free)
 	param.c_param.solver_type = C.int(solver_type)
 	param.c_param.eps = C.double(eps)
 	param.c_param.C = C.double(C)
@@ -39,30 +70,37 @@ func NewParameter(solver_type int, C float64, eps float64) *Parameter {
 	param.c_param.weight_label = nil
 	param.c_param.weight = nil
 
-	return &param
+	return param
 }
 
+// NewProblem creates input to libsvm which describes a particular
+// regression/classification problem. It requires an array of float values
+// and an array of y values.
 func NewProblem(X [][]float64, y []float64, bias float64) *Problem {
-	prob := Problem{}
+	prob := &Problem{C.CreateCProblem()}
+	runtime.SetFinalizer(prob, (*Problem).Free)
 	prob.c_prob.l = C.int(len(X))
 	prob.c_prob.n = C.int(len(X[0]) + 1)
 
-	prob.c_prob.x = convert_features(X, bias)
-	c_y := make([]C.double, len(y))
+	convert_features(prob, X, bias)
+	C.AllocateLabelsForProblem(prob.c_prob, C.int(len(y)))
 	for i := 0; i < len(y); i++ {
-		c_y[i] = C.double(y[i])
+		C.AssignLabelForProblem(prob.c_prob, C.int(i), C.double(y[i]))
 	}
-	prob.c_prob.y = &c_y[0]
+	// Should not go out of scope until the Problem struct
+	// is cleaned up.
 	prob.c_prob.bias = C.double(-1)
 
-	return &prob
+	return prob
 }
 
+// Train invokes libsvm and returns a trained model.
 func Train(prob *Problem, param *Parameter) *Model {
 	libLinearHookPrintFunc() // Sets up logging
-	tmpCProb := &prob.c_prob
-	tmpCParam := &param.c_param
-	return &Model{unsafe.Pointer(C.train(tmpCProb, tmpCParam))}
+	out := C.train(prob.c_prob, param.c_param)
+	m := &Model{out}
+	runtime.SetFinalizer(m, (*Model).Free)
+	return m
 }
 
 func Export(model *Model, filePath string) error {
@@ -74,82 +112,100 @@ func Export(model *Model, filePath string) error {
 }
 
 func Load(model *Model, filePath string) error {
-	model.c_model = unsafe.Pointer(C.load_model(C.CString(filePath)))
+	model.c_model = C.load_model(C.CString(filePath))
 	if model.c_model == nil {
 		return fmt.Errorf("Something went wrong")
 	}
 	return nil
+
 }
 
+// Predict takes a row of float values corresponding to a particular
+// input and returns the regression result.
 func Predict(model *Model, x []float64) float64 {
-	c_x := convert_vector(x, 0)
-	c_y := C.predict((*C.struct_model)(model.c_model), c_x)
-	y := float64(c_y)
+	cX := convertVector(x, 0)
+	cY := C.predict((*C.struct_model)(model.c_model), &cX[0])
+	y := float64(cY)
 	return y
 }
-func convert_vector(x []float64, bias float64) *C.struct_feature_node {
-	n_ele := 0
+
+// convertVector is an internal function used for converting
+// dense float64 vectors into the sparse input that libsvm accepts.
+func convertVector(x []float64, bias float64) []C.struct_feature_node {
+	// Count the number of non-zero elements
+	nElements := 0
 	for i := 0; i < len(x); i++ {
 		if x[i] > 0 {
-			n_ele++
+			nElements++
 		}
 	}
-	n_ele += 2
+	// Add one at the end for the -1 terminator
+	nElements++
+	if bias >= 0 {
+		// And one for the bias, if we have it
+		nElements++
+	}
 
-	c_x := make([]C.struct_feature_node, n_ele)
+	cX := make([]C.struct_feature_node, nElements)
 	j := 0
 	for i := 0; i < len(x); i++ {
 		if x[i] > 0 {
-			c_x[j].index = C.int(i + 1)
-			c_x[j].value = C.double(x[i])
+			cX[j].index = C.int(i + 1)
+			cX[j].value = C.double(x[i])
 			j++
 		}
 	}
-	if bias > 0 {
-		c_x[j].index = C.int(0)
-		c_x[j].value = C.double(0)
+	if bias >= 0 {
+		cX[j].index = C.int(0)
+		cX[j].value = C.double(0)
 		j++
 	}
-	c_x[j].index = C.int(-1)
-	return &c_x[0]
+	cX[j].index = C.int(-1)
+	return cX
 }
-func convert_features(X [][]float64, bias float64) **C.struct_feature_node {
-	n_samples := len(X)
-	n_elements := 0
 
-	for i := 0; i < n_samples; i++ {
+// convert_features is an internal function used for converting
+// dense 2D arrays of float values into the sparse format libsvm accepts.
+func convert_features(prob *Problem, X [][]float64, bias float64) {
+
+	nonZeroRowElements := make([]C.int, len(X))
+	totalElements := 0
+
+	for i := 0; i < len(X); i++ {
+		// For each row of input data, we count how many non-zero things are in the row
+		nonZeroElementsInRow := 1 // Initially one, because we need the -1 null terminator
 		for j := 0; j < len(X[i]); j++ {
 			if X[i][j] != 0.0 {
-				n_elements++
+				nonZeroElementsInRow++
 			}
-			n_elements++ //for bias
+			if bias >= 0 {
+				nonZeroElementsInRow++
+			}
 		}
+		nonZeroRowElements[i] = C.int(nonZeroElementsInRow)
+		totalElements += nonZeroElementsInRow
 	}
+	// Allocate one feature vector for each row, total number
+	C.AllocateFeatureNodesForProblem(prob.c_prob, C.int(len(X)), C.int(totalElements), &nonZeroRowElements[0])
 
-	x_space := make([]C.struct_feature_node, n_elements+n_samples)
-
-	cursor := 0
-	x := make([]*C.struct_feature_node, n_samples)
-	var c_x **C.struct_feature_node
-
-	for i := 0; i < n_samples; i++ {
-		x[i] = &x_space[cursor]
-
+	for i := 0; i < len(X); i++ {
+		nonZeroElementCounter := 0
 		for j := 0; j < len(X[i]); j++ {
 			if X[i][j] != 0.0 {
-				x_space[cursor].index = C.int(j + 1)
-				x_space[cursor].value = C.double(X[i][j])
-				cursor++
-			}
-			if bias > 0 {
-				x_space[cursor].index = C.int(0)
-				x_space[cursor].value = C.double(bias)
-				cursor++
+				xSpace := C.GetFeatureNodeForIndex(prob.c_prob, C.int(i), C.int(nonZeroElementCounter))
+				xSpace.index = C.int(j + 1)
+				xSpace.value = C.double(X[i][j])
+				nonZeroElementCounter++
 			}
 		}
-		x_space[cursor].index = C.int(-1)
-		cursor++
+		if bias >= 0 {
+			xSpace := C.GetFeatureNodeForIndex(prob.c_prob, C.int(i), C.int(nonZeroElementCounter))
+			xSpace.index = C.int(len(X[i]) + 1)
+			xSpace.value = C.double(bias)
+			nonZeroElementCounter++
+		}
+		xSpace := C.GetFeatureNodeForIndex(prob.c_prob, C.int(i), C.int(nonZeroElementCounter))
+		xSpace.index = C.int(-1)
+		xSpace.value = C.double(0)
 	}
-	c_x = &x[0]
-	return c_x
 }
