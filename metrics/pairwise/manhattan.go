@@ -3,7 +3,6 @@ package pairwise
 import (
 	"math"
 
-	"github.com/gonum/matrix"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -19,7 +18,7 @@ func (m *Manhattan) Distance(vectorX *mat.Dense, vectorY *mat.Dense) float64 {
 	r1, c1 := vectorX.Dims()
 	r2, c2 := vectorY.Dims()
 	if r1 != r2 || c1 != c2 {
-		panic(matrix.ErrShape)
+		panic(mat.ErrShape)
 	}
 
 	result := .0

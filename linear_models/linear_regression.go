@@ -6,7 +6,7 @@ import (
 	"github.com/sjwhitworth/golearn/base"
 
 	"fmt"
-	_ "github.com/gonum/blas"
+	_ "gonum.org/v1/gonum/blas"
 	"gonum.org/v1/gonum/mat"
 )
 
