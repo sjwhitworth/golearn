@@ -1,7 +1,8 @@
 GoLearn
 =======
 
-<img src="http://talks.golang.org/2013/advconc/gopherhat.jpg" width=125><br>
+![(COPY) Custom dimensions 1280x640 px (5)](https://github.com/sjwhitworth/golearn/assets/16087849/106cf1d8-386a-4d89-ad41-cd46cc88fb6c)
+
 [![GoDoc](https://godoc.org/github.com/sjwhitworth/golearn?status.png)](https://godoc.org/github.com/sjwhitworth/golearn)
 [![Build Status](https://travis-ci.org/sjwhitworth/golearn.png?branch=master)](https://travis-ci.org/sjwhitworth/golearn)<br>
 [![Code Coverage](https://codecov.io/gh/sjwhitworth/golearn/branch/master/graph/badge.svg)](https://codecov.io/gh/sjwhitworth/golearn)
